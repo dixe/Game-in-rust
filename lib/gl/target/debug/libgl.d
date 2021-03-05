@@ -1,1 +1,0 @@
-E:\repos\Rust\game\lib\gl\target\debug\libgl.rlib: E:\repos\Rust\game\lib\gl\build.rs E:\repos\Rust\game\lib\gl\src\lib.rs E:\repos\Rust\game\lib\gl\target\debug\build\gl-07d3f921c24627b1\out\bindings.rs
