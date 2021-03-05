@@ -1,0 +1,10 @@
+entity a
+entity b
+
+for hver side S i b:
+    for hvr side i a
+        project a ned S
+        find directions project - vertex
+        og se om collision dir1.dot(dir2) > 0
+
+    Er der collision så tag den projection fra den |største| projection og træk den fra posiiton

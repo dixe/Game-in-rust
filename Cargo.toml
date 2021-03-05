@@ -1,0 +1,28 @@
+[package]
+name = "game"
+version = "0.1.0"
+authors = ["Nikolaj Østergaard <niko.fris@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+gl = { path = "lib/gl" }
+failure = "0.1"
+render_gl_derive = { path = "render_gl_derive" }
+vec-2-10-10-10  = "0.1.2"
+half = "1.1.1"
+nalgebra = "0.16"
+
+
+[dependencies.sdl2]
+version = "0.34.3"
+features = ["bundled", "static-link"]
+
+
+[features]
+gl_debug = ["gl/debug"]
+
+
+[build-dependencies]
+walkdir = "2.1"
