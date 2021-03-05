@@ -31,7 +31,7 @@ impl Camera {
         let projection = na::Matrix4::new_perspective(900.0 / 700.0, fov.to_radians(), 0.1, 100.0);
 
         // orthonoal, more topdown 2d like
-        let zoom = 0.27;
+        //let zoom = 0.27;
         //let projection = na::Matrix4::new_orthographic(-100.0 *zoom, 100.0*zoom, -100.0* zoom, 100.0* zoom, -1.0, 30.0);
 
         Camera {

@@ -7,7 +7,8 @@ pub struct Level {
 
     pub width: i32,
     pub height: i32,
-    pub level_data: Vec<i32>
+    pub level_data: Vec<i32>,
+
 }
 
 #[derive(Debug, Fail)]

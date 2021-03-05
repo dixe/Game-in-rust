@@ -1,24 +1,24 @@
 use nalgebra as na;
 
 
-
-use crate::controls;
 use crate::scene;
 use crate::entity;
+
+use crate::game;
 
 use crate::physics::projection_collision::{collision_sat, CollisionBox};
 
 
-pub fn process(controls: &controls::Controls, scene: &scene::Scene, player: &mut entity::Entity, enemies: &mut Vec::<entity::Entity>) {
+pub fn process(ctx: &mut game::Context) {
 
-    entity_update_movement(player, &controls.movement_dir, scene, true);
+    entity_update_movement(&mut ctx.player, &ctx.controls.movement_dir, &ctx.scene);
 
-    for e in enemies {
+    for e in &mut ctx.enemies {
         let move_dir = na::Vector3::new(1.1,0.2,0.0).normalize();
 
-        entity_update_movement(e, &move_dir, scene, false);
+        entity_update_movement(e, &move_dir, &ctx.scene);
 
-        if entities_collide(&player, e) {
+        if entities_collide(&ctx.player, e) {
             println!("OUCH");
         }
     }
@@ -46,20 +46,10 @@ fn entities_collide(entity_1: &entity::Entity, entity_2: &entity::Entity) -> boo
 }
 
 
-fn entity_update_movement(entity: &mut entity::Entity, movement_dir: &na::Vector3::<f32>, scene: &scene::Scene, print_debug: bool) {
-
-    let mut new_dir = na::Vector3::new(movement_dir.x, movement_dir.y, movement_dir.z);
-    let mut new_entity_velocity = new_velocity(&new_dir, &entity.velocity, entity.acceleration, entity.max_speed);
+fn entity_update_movement(entity: &mut entity::Entity, movement_dir: &na::Vector3::<f32>, scene: &scene::Scene) {
+    let mut new_entity_velocity = new_velocity(&movement_dir, &entity.velocity, entity.acceleration, entity.max_speed);
 
     let mut entity_pos_updated = entity.pos + new_entity_velocity;
-
-    let entity_col_box = CollisionBox {
-        pos: entity_pos_updated,
-        side_len: 1.0,
-    };
-
-
-    let mut has_col = false;
 
     for wall_pos in &scene.border_positions {
 
@@ -81,8 +71,6 @@ fn entity_update_movement(entity: &mut entity::Entity, movement_dir: &na::Vector
             entity_pos_updated -= dir;
             new_entity_velocity -= dir;
         }
-
-        has_col |= col;
     }
 
     entity.set_position(entity_pos_updated);
@@ -99,15 +87,6 @@ struct Collision {
 }
 
 
-fn x_y_aabb_aabb_colision(box1: &CollisionBox, box2: &CollisionBox) -> bool {
-
-    let x_col = box1.pos.x <= box2.pos.x + box2.side_len && box1.pos.x + box1.side_len >= box2.pos.x;
-
-    let y_col = box1.pos.y <= box2.pos.y + box2.side_len && box1.pos.y + box1.side_len >= box2.pos.y;
-
-    x_col && y_col
-
-}
 
 fn new_velocity(dir: &na::Vector3::<f32>, old_velocity: &na::Vector3::<f32>, acceleration: f32, max_speed: f32) -> na::Vector3::<f32> {
 

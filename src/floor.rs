@@ -23,6 +23,7 @@ pub struct Floor {
     proj_loc: gl::types::GLint,
     view_loc: gl::types::GLint,
     model_loc: gl::types::GLint,
+    model_mat: na::Matrix4::<f32>,
 }
 
 
@@ -121,6 +122,12 @@ impl Floor {
         vbo.unbind();
         vao.unbind();
 
+        let pos = na::Vector3::<f32>::new(0.0, 0.0, 0.0);
+
+        let translation = na::Matrix4::new_translation(&pos);
+
+        let model_mat = translation *  na::Matrix4::identity();
+
         Ok(Floor {
             program,
             vao,
@@ -128,14 +135,16 @@ impl Floor {
             _ebo: ebo,
             proj_loc,
             view_loc,
-            model_loc
+            model_loc,
+            model_mat
         })
     }
 
-    pub fn render(&self, gl: &gl::Gl, projection: na::Matrix4<f32>,  view: na::Matrix4<f32>, model: na::Matrix4<f32>,) {
+    pub fn render(&self, gl: &gl::Gl, projection: na::Matrix4<f32>, view: na::Matrix4<f32>) {
         self.program.set_used();
 
         self.vao.bind();
+
         unsafe {
 
 
@@ -153,7 +162,7 @@ impl Floor {
                 self.model_loc,
                 1,
                 gl::FALSE,
-                model.as_slice().as_ptr() as *const f32);
+                self.model_mat.as_slice().as_ptr() as *const f32);
 
             // draw
             gl.DrawElements(

@@ -88,7 +88,7 @@ impl Controls {
                         _ => {}
                     }
                 },
-                Event::ControllerAxisMotion {which, axis, value,..} => {
+                Event::ControllerAxisMotion {axis, value,..} => {
 
                     let mut f_value = (value as f32) / 32768.0;
                     if value < 12768 && value > -12768{
@@ -124,11 +124,6 @@ impl Controls {
                 Event::ControllerDeviceAdded {which,..} => {
                     ctx.set_controller(which);
                 },
-
-                Event::JoyDeviceAdded {which,..} => {
-                    let ctrl = ctx.controller_subsystem.open(which).unwrap();
-                    println!("JOYSTICK {}, {}", which, ctrl.attached());
-                },
                 _ => {
 
                 }
@@ -136,7 +131,7 @@ impl Controls {
 
         }
 
-        if self.a && self.w && self.d && self.s {
+        if self.a || self.w || self.d || self.s {
             self.movement_dir.x = 0.0;
             self.movement_dir.y = 0.0;
             self.movement_dir.z = 0.0;
