@@ -3,28 +3,43 @@ use nalgebra as na;
 
 use crate::scene;
 use crate::entity;
-
+use crate::shot;
 use crate::game;
 
 use crate::physics::projection_collision::{collision_sat, CollisionBox};
+
 
 
 pub fn process(ctx: &mut game::Context) {
 
     entity_update_movement(&mut ctx.player, &ctx.controls.movement_dir, &ctx.scene);
 
-    for p in &mut ctx.player_projectiles {
+    for p in &mut  ctx.player_projectiles {
         if p.expired {
             continue;
         }
         p.entity.set_position(p.entity.pos + p.entity.velocity);
     }
 
+
+    let active_player_shots: Vec<&shot::Shot> = ctx.player_projectiles.iter()
+        .filter_map(|p| match p.expired {
+            false => Some(p),
+            true => None
+        }).collect();
+
+
+
     for e in &mut ctx.enemies {
         let move_dir = na::Vector3::new(1.1,0.2,0.0).normalize();
 
         entity_update_movement(e, &move_dir, &ctx.scene);
 
+        for p in &active_player_shots {
+            if entities_collide(&p.entity, e) {
+                println!("Got you");
+            }
+        }
         if entities_collide(&ctx.player, e) {
             println!("OUCH");
         }

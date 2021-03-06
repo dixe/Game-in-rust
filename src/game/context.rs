@@ -89,19 +89,9 @@ impl Context {
 
         let delta = self.delta_time.millis();
 
-
-        if self.player_projectiles.len() > 0 {
-
-            println!("{}", self.player_projectiles.len());
-        }
-
-
-
-
         for p in &mut self.player_projectiles {
             p.update(delta);
         }
-
 
         match self.controls.shoot_dir {
             Some(dir) =>

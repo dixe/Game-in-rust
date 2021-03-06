@@ -96,12 +96,6 @@ impl Controls {
 
                     let mut f_value = (value as f32) / 32768.0;
 
-                    if is_dead_zone(value) {
-                        //println!("value : {}", value);
-                        f_value = 0.0;
-
-                    }
-
                     match axis {
                         sdl2::controller::Axis::LeftX => {
                             self.movement_dir.x = f_value;
@@ -166,8 +160,13 @@ impl Controls {
         }
 
 
+        //CONTROLLER DEADZONE HANDLING
+        if self.movement_dir.magnitude() < 0.3 {
+            self.movement_dir.x = 0.0;
+            self.movement_dir.y = 0.0;
+        }
 
-        if shoot_dir.magnitude() > 0.5 {
+        if shoot_dir.magnitude() > 0.3 {
             self.shoot_dir = Some(shoot_dir.normalize());
         }
         else{
