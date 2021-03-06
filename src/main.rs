@@ -5,6 +5,7 @@ extern crate nalgebra;
 #[macro_use] extern crate failure;
 #[macro_use] extern crate render_gl_derive;
 
+
 pub mod render_gl;
 pub mod resources;
 
@@ -17,7 +18,8 @@ pub mod controls;
 mod debug;
 
 mod game;
-
+mod deltatime;
+mod shot;
 mod entity;
 mod camera;
 mod scene;
@@ -51,11 +53,13 @@ fn run() -> Result<(), failure::Error> {
         }
 
 
+
+
         //PHYSICS PROCESSING
         physics::process(&mut ctx);
 
-        //physics::process(&controls, &scene, &mut player);
-
+        // SPAWN PROJECTILES, HANDLE COLLISION THAT WAS NOT WITH ENVIROMENT
+        ctx.update_game_state();
 
         // RENDERING
         ctx.render();

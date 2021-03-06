@@ -8,13 +8,19 @@ use std::path::Path;
 pub struct Context {
     pub res: Resources,
     pub sdl: sdl2::Sdl,
+
+
     pub video_subsystem: sdl2::VideoSubsystem,
     pub controller_subsystem: sdl2::GameControllerSubsystem,
-    pub gl_context:  sdl2::video::GLContext,
     pub window:  sdl2::video::Window,
+
+    pub gl_context:  sdl2::video::GLContext,
     pub gl: gl::Gl,
+
+
     pub transform: na::Matrix4<f32>,
     pub viewport: render_gl::Viewport,
+
     controller: Option<sdl2::controller::GameController>,
     wire_frame: bool,
 

@@ -11,30 +11,34 @@ pub struct Controls {
     w: bool,
     s: bool,
     pub movement_dir: na::Vector3::<f32>,
-    pub look_dir: na::Vector3::<f32>,
+    pub shoot_dir: Option<na::Vector3::<f32>>,
+
 }
 
 
 impl Controls {
 
     pub fn new(event_pump: sdl2::EventPump) -> Self {
-        let movement_dir =  na::Vector3::<f32>::new(0.0, 0.0, 0.0);
-        let look_dir =  na::Vector3::<f32>::new(1.0, 0.0, 0.0);
+        let movement_dir = na::Vector3::<f32>::new(0.0, 0.0, 0.0);
+
         Controls {
             quit: false,
             event_pump: event_pump,
             movement_dir,
-            look_dir,
+            shoot_dir: None,
             a: false,
             w: false,
             s: false,
             d: false,
-
         }
     }
 
     pub fn handle_inputs(&mut self,  ctx: &mut render_gl::context::Context)  {
 
+        let mut shoot_dir = match self.shoot_dir {
+            Some(dir) => dir,
+            None => na::Vector3::<f32>::new(0.0, 0.0, 0.0)
+        };
 
         for event in self.event_pump.poll_iter() {
             use sdl2::event::Event;
@@ -91,8 +95,9 @@ impl Controls {
                 Event::ControllerAxisMotion {axis, value,..} => {
 
                     let mut f_value = (value as f32) / 32768.0;
-                    if value < 12768 && value > -12768{
 
+                    if is_dead_zone(value) {
+                        //println!("value : {}", value);
                         f_value = 0.0;
 
                     }
@@ -107,24 +112,29 @@ impl Controls {
                         },
 
                         sdl2::controller::Axis::RightX => {
-                            if f_value != 0.0 {
-                                self.look_dir.x = f_value;
-                            }
+                            shoot_dir.x = f_value;
+
                         },
 
                         sdl2::controller::Axis::RightY => {
-                            if f_value != 0.0 {
-                                self.look_dir.y = -f_value;
-                            }
+                            shoot_dir.y = -f_value;
+
                         },
                         _ => {}
 
                     }
                 },
+
+                // TRIGGER BUTTON
+                Event::JoyAxisMotion {..} => {
+                    //println!("axis");
+                },
+
                 Event::ControllerDeviceAdded {which,..} => {
                     ctx.set_controller(which);
                 },
-                _ => {
+                evt => {
+                    //println!("EVENT ALL RIGHT {}", evt.is_joy());
 
                 }
             }
@@ -157,7 +167,17 @@ impl Controls {
 
 
 
-        self.look_dir = self.look_dir.normalize();
-
+        if shoot_dir.magnitude() > 0.5 {
+            self.shoot_dir = Some(shoot_dir.normalize());
+        }
+        else{
+            self.shoot_dir = None;
+        }
     }
+}
+
+
+
+fn is_dead_zone(value: i16) -> bool{
+    value < 12768 && value > -12768
 }

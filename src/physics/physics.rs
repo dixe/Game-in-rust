@@ -13,6 +13,13 @@ pub fn process(ctx: &mut game::Context) {
 
     entity_update_movement(&mut ctx.player, &ctx.controls.movement_dir, &ctx.scene);
 
+    for p in &mut ctx.player_projectiles {
+        if p.expired {
+            continue;
+        }
+        p.entity.set_position(p.entity.pos + p.entity.velocity);
+    }
+
     for e in &mut ctx.enemies {
         let move_dir = na::Vector3::new(1.1,0.2,0.0).normalize();
 
@@ -21,8 +28,8 @@ pub fn process(ctx: &mut game::Context) {
         if entities_collide(&ctx.player, e) {
             println!("OUCH");
         }
-    }
 
+    }
 }
 
 

@@ -4,6 +4,8 @@ pub mod buffer;
 
 pub mod context;
 
+mod renderable;
+pub use self::renderable::{Renderable};
 
 mod shader;
 pub use self::shader::{Shader, Program, Error};
