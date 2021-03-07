@@ -5,11 +5,15 @@ use crate::cube;
 use crate::render_gl;
 use crate::floor;
 
+use crate::physics;
+
+
 use nalgebra as na;
 
 pub struct Scene {
 
-    pub border_positions: Vec::<na::Vector3::<f32>>,
+    border_positions: Vec::<na::Vector3::<f32>>,
+    border_sides: Vec::<physics::NormalSide>,
     border: cube::Cube,
     floor: floor::Floor,
 }
@@ -23,13 +27,48 @@ impl Scene {
         let mut border_positions = Vec::<na::Vector3::<f32>>::new();
 
         let clr = na::Vector3::new(0.6, 0.5, 0.4);
+        //TODO shold be model ids
         let border = cube::Cube::new(&ctx.res, clr, &ctx.gl)?;
 
         let floor_clr = na::Vector3::new(0.50, 0.33, 0.6);
 
         let floor =  floor::Floor::new(&ctx.res, floor_clr, &ctx.gl)?;
 
+
+        // create border sides, by only exposing the sides that a entity can reach
+        // this is to not do collision with all 4 sides, when only 1 is needed
+        let mut border_sides = Vec::<physics::NormalSide>::new();
+
+
+        // right
+
+        border_sides.push(physics::generate_normal_side(
+            na::Vector3::new(9.0, -10.0, 0.0),
+            na::Vector3::new(9.0, 9.0, 0.0),
+        ));
+
+
+        // left
+        border_sides.push(physics::generate_normal_side(
+            na::Vector3::new(-9.0, 9.0,0.0),
+            na::Vector3::new(-9.0, -10.0,0.0),
+        ));
+
+
+        //top
+        border_sides.push(physics::generate_normal_side(
+            na::Vector3::new(9.0, 9.0,0.0),
+            na::Vector3::new(-9.0, 9.0,0.0),
+        ));
+
+        // bottom
+        border_sides.push(physics::generate_normal_side(
+            na::Vector3::new(-9.0, -9.0,0.0),
+            na::Vector3::new(9.0, -9.0,0.0),
+        ));
+
         for (i, item) in level.level_data.iter().enumerate() {
+
 
             if *item != 1  {
                 continue;
@@ -44,13 +83,19 @@ impl Scene {
             border_positions.push(border_pos);
         }
 
+
         Ok(Scene {
             border_positions,
             border,
             floor,
+            border_sides,
         })
     }
 
+    pub fn border_sides(&self) -> &Vec::<physics::NormalSide> {
+
+        &self.border_sides
+    }
 
 
 

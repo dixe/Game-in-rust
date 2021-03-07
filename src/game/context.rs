@@ -29,7 +29,6 @@ pub struct Context {
 
     pub entity_manager: entity::EntityManager,
 
-
     player_projectile_model_id: usize,
 
     delta_time: deltatime::Deltatime,
@@ -41,20 +40,35 @@ impl Context {
 
     fn setup_player(&mut self) -> Result<(), failure::Error>  {
 
-
+        // PLAYER
         let player_pos = na::Vector3::new(3.0, 3.0, 0.0);
         let player_color = na::Vector3::new(0.0,  1.0, 1.0);
 
         let player_cube = cube::Cube::new(&self.render_context.res, player_color, &self.render_context.gl)?;
 
+        let player_model = entity::Model::new(player_cube);
 
-        let player_model_id = self.entity_manager.add_model(player_cube);
-
-
+        let player_model_id = self.entity_manager.add_model(player_model);
 
         let player_id = self.entity_manager.add_entity(player_model_id, player_pos);
 
         self.player_id = player_id;
+
+
+        // PLAYER PROJECTILE
+
+        let player_projectile_color = na::Vector3::new(0.2,  1.0, 0.2);
+
+        let player_projectile_cube = cube::Cube::new(&self.render_context.res, player_projectile_color, &self.render_context.gl)?;
+
+        let mut proj_model = entity::Model::new(player_projectile_cube);
+
+        let scale = &na::Vector3::new(0.3,0.3,0.3);
+        proj_model.scale(&scale);
+
+        let player_projectile_model_id = self.entity_manager.add_model(proj_model);
+
+        self.player_projectile_model_id = player_projectile_model_id;
 
         Ok(())
     }
@@ -68,6 +82,8 @@ impl Context {
 
         Ok(ctx)
     }
+
+
 
 
 
@@ -106,12 +122,15 @@ impl Context {
 
                 // spawn projectile with dir
 
-                let player_pos = match self.entity_manager.get_entity(self.player_id) {
+                let mut player_pos = match self.entity_manager.get_entity(self.player_id) {
                     Some(p) => p.pos,
                     _ => return // Can we shoot when dead, and should all exit. Maybe just update shooting in own function
                 };
 
+                player_pos.z += 0.5;
+
                 let speed = 30.0;
+
                 let p_id = self.entity_manager.add_entity_with_vel(self.player_projectile_model_id, player_pos, dir * speed);
                 let shot = shot::Shot::new(p_id, 300);
                 self.player_projectiles.push(shot);
@@ -180,19 +199,20 @@ fn empty() -> Result<Context, failure::Error> {
 
     let enemy_cube = cube::Cube::new(&render_context.res, enemy_color, &render_context.gl)?;
 
-
-
     let delta_time = deltatime::Deltatime::new();
 
     let mut enemies_ids = Vec::new();
 
-    let enemy_model_id = entity_manager.add_model(enemy_cube);
+    let e_model = entity::Model::new(enemy_cube);
+
+    let enemy_model_id = entity_manager.add_model(e_model);
+
 
     enemies_ids.push(entity_manager.add_entity(enemy_model_id, enemy_pos));
 
     Ok(Context {
         player_projectiles: Vec::<shot::Shot>::new(),
-        player_id: 0,
+        player_id: 9999,
         scene,
         controls,
         render_context,
@@ -201,8 +221,6 @@ fn empty() -> Result<Context, failure::Error> {
         delta_time,
         entity_manager,
         enemies_ids,
-        player_projectile_model_id: 0,
+        player_projectile_model_id: 9999,
     })
-
-
 }

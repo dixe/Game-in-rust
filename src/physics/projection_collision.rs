@@ -1,5 +1,5 @@
 use nalgebra as na;
-
+use std::ops::Index;
 
 
 pub struct CollisionBox {
@@ -7,10 +7,40 @@ pub struct CollisionBox {
     pub side_len: f32,
 }
 
-
+#[derive(Copy, Clone)]
 pub struct Side {
-    v1: na::Vector3::<f32>,
-    v2: na::Vector3::<f32>
+    pub v1: na::Vector3::<f32>,
+    pub v2: na::Vector3::<f32>
+}
+
+
+#[derive(Copy, Clone)]
+pub struct NormalSide {
+    pub w: na::Vector3::<f32>,
+    pub b: na::Matrix1::<f32>
+
+}
+
+pub fn collision_side(vertices: Vec::<na::Vector3::<f32>>, side: &NormalSide) -> (bool, na::Vector3::<f32>) {
+
+    // Kinda inspires ny how svm check if in category 0 or 1, with a hyperplane
+
+    let mut crossing = false;
+
+    let mut m_val_min = 1.0;
+    'check: for v in &vertices {
+
+        let m: na::Matrix1::<f32>  = side.w.transpose() * v - side.b;
+        let m_val: f32 = *m.index(0);
+
+
+        m_val_min = f32::min(m_val, m_val_min);
+
+        crossing |= m_val <= 0.0;
+    }
+
+
+    (crossing, side.w * m_val_min)
 }
 
 
@@ -83,6 +113,21 @@ fn vertices_from_sides(sides: &[Side]) -> Vec::<na::Vector3::<f32>> {
     r
 }
 
+
+pub fn generate_normal_side(v1: na::Vector3::<f32>, v2: na::Vector3::<f32>) -> NormalSide {
+    let line = v2-v1;
+    let w = na::Vector3::new(-line.y, line.x, line.z).normalize();
+
+    let b = w.transpose() * v1;
+
+    NormalSide{
+        w,
+        b
+    }
+
+}
+
+
 pub fn generate_vertices(b: &CollisionBox) -> Vec::<na::Vector3::<f32>> {
     let v00 = na::Vector3::new(
         b.pos.x,
@@ -143,7 +188,8 @@ pub fn projection(from: &na::Vector3::<f32>, onto: &na::Vector3::<f32>) -> na::V
 #[cfg(test)]
 mod tests {
 
-    use crate::physics::projection_collision::{CollisionBox,projection, collision_sat, generate_vertices, generate_sides};
+
+    use crate::physics::projection_collision::{CollisionBox, projection, collision_sat, generate_vertices, generate_sides, collision_side, generate_normal_side };
     use nalgebra as na;
 
     #[test]
@@ -231,8 +277,47 @@ mod tests {
         let (has_col, _) = collision_sat(generate_vertices(&box1), generate_sides(&box2).as_slice());
 
         assert!(!has_col);
+    }
 
 
+    #[test]
+    fn collision_side_left_false() {
+
+        let box1 = CollisionBox {
+            pos: na::Vector3::new(2.0, -10.0, 0.0),
+            side_len: 1.0,
+
+        };
+
+        let side = generate_normal_side(
+            na::Vector3::new(-8.0, 9.0,0.0),
+            na::Vector3::new(-8.0, -10.0,0.0),
+        );
+
+        let (has_col, _) = collision_side(generate_vertices(&box1), &side);
+
+        assert!(!has_col);
+    }
+
+    #[test]
+    fn collision_side_left_true() {
+
+        let box1 = CollisionBox {
+            pos: na::Vector3::new(-8.11, -0.96, 0.0),
+            side_len: 1.0,
+
+        };
+
+
+        let side = generate_normal_side(
+            na::Vector3::new(-8.0, 9.0,0.0),
+            na::Vector3::new(-8.0, -10.0,0.0),
+        );
+
+        let (has_col, dir) = collision_side(generate_vertices(&box1), &side);
+
+        println!("{}", dir);
+        assert!(has_col);
     }
 
 }

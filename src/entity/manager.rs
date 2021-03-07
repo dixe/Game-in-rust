@@ -1,15 +1,13 @@
 use nalgebra as na;
 
-use crate::cube;
-
-use crate::entity::Entity;
+use crate::entity::{Entity, Model};
 
 
 pub struct EntityManager {
 
     next_id: usize,
     pub entities: std::collections::HashMap<usize, Entity>,
-    models: Vec<cube::Cube>,
+    models: Vec<Model>,
 
 }
 
@@ -20,7 +18,7 @@ impl EntityManager {
         return EntityManager {
             next_id: 1,
             entities: std::collections::HashMap::new(),
-            models: Vec::<cube::Cube>::new()
+            models: Vec::<Model>::new()
         }
     }
 
@@ -75,7 +73,7 @@ impl EntityManager {
     }
 
 
-    pub fn add_model(&mut self, model: cube::Cube) -> usize {
+    pub fn add_model(&mut self, model: Model) -> usize {
         self.models.push(model);
 
         (self.models.len() - 1) as usize
@@ -87,7 +85,7 @@ impl EntityManager {
     pub fn render(&self, entity_id:usize, gl: &gl::Gl, projection: &na::Matrix4<f32>, view: &na::Matrix4<f32>) {
         match self.get_entity(entity_id) {
             Some(e) => match self.models.get(e.model_id as usize) {
-                Some(m) => e.render(gl, m, projection, view),
+                Some(m) => m.render(gl, projection, view, e.pos),
                 None => {}
             },
             None => {}

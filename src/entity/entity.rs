@@ -26,18 +26,4 @@ impl Entity {
     pub fn set_velocity(&mut self, vel: na::Vector3::<f32>) {
         self.velocity = vel;
     }
-
-    pub fn render(&self, gl: &gl::Gl, model: &cube::Cube, projection: &na::Matrix4<f32>, view: &na::Matrix4<f32>) {
-
-        let trans = na::Matrix4::new_translation(&self.pos);
-
-        let mut model_mat = na::Matrix4::<f32>::identity();
-
-        model_mat = trans * model_mat;
-
-        model.render(gl, *projection, *view, model_mat);
-
-
-
-    }
 }

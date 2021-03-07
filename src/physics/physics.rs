@@ -5,7 +5,7 @@ use crate::scene;
 use crate::entity;
 use crate::game;
 
-use crate::physics::projection_collision::{collision_sat, CollisionBox, generate_sides, generate_vertices};
+use crate::physics::projection_collision::{collision_sat, CollisionBox, generate_sides, generate_vertices, collision_side};
 
 
 
@@ -91,24 +91,21 @@ fn entity_update_movement(entity: &mut entity::Entity, delta: f32, movement_dir:
 
     let mut entity_pos_updated = entity.pos + new_entity_velocity * delta;
 
-    for wall_pos in &scene.border_positions {
 
-        let wall_collision_box =  CollisionBox {
-            pos: *wall_pos,
-            side_len: 1.0,
-        };
 
+
+    for wall_side in scene.border_sides() {
         let entity_col_box = CollisionBox {
             pos: entity_pos_updated,
             side_len: 1.0,
         };
 
+        let sides = vec![*wall_side];
 
-        let (col, dir) = collision_sat(generate_vertices(&entity_col_box), generate_sides(&wall_collision_box).as_slice());
+        let (col, dir) = collision_side(generate_vertices(&entity_col_box), &wall_side);
 
         if col {
             entity_pos_updated -= dir;
-
         }
     }
 
