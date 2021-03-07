@@ -9,7 +9,7 @@ use crate::level;
 use crate::controls;
 use crate::deltatime;
 use crate::shot;
-use crate::physics;
+
 
 pub struct Context {
 
@@ -17,7 +17,7 @@ pub struct Context {
     //GAME STATE SHOULD MOVE INTO STRUCT/MODULE
     pub player_projectiles: Vec::<shot::Shot>,
 
-    pub enemies_ids: Vec<usize>,
+    pub enemies: Vec<usize>,
     pub player_id: usize,
 
     // STUFF WE NEED
@@ -29,13 +29,44 @@ pub struct Context {
 
     pub entity_manager: entity::EntityManager,
 
-    player_projectile_model_id: usize,
+    pub player_projectile_model_id: usize,
+    pub enemy_model_id: usize,
 
     delta_time: deltatime::Deltatime,
 
 }
 
 impl Context {
+
+
+
+    pub fn new() -> Result<Context, failure::Error> {
+
+        let mut ctx = empty()?;
+
+        ctx.setup_player()?;
+
+        ctx.setup_enemy_models()?;
+
+        ctx.add_enemy();
+
+        Ok(ctx)
+    }
+
+
+    fn setup_enemy_models(&mut self) -> Result<(), failure::Error> {
+
+        let enemy_color = na::Vector3::new(0.3, 0.0, 0.0);
+
+        let enemy_cube = cube::Cube::new(&self.render_context.res, enemy_color, &self.render_context.gl)?;
+
+        let e_model = entity::Model::new(enemy_cube);
+
+        self.enemy_model_id = self.entity_manager.add_model(e_model);
+
+        Ok(())
+
+    }
 
 
     fn setup_player(&mut self) -> Result<(), failure::Error>  {
@@ -53,6 +84,9 @@ impl Context {
         let player_id = self.entity_manager.add_entity(player_model_id, player_pos);
 
         self.player_id = player_id;
+
+        let health = entity::Health::new(100.0);
+        self.entity_manager.set_entity_health(player_id, health);
 
 
         // PLAYER PROJECTILE
@@ -73,15 +107,30 @@ impl Context {
         Ok(())
     }
 
+    fn add_enemy(&mut self) {
 
-    pub fn new() -> Result<Context, failure::Error> {
+        // ENEMY
+        let enemy_pos = na::Vector3::new(-3.0, -3.0, 0.0);
 
-        let mut ctx = empty()?;
+        let enemy_id = self.entity_manager.add_entity(self.enemy_model_id, enemy_pos);
 
-        ctx.setup_player()?;
+        self.enemies.push(enemy_id);
 
-        Ok(ctx)
+        let health = entity::Health::new(100.0);
+
+        self.entity_manager.set_entity_health(enemy_id, health);
+
+        match self.entity_manager.get_entity(enemy_id) {
+            Some(mut e) => {
+                e.max_speed = 8.0;
+                self.entity_manager.update_entity(enemy_id, e);
+            },
+            None => {}
+        };
+
     }
+
+
 
 
     // Call once pr update step
@@ -96,67 +145,6 @@ impl Context {
     pub fn get_delta_time(&self) -> f32 {
         self.delta_time.time()
     }
-
-
-    pub fn update_game_state(&mut self, collisions: &physics::Collisions) {
-
-        self.update_player_shoot();
-
-
-        for c in &collisions.enemies_hit {
-
-            let enemy = match self.entity_manager.get_entity(c.entity_id) {
-                Some(e) => e,
-                _ => continue
-            };
-
-            self.entity_manager.remove_entity(c.projectile_id);
-
-        }
-
-    }
-
-
-
-
-    fn update_player_shoot(&mut self) {
-        let delta = self.get_delta_millis();
-        for p in &mut self.player_projectiles {
-            p.update(delta);
-
-            if p.expired {
-                self.entity_manager.remove_entity(p.entity_id);
-            }
-        }
-
-        self.player_projectiles.retain(|p| !p.expired);
-
-
-        match self.controls.shoot_dir {
-            Some(dir) =>
-            {
-                //todo check cooldown/shooting speed
-
-                // spawn projectile with dir
-
-                let mut player_pos = match self.entity_manager.get_entity(self.player_id) {
-                    Some(p) => p.pos,
-                    _ => return // Can we shoot when dead, and should all exit. Maybe just update shooting in own function
-                };
-
-                player_pos.z += 0.5;
-
-                let speed = 30.0;
-
-                let p_id = self.entity_manager.add_entity_with_vel(self.player_projectile_model_id, player_pos, dir * speed);
-                let shot = shot::Shot::new(p_id, 300);
-                self.player_projectiles.push(shot);
-            }
-            _ => {}
-        }
-    }
-
-
 
 
     pub fn handle_inputs(&mut self) {
@@ -174,7 +162,7 @@ impl Context {
 
 
         // enemies
-        for id in &self.enemies_ids {
+        for id in &self.enemies {
             self.entity_manager.render(*id, &self.render_context.gl, &self.camera.projection(), &self.camera.view());
         }
 
@@ -195,11 +183,7 @@ fn empty() -> Result<Context, failure::Error> {
 
     let background_color_buffer = render_gl::ColorBuffer::from_color(na::Vector3::new(0.3, 0.3, 0.5));
 
-    let mut entity_manager = entity::EntityManager::new();
-
-    let enemy_pos = na::Vector3::new(0.0, 0.0, 0.0);
-
-    let enemy_color = na::Vector3::new(0.0, 0.0, 0.0);
+    let entity_manager = entity::EntityManager::new();
 
     background_color_buffer.set_used(&render_context.gl);
 
@@ -213,18 +197,10 @@ fn empty() -> Result<Context, failure::Error> {
 
     let controls = controls::Controls::new(event_pump);
 
-    let enemy_cube = cube::Cube::new(&render_context.res, enemy_color, &render_context.gl)?;
-
     let delta_time = deltatime::Deltatime::new();
 
-    let mut enemies_ids = Vec::new();
+    let enemies = Vec::new();
 
-    let e_model = entity::Model::new(enemy_cube);
-
-    let enemy_model_id = entity_manager.add_model(e_model);
-
-
-    enemies_ids.push(entity_manager.add_entity(enemy_model_id, enemy_pos));
 
     Ok(Context {
         player_projectiles: Vec::<shot::Shot>::new(),
@@ -236,7 +212,8 @@ fn empty() -> Result<Context, failure::Error> {
         camera,
         delta_time,
         entity_manager,
-        enemies_ids,
+        enemies,
         player_projectile_model_id: 9999,
+        enemy_model_id: 9999,
     })
 }

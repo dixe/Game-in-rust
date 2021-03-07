@@ -1,6 +1,6 @@
 use nalgebra as na;
 
-use crate::entity::{Entity, Model};
+use crate::entity::{Entity, Model, Health};
 
 
 pub struct EntityManager {
@@ -8,6 +8,7 @@ pub struct EntityManager {
     next_id: usize,
     pub entities: std::collections::HashMap<usize, Entity>,
     models: Vec<Model>,
+    pub healths: std::collections::HashMap<usize, Health>,
 
 }
 
@@ -18,6 +19,7 @@ impl EntityManager {
         return EntityManager {
             next_id: 1,
             entities: std::collections::HashMap::new(),
+            healths: std::collections::HashMap::new(),
             models: Vec::<Model>::new()
         }
     }
@@ -28,7 +30,6 @@ impl EntityManager {
         self.next_id += 1;
 
         let e = Entity {
-            id,
             model_id,
             pos,
             velocity: direction,
@@ -41,13 +42,20 @@ impl EntityManager {
     }
 
 
-    pub fn update_entity(&mut self, entity: Entity) {
-        self.entities.insert(entity.id, entity);
+    pub fn set_entity_health(&mut self, entity_id: usize, hp: Health) {
+        self.healths.insert(entity_id, hp);
+    }
+
+
+    pub fn update_entity(&mut self, entity_id: usize, entity: Entity) {
+        self.entities.insert(entity_id, entity);
     }
 
 
     pub fn remove_entity(&mut self, id: usize) {
+
         self.entities.remove(&id);
+        self.healths.remove(&id);
     }
 
 
@@ -67,6 +75,14 @@ impl EntityManager {
 
     pub fn get_entity(&self, id: usize) -> Option<Entity> {
         match &self.entities.get(&id) {
+            Some(e) => Some(**e),
+            None => None
+        }
+    }
+
+
+    pub fn get_health(&self, id: usize) -> Option<Health> {
+        match &self.healths.get(&id) {
             Some(e) => Some(**e),
             None => None
         }
@@ -94,31 +110,6 @@ impl EntityManager {
     }
 
 
-    /*
-
-    pub fn set_player (&mut self, model_id: usize, pos: na::Vector3::<f32>) -> usize {
-
-    let id = self.next_entity(model_id, pos, empty_vec());
-    self.player_id = id;
-    id
-}
-
-}
-
-
-    pub fn player(&self) -> Option<&Entity> {
-    self.get_entity(self.player_id)
-}
-
-
-    pub fn player_mut(&mut self) -> Option<&mut Entity> {
-    self.get_entity_mut(self.player_id)
-}
-
-    pub fn enemiey_mut(&mut self, enemy_id: usize) -> Option<&mut Entity> {
-    self.get_entity_mut(enemy_id)
-}
-     */
 
 
 }

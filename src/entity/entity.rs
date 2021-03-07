@@ -2,7 +2,7 @@ use nalgebra as na;
 
 #[derive(Copy, Clone)]
 pub struct Entity {
-    pub id: usize,
+
     pub pos: na::Vector3::<f32>,
     pub velocity: na::Vector3::<f32>,
     pub max_speed: f32,

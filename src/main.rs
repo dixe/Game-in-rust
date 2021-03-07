@@ -55,11 +55,14 @@ fn run() -> Result<(), failure::Error> {
         }
 
 
+
+        game::run_ai(&mut ctx);
+
         //PHYSICS PROCESSING
         let collisions = physics::process(&mut ctx);
 
         // SPAWN PROJECTILES, HANDLE COLLISION THAT WAS NOT WITH ENVIROMENT
-        ctx.update_game_state(&collisions);
+        game::update_game_state(&mut ctx, &collisions);
 
         // RENDERING
         ctx.render();

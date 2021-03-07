@@ -9,3 +9,8 @@ pub use self::model::{Model};
 
 mod manager;
 pub use self::manager::{EntityManager};
+
+
+mod health;
+
+pub use self::health::{Health};

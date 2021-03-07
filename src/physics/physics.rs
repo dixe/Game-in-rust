@@ -9,9 +9,13 @@ use crate::physics::projection_collision::{collision_sat, CollisionBox, generate
 
 
 pub struct Collisions {
-    pub enemies_hit: Vec<Hit>
+    pub enemies_hit: Vec<Hit>,
+    pub player_enemies_collision: Vec<usize>,
+
 
 }
+
+
 
 pub struct Hit {
 
@@ -25,6 +29,7 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
 
     let mut collisions = Collisions {
         enemies_hit: Vec::<Hit>::new(),
+        player_enemies_collision: Vec::<usize>::new(),
     };
 
     let delta = ctx.get_delta_time();
@@ -34,19 +39,15 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
         None => return collisions
     };
 
-    entity_update_movement(&mut player, delta, &ctx.controls.movement_dir, &ctx.scene);
+    entity_update_movement_scene(&mut player, delta, &ctx.scene);
 
-    //    println!("enemy_speed: {}", player.velocity);
-
-    for e_id in &mut ctx.enemies_ids {
+    for e_id in &mut ctx.enemies {
         let mut e = match ctx.entity_manager.get_entity(*e_id) {
             Some(en) => en,
             None => continue
         };
 
-        let move_dir = na::Vector3::new(1.1,0.2,0.0).normalize();
-
-        entity_update_movement(&mut e, delta, &move_dir, &ctx.scene);
+        entity_update_movement_scene(&mut e, delta, &ctx.scene);
 
         for proj in &mut ctx.player_projectiles {
             let mut p = match ctx.entity_manager.get_entity(proj.entity_id) {
@@ -54,23 +55,28 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
                 None => continue
             };
 
-            // println!("{}", p.velocity);
-            p.set_position(p.pos + p.velocity*delta);
-            ctx.entity_manager.update_entity(p);
 
-            if entities_collide(&p, &e) {
-                collisions.enemies_hit.push(Hit { entity_id: e.id, projectile_id: e.id});
+            p.set_position(p.pos + p.velocity*delta);
+            ctx.entity_manager.update_entity(proj.entity_id, p);
+
+            let (col, _) = entities_collide(&p, &e);
+            if col {
+                collisions.enemies_hit.push(Hit { entity_id: *e_id, projectile_id: proj.entity_id});
             }
 
         }
 
 
-        if entities_collide(&player, &e) {
-            println!("OUCH");
+
+
+        let (col, dir) = entities_collide(&player, &e);
+
+        if col {
+            e.pos -= dir;
+            collisions.player_enemies_collision.push(*e_id);
         }
 
-
-        ctx.entity_manager.update_entity(e);
+        ctx.entity_manager.update_entity(*e_id, e);
     }
 
 
@@ -83,19 +89,19 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
 
         // println!("{}", p.velocity);
         p.set_position(p.pos + p.velocity*delta);
-        ctx.entity_manager.update_entity(p);
+        ctx.entity_manager.update_entity(proj.entity_id, p);
 
 
     }
 
 
-    ctx.entity_manager.update_entity(player);
+    ctx.entity_manager.update_entity(ctx.player_id, player);
 
     collisions
 }
 
 
-fn entities_collide(entity_1: &entity::Entity, entity_2: &entity::Entity) -> bool {
+fn entities_collide(entity_1: &entity::Entity, entity_2: &entity::Entity) -> (bool, na::Vector3::<f32>) {
 
     let entity_1_col_box = CollisionBox {
         pos: entity_1.pos,
@@ -107,20 +113,13 @@ fn entities_collide(entity_1: &entity::Entity, entity_2: &entity::Entity) -> boo
         side_len: 1.0,
     };
 
-    let (col, _) = collision_sat(generate_vertices(&entity_1_col_box), generate_sides(&entity_2_col_box).as_slice());
-
-    col
+    collision_sat(generate_vertices(&entity_1_col_box), generate_sides(&entity_2_col_box).as_slice())
 }
 
 
-fn entity_update_movement(entity: &mut entity::Entity, delta: f32, movement_dir: &na::Vector3::<f32>, scene: &scene::Scene) {
+fn entity_update_movement_scene(entity: &mut entity::Entity, delta: f32, scene: &scene::Scene) {
 
-    let new_entity_velocity = new_velocity(&movement_dir, &entity.velocity, entity.acceleration, entity.max_speed);
-
-    let mut entity_pos_updated = entity.pos + new_entity_velocity * delta;
-
-
-
+    let mut entity_pos_updated = entity.pos + entity.velocity * delta;
 
     for wall_side in scene.border_sides() {
         let entity_col_box = CollisionBox {
@@ -136,24 +135,5 @@ fn entity_update_movement(entity: &mut entity::Entity, delta: f32, movement_dir:
     }
 
     entity.set_position(entity_pos_updated);
-    entity.set_velocity(new_entity_velocity);
 
-}
-
-
-fn new_velocity(dir: &na::Vector3::<f32>, old_velocity: &na::Vector3::<f32>, acceleration: f32, max_speed: f32) -> na::Vector3::<f32> {
-
-    if dir.x == 0.0 && dir.y == 0.0 && dir.z == 0.0 {
-        return na::Vector3::new(0.0, 0.0, 0.0);
-    }
-
-    let mut new_vel = dir.normalize() * acceleration + old_velocity;
-
-    let speed = new_vel.magnitude();
-
-    if speed > max_speed {
-        new_vel *= max_speed / speed;
-    }
-
-    new_vel
 }
