@@ -1,13 +1,10 @@
 use nalgebra as na;
 
 
-use crate::render_gl::Renderable;
-
-
 use crate::entity;
 
 pub struct Shot {
-    pub entity: entity::Entity,
+    pub entity_id: usize,
     pub time_remaining: i32,
     pub expired: bool,
 }
@@ -15,9 +12,9 @@ pub struct Shot {
 
 impl Shot {
 
-    pub fn new(entity: entity::Entity, life_time: i32) -> Self {
+    pub fn new(entity_id: usize, life_time: i32) -> Self {
         Shot {
-            entity,
+            entity_id,
             time_remaining: life_time,
             expired: false
         }
@@ -29,15 +26,4 @@ impl Shot {
         self.time_remaining -= delta;
         self.expired = self.time_remaining <= 0;
     }
-}
-
-
-
-impl Renderable for Shot {
-    fn render(&self, gl: &gl::Gl, projection: na::Matrix4<f32>, view: na::Matrix4<f32>) {
-        if ! self.expired {
-            self.entity.render(gl, projection, view);
-        }
-    }
-
 }

@@ -20,6 +20,10 @@ impl Deltatime {
         self.value.as_millis() as i32
     }
 
+    pub fn time(&self) -> f32 {
+        (self.value.as_millis() as f32 )/ 1000.0
+    }
+
     pub fn update(&mut self) {
         self.value = self.last_update.elapsed();
         self.last_update = Instant::now();

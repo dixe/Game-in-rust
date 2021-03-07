@@ -4,6 +4,7 @@ use nalgebra as na;
 use crate::scene;
 use crate::entity;
 use crate::shot;
+use crate::controls;
 use crate::game;
 
 use crate::physics::projection_collision::{collision_sat, CollisionBox};
@@ -12,42 +13,119 @@ use crate::physics::projection_collision::{collision_sat, CollisionBox};
 
 pub fn process(ctx: &mut game::Context) {
 
-    entity_update_movement(&mut ctx.player, &ctx.controls.movement_dir, &ctx.scene);
 
-    for p in &mut  ctx.player_projectiles {
-        if p.expired {
-            continue;
-        }
-        p.entity.set_position(p.entity.pos + p.entity.velocity);
+    let delta = ctx.get_delta_time();
+
+    let mut player = match ctx.entity_manager.get_entity(ctx.player_id) {
+        Some(p) => p,
+        None => return
+    };
+
+
+
+    entity_update_movement(&mut player, delta, &ctx.controls.movement_dir, &ctx.scene);
+
+    //    println!("enemy_speed: {}", player.velocity);
+
+    for e_id in &mut ctx.enemies_ids {
+        let mut e = match ctx.entity_manager.get_entity(*e_id) {
+            Some(en) => en,
+            None => continue
+        };
+
+        let move_dir = na::Vector3::new(1.1,0.2,0.0).normalize();
+
+        entity_update_movement(&mut e, delta, &move_dir, &ctx.scene);
+
+
+
+
+
+
+        ctx.entity_manager.update_entity(e);
     }
 
 
-    let active_player_shots: Vec<&shot::Shot> = ctx.player_projectiles.iter()
-        .filter_map(|p| match p.expired {
-            false => Some(p),
-            true => None
-        }).collect();
+    // handle
+    for proj in &mut ctx.player_projectiles {
+        let mut p = match ctx.entity_manager.get_entity(proj.entity_id) {
+            Some(e) => e,
+            None => continue
+        };
+
+        // println!("{}", p.velocity);
+        p.set_position(p.pos + p.velocity*delta);
+        ctx.entity_manager.update_entity(p);
+
+
+    }
 
 
 
-    for e in &mut ctx.enemies {
-        let move_dir = na::Vector3::new(1.1,0.2,0.0).normalize();
+    // DO NON MUTABLE UPDATES ON ALREADY UPDATED ENTITIES
 
-        entity_update_movement(e, &move_dir, &ctx.scene);
+    let mut player_n = match ctx.entity_manager.get_entity(ctx.player_id) {
+        Some(p) => p,
+        None => return
+    };
+    for e_id in &ctx.enemies_ids {
+        let e = match ctx.entity_manager.get_entity(*e_id) {
+            Some(en) => en,
+            None => continue
+        };
 
-        for p in &active_player_shots {
-            if entities_collide(&p.entity, e) {
-                println!("Got you");
-            }
-        }
-        if entities_collide(&ctx.player, e) {
+        let mut player_n = match ctx.entity_manager.get_entity(ctx.player_id) {
+            Some(p) => p,
+            None => return
+        };
+
+        if entities_collide(&player_n, &e) {
             println!("OUCH");
         }
 
+
+        /*
+        for p in &active_player_shots {
+        if entities_collide(&p.entity, e) {
+        println!("Got you");
+        ^        }
     }
+
+
+         */
+        /*
+        let player = match ctx.entity_manager.get_entity(ctx.player_id) {
+        Some(p) => p,
+        None => return
+    };
+         */
+
+
+
+        /* for p in &mut  ctx.player_projectiles {
+        if p.expired {
+        continue;
+    }
+        p.entity.set_position(p.entity.pos + p.entity.velocity);
+    }
+         */
+
+        //TODO this should just be hanldes in entityManager
+        /*
+        let active_player_shots: Vec<&shot::Shot> = ctx.player_projectiles.iter()
+        .filter_map(|p| match p.expired {
+        false => Some(p),
+        true => None
+    }).collect();
+         */
+
+
+
+        ctx.entity_manager.update_entity(player);
+
+    }
+
 }
-
-
 
 
 fn entities_collide(entity_1: &entity::Entity, entity_2: &entity::Entity) -> bool {
@@ -68,11 +146,13 @@ fn entities_collide(entity_1: &entity::Entity, entity_2: &entity::Entity) -> boo
 }
 
 
-fn entity_update_movement(entity: &mut entity::Entity, movement_dir: &na::Vector3::<f32>, scene: &scene::Scene) {
+fn entity_update_movement(entity: &mut entity::Entity, delta: f32, movement_dir: &na::Vector3::<f32>, scene: &scene::Scene) {
+
     let mut new_entity_velocity = new_velocity(&movement_dir, &entity.velocity, entity.acceleration, entity.max_speed);
 
-    let mut entity_pos_updated = entity.pos + new_entity_velocity;
+    let mut entity_pos_updated = entity.pos + new_entity_velocity * delta;
 
+    println!("enter");
     for wall_pos in &scene.border_positions {
 
         let wall_collision_box =  CollisionBox {
@@ -89,9 +169,12 @@ fn entity_update_movement(entity: &mut entity::Entity, movement_dir: &na::Vector
         let (col, dir) = collision_sat(&entity_col_box, &wall_collision_box);
 
         if col {
-
+            if dir.x > 0.0 {
+                let (col2, dir2) = collision_sat(&entity_col_box, &wall_collision_box);
+            }
+            println!("col_dir: {}", dir);
             entity_pos_updated -= dir;
-            new_entity_velocity -= dir;
+
         }
     }
 
@@ -116,7 +199,7 @@ fn new_velocity(dir: &na::Vector3::<f32>, old_velocity: &na::Vector3::<f32>, acc
         return na::Vector3::new(0.0, 0.0, 0.0);
     }
 
-    let mut new_vel = dir.normalize() * acceleration + old_velocity;
+    let mut new_vel = (dir.normalize() * acceleration + old_velocity);
 
     let speed = new_vel.magnitude();
 
@@ -125,6 +208,4 @@ fn new_velocity(dir: &na::Vector3::<f32>, old_velocity: &na::Vector3::<f32>, acc
     }
 
     new_vel
-
-
 }

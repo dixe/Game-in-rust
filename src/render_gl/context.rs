@@ -1,7 +1,6 @@
 use nalgebra as na;
 use crate::render_gl;
 
-
 use crate::resources::Resources;
 use std::path::Path;
 
@@ -50,6 +49,7 @@ impl Context {
                  self.controller_subsystem.event_state());
         self.controller = Some(ctrl);
     }
+
 }
 
 
@@ -105,6 +105,6 @@ pub fn setup() -> Result<Context, failure::Error>
         wire_frame,
         transform,
         viewport,
-        controller: None
+        controller: None,
     })
 }

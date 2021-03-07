@@ -11,8 +11,6 @@ pub struct CollisionBox {
 
 pub fn collision_sat(box1: &CollisionBox, box2: &CollisionBox) -> (bool, na::Vector3::<f32>) {
 
-
-
     let vertecies_box_1 = generate_vertecies(box1);
     let vertecies_box_2 = generate_vertecies(box2);
 
@@ -24,9 +22,9 @@ pub fn collision_sat(box1: &CollisionBox, box2: &CollisionBox) -> (bool, na::Vec
 
     'sides: for (v1, v2) in generate_sides(box1) {
 
-        let line = v1 - v2;
+        let line = (v1 - v2).normalize();
 
-        let wall = na::Vector3::new( -line.y, line.x, line.z).normalize();
+        let wall = na::Vector3::new( - line.y, line.x, line.z).normalize();
 
         let mut box_1_max = 0.0;
         let mut box_1_min = vertecies_box_1[0].dot(&wall);
@@ -48,7 +46,6 @@ pub fn collision_sat(box1: &CollisionBox, box2: &CollisionBox) -> (bool, na::Vec
 
         let overlap = (box_1_min <= box_2_min && box_1_max >= box_2_min) ||
             (box_1_min <= box_2_max && box_1_max >= box_2_max);
-
 
         has_gap = !overlap;
 

@@ -1,30 +1,23 @@
 use nalgebra as na;
 
-use crate ::cube;
+use crate::render_gl;
+use crate::cube;
 
 
+#[derive(Copy, Clone)]
 pub struct Entity {
-
+    pub id: usize,
     pub pos: na::Vector3::<f32>,
     pub velocity: na::Vector3::<f32>,
     pub max_speed: f32,
     pub acceleration: f32,
-    model: cube::Cube,
+    //
+    pub model_id: usize,
 
 }
 
 
 impl Entity {
-
-    pub fn new (cube: cube::Cube, pos: na::Vector3::<f32>) -> Self {
-        Entity {
-            model: cube,
-            pos,
-            velocity: na::Vector3::<f32>::new(0.0,0.0,0.0),
-            acceleration: 0.05,
-            max_speed: 0.15
-        }
-    }
 
 
     pub fn set_position(&mut self, pos: na::Vector3::<f32>) {
@@ -36,8 +29,7 @@ impl Entity {
         self.velocity = vel;
     }
 
-
-    pub fn render(&self, gl: &gl::Gl, projection: na::Matrix4<f32>, view: na::Matrix4<f32>) {
+    pub fn render(&self, gl: &gl::Gl, model: &cube::Cube, projection: &na::Matrix4<f32>, view: &na::Matrix4<f32>) {
 
         let trans = na::Matrix4::new_translation(&self.pos);
 
@@ -45,7 +37,9 @@ impl Entity {
 
         model_mat = trans * model_mat;
 
-        self.model.render(gl, projection, view, model_mat);
+        model.render(gl, *projection, *view, model_mat);
+
+
 
     }
 }
