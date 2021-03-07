@@ -9,6 +9,7 @@ use crate::physics::projection_collision::{collision_sat, CollisionBox, generate
 
 
 
+
 pub fn process(ctx: &mut game::Context) {
 
 
@@ -38,6 +39,9 @@ pub fn process(ctx: &mut game::Context) {
 
 
 
+        if entities_collide(&player, &e) {
+            println!("OUCH");
+        }
 
 
         ctx.entity_manager.update_entity(e);
@@ -59,65 +63,7 @@ pub fn process(ctx: &mut game::Context) {
     }
 
 
-
-    // DO NON MUTABLE UPDATES ON ALREADY UPDATED ENTITIES
-
-    let player_n = match ctx.entity_manager.get_entity(ctx.player_id) {
-        Some(p) => p,
-        None => return
-    };
-    for e_id in &ctx.enemies_ids {
-        let e = match ctx.entity_manager.get_entity(*e_id) {
-            Some(en) => en,
-            None => continue
-        };
-
-        if entities_collide(&player_n, &e) {
-            println!("OUCH");
-        }
-
-
-        /*
-        for p in &active_player_shots {
-        if entities_collide(&p.entity, e) {
-        println!("Got you");
-        ^        }
-    }
-
-
-         */
-        /*
-        let player = match ctx.entity_manager.get_entity(ctx.player_id) {
-        Some(p) => p,
-        None => return
-    };
-         */
-
-
-
-        /* for p in &mut  ctx.player_projectiles {
-        if p.expired {
-        continue;
-    }
-        p.entity.set_position(p.entity.pos + p.entity.velocity);
-    }
-         */
-
-        //TODO this should just be hanldes in entityManager
-        /*
-        let active_player_shots: Vec<&shot::Shot> = ctx.player_projectiles.iter()
-        .filter_map(|p| match p.expired {
-        false => Some(p),
-        true => None
-    }).collect();
-         */
-
-
-
-        ctx.entity_manager.update_entity(player);
-
-    }
-
+    ctx.entity_manager.update_entity(player);
 }
 
 
@@ -133,7 +79,7 @@ fn entities_collide(entity_1: &entity::Entity, entity_2: &entity::Entity) -> boo
         side_len: 1.0,
     };
 
-    let (col, _) = collision_sat(generate_vertices(&entity_1_col_box), generate_sides(&entity_2_col_box));
+    let (col, _) = collision_sat(generate_vertices(&entity_1_col_box), generate_sides(&entity_2_col_box).as_slice());
 
     col
 }
@@ -145,7 +91,6 @@ fn entity_update_movement(entity: &mut entity::Entity, delta: f32, movement_dir:
 
     let mut entity_pos_updated = entity.pos + new_entity_velocity * delta;
 
-    println!("enter");
     for wall_pos in &scene.border_positions {
 
         let wall_collision_box =  CollisionBox {
@@ -159,13 +104,9 @@ fn entity_update_movement(entity: &mut entity::Entity, delta: f32, movement_dir:
         };
 
 
-        let (col, dir) = collision_sat(generate_vertices(&entity_col_box), generate_sides(&wall_collision_box));
+        let (col, dir) = collision_sat(generate_vertices(&entity_col_box), generate_sides(&wall_collision_box).as_slice());
 
         if col {
-            if dir.x > 0.0 {
-                //let (col2, dir2) = collision_sat(&entity_col_box, &wall_collision_box);
-            }
-            println!("col_dir: {}", dir);
             entity_pos_updated -= dir;
 
         }

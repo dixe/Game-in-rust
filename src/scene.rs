@@ -51,6 +51,9 @@ impl Scene {
         })
     }
 
+
+
+
     pub fn render(&self, gl: &gl::Gl, projection: na::Matrix4<f32>,  view: na::Matrix4<f32>) {
 
         self.floor.render(gl, projection, view);

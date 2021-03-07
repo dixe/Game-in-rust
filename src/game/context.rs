@@ -111,14 +111,13 @@ impl Context {
                     _ => return // Can we shoot when dead, and should all exit. Maybe just update shooting in own function
                 };
 
-                let p_id = self.entity_manager.add_entity_with_vel(self.player_projectile_model_id, player_pos, dir);
+                let speed = 30.0;
+                let p_id = self.entity_manager.add_entity_with_vel(self.player_projectile_model_id, player_pos, dir * speed);
                 let shot = shot::Shot::new(p_id, 300);
                 self.player_projectiles.push(shot);
             }
             _ => {}
         }
-
-        //println!("AFTER");
 
     }
 

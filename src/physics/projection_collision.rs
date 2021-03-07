@@ -8,8 +8,13 @@ pub struct CollisionBox {
 }
 
 
+pub struct Side {
+    v1: na::Vector3::<f32>,
+    v2: na::Vector3::<f32>
+}
 
-pub fn collision_sat(vertices: Vec::<na::Vector3::<f32>>, sides: Vec::<(na::Vector3::<f32>,na::Vector3::<f32>)>) -> (bool, na::Vector3::<f32>) {
+
+pub fn collision_sat(vertices: Vec::<na::Vector3::<f32>>, sides: &[Side]) -> (bool, na::Vector3::<f32>) {
 
     let vertices_1 = vertices;
 
@@ -19,9 +24,9 @@ pub fn collision_sat(vertices: Vec::<na::Vector3::<f32>>, sides: Vec::<(na::Vect
     let mut smallest_overlap = 10000000000000000000.0;
     let mut smallest_overlap_dir = na::Vector3::new(0.0, 0.0, 0.0);
 
-    'sides: for (v1, v2) in sides {
+    'sides: for s in sides {
 
-        let line = (v1 - v2).normalize();
+        let line = (s.v1 - s.v2).normalize();
 
         let wall = na::Vector3::new( - line.y, line.x, line.z).normalize();
 
@@ -67,13 +72,14 @@ pub fn collision_sat(vertices: Vec::<na::Vector3::<f32>>, sides: Vec::<(na::Vect
 
 }
 
-fn vertices_from_sides(sides: &Vec::<(na::Vector3::<f32>,na::Vector3::<f32>)>) -> Vec::<na::Vector3::<f32>> {
+fn vertices_from_sides(sides: &[Side]) -> Vec::<na::Vector3::<f32>> {
 
     let mut r = Vec::<na::Vector3::<f32>>::new();
 
-    for (v,_) in sides {
-        r.push(*v);
+    for s in sides {
+        r.push(s.v1);
     }
+
     r
 }
 
@@ -100,7 +106,7 @@ pub fn generate_vertices(b: &CollisionBox) -> Vec::<na::Vector3::<f32>> {
 }
 
 
-pub fn generate_sides(b: &CollisionBox) -> Vec::<(na::Vector3::<f32>,na::Vector3::<f32>)> {
+pub fn generate_sides(b: &CollisionBox) -> Vec::<Side> {
     let v00 = na::Vector3::new(
         b.pos.x,
         b.pos.y,
@@ -118,13 +124,14 @@ pub fn generate_sides(b: &CollisionBox) -> Vec::<(na::Vector3::<f32>,na::Vector3
         b.pos.y + b.side_len,
         0.0);
 
-    vec! [
-        (v00, v10),
-        (v10, v11),
-        (v11, v01),
-        (v01, v00)
+    let v =vec! [
+        Side {v1: v00, v2: v10},
+        Side {v1: v10, v2: v11},
+        Side {v1: v11, v2: v01},
+        Side {v1: v01, v2: v00}
+    ];
 
-    ]
+    v
 }
 
 
@@ -136,7 +143,7 @@ pub fn projection(from: &na::Vector3::<f32>, onto: &na::Vector3::<f32>) -> na::V
 #[cfg(test)]
 mod tests {
 
-    use crate::physics::projection_collision::{CollisionBox,projection, collision_sat};
+    use crate::physics::projection_collision::{CollisionBox,projection, collision_sat, generate_vertices, generate_sides};
     use nalgebra as na;
 
     #[test]
@@ -171,7 +178,7 @@ mod tests {
 
 
 
-        let (has_col, dir) = collision_sat(&box1, &box2);
+        let (has_col, _) = collision_sat(generate_vertices(&box1), generate_sides(&box2).as_slice());
 
         assert!(has_col);
 
@@ -197,7 +204,7 @@ mod tests {
 
 
 
-        let (has_col, dir) = collision_sat(&box1, &box2);
+        let (has_col, _) = collision_sat(generate_vertices(&box1), generate_sides(&box2).as_slice());
 
         assert!(has_col);
 
@@ -221,7 +228,7 @@ mod tests {
 
         };
 
-        let (has_col, dir) = collision_sat(&box1, &box2);
+        let (has_col, _) = collision_sat(generate_vertices(&box1), generate_sides(&box2).as_slice());
 
         assert!(!has_col);
 
