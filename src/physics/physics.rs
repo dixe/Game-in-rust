@@ -3,11 +3,9 @@ use nalgebra as na;
 
 use crate::scene;
 use crate::entity;
-use crate::shot;
-use crate::controls;
 use crate::game;
 
-use crate::physics::projection_collision::{collision_sat, CollisionBox};
+use crate::physics::projection_collision::{collision_sat, CollisionBox, generate_sides, generate_vertices};
 
 
 
@@ -64,7 +62,7 @@ pub fn process(ctx: &mut game::Context) {
 
     // DO NON MUTABLE UPDATES ON ALREADY UPDATED ENTITIES
 
-    let mut player_n = match ctx.entity_manager.get_entity(ctx.player_id) {
+    let player_n = match ctx.entity_manager.get_entity(ctx.player_id) {
         Some(p) => p,
         None => return
     };
@@ -72,11 +70,6 @@ pub fn process(ctx: &mut game::Context) {
         let e = match ctx.entity_manager.get_entity(*e_id) {
             Some(en) => en,
             None => continue
-        };
-
-        let mut player_n = match ctx.entity_manager.get_entity(ctx.player_id) {
-            Some(p) => p,
-            None => return
         };
 
         if entities_collide(&player_n, &e) {
@@ -140,7 +133,7 @@ fn entities_collide(entity_1: &entity::Entity, entity_2: &entity::Entity) -> boo
         side_len: 1.0,
     };
 
-    let (col, _) = collision_sat(&entity_1_col_box, &entity_2_col_box);
+    let (col, _) = collision_sat(generate_vertices(&entity_1_col_box), generate_sides(&entity_2_col_box));
 
     col
 }
@@ -148,7 +141,7 @@ fn entities_collide(entity_1: &entity::Entity, entity_2: &entity::Entity) -> boo
 
 fn entity_update_movement(entity: &mut entity::Entity, delta: f32, movement_dir: &na::Vector3::<f32>, scene: &scene::Scene) {
 
-    let mut new_entity_velocity = new_velocity(&movement_dir, &entity.velocity, entity.acceleration, entity.max_speed);
+    let new_entity_velocity = new_velocity(&movement_dir, &entity.velocity, entity.acceleration, entity.max_speed);
 
     let mut entity_pos_updated = entity.pos + new_entity_velocity * delta;
 
@@ -166,11 +159,11 @@ fn entity_update_movement(entity: &mut entity::Entity, delta: f32, movement_dir:
         };
 
 
-        let (col, dir) = collision_sat(&entity_col_box, &wall_collision_box);
+        let (col, dir) = collision_sat(generate_vertices(&entity_col_box), generate_sides(&wall_collision_box));
 
         if col {
             if dir.x > 0.0 {
-                let (col2, dir2) = collision_sat(&entity_col_box, &wall_collision_box);
+                //let (col2, dir2) = collision_sat(&entity_col_box, &wall_collision_box);
             }
             println!("col_dir: {}", dir);
             entity_pos_updated -= dir;
@@ -199,7 +192,7 @@ fn new_velocity(dir: &na::Vector3::<f32>, old_velocity: &na::Vector3::<f32>, acc
         return na::Vector3::new(0.0, 0.0, 0.0);
     }
 
-    let mut new_vel = (dir.normalize() * acceleration + old_velocity);
+    let mut new_vel = dir.normalize() * acceleration + old_velocity;
 
     let speed = new_vel.magnitude();
 

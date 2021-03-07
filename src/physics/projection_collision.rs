@@ -9,35 +9,35 @@ pub struct CollisionBox {
 
 
 
-pub fn collision_sat(box1: &CollisionBox, box2: &CollisionBox) -> (bool, na::Vector3::<f32>) {
+pub fn collision_sat(vertices: Vec::<na::Vector3::<f32>>, sides: Vec::<(na::Vector3::<f32>,na::Vector3::<f32>)>) -> (bool, na::Vector3::<f32>) {
 
-    let vertecies_box_1 = generate_vertecies(box1);
-    let vertecies_box_2 = generate_vertecies(box2);
+    let vertices_1 = vertices;
 
-
+    let vertices_2 = vertices_from_sides(&sides);
     let mut has_gap = false;
 
     let mut smallest_overlap = 10000000000000000000.0;
     let mut smallest_overlap_dir = na::Vector3::new(0.0, 0.0, 0.0);
 
-    'sides: for (v1, v2) in generate_sides(box1) {
+    'sides: for (v1, v2) in sides {
 
         let line = (v1 - v2).normalize();
 
         let wall = na::Vector3::new( - line.y, line.x, line.z).normalize();
 
         let mut box_1_max = 0.0;
-        let mut box_1_min = vertecies_box_1[0].dot(&wall);
-        for v in &vertecies_box_1 {
+        let mut box_1_min = vertices_1[0].dot(&wall);
+        for v in &vertices_1 {
             let proj_dot = projection(v, &wall).dot(&wall);
 
             box_1_max = f32::max(box_1_max, proj_dot);
             box_1_min = f32::min(box_1_min, proj_dot);
         }
 
+
         let mut box_2_max = 0.0;
-        let mut box_2_min = vertecies_box_2[0].dot(&wall);
-        for v in &vertecies_box_2 {
+        let mut box_2_min = vertices_2[0].dot(&wall);
+        for v in &vertices_2 {
             let proj_dot = projection(v, &wall).dot(&wall);
             box_2_max = f32::max(box_2_max, proj_dot);
             box_2_min = f32::min(box_2_min, proj_dot);
@@ -67,8 +67,17 @@ pub fn collision_sat(box1: &CollisionBox, box2: &CollisionBox) -> (bool, na::Vec
 
 }
 
+fn vertices_from_sides(sides: &Vec::<(na::Vector3::<f32>,na::Vector3::<f32>)>) -> Vec::<na::Vector3::<f32>> {
 
-fn generate_vertecies(b: &CollisionBox) ->Vec::<na::Vector3::<f32>> {
+    let mut r = Vec::<na::Vector3::<f32>>::new();
+
+    for (v,_) in sides {
+        r.push(*v);
+    }
+    r
+}
+
+pub fn generate_vertices(b: &CollisionBox) -> Vec::<na::Vector3::<f32>> {
     let v00 = na::Vector3::new(
         b.pos.x,
         b.pos.y,
@@ -91,7 +100,7 @@ fn generate_vertecies(b: &CollisionBox) ->Vec::<na::Vector3::<f32>> {
 }
 
 
-fn generate_sides(b: &CollisionBox) -> Vec::<(na::Vector3::<f32>,na::Vector3::<f32>)> {
+pub fn generate_sides(b: &CollisionBox) -> Vec::<(na::Vector3::<f32>,na::Vector3::<f32>)> {
     let v00 = na::Vector3::new(
         b.pos.x,
         b.pos.y,

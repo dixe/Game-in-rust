@@ -1,7 +1,5 @@
 use nalgebra as na;
 
-
-use crate::render_gl::Renderable;
 use crate::entity;
 use crate::render_gl;
 use crate::cube;
@@ -66,7 +64,7 @@ impl Context {
 
         let mut ctx = empty()?;
 
-        ctx.setup_player();
+        ctx.setup_player()?;
 
         Ok(ctx)
     }
@@ -93,7 +91,7 @@ impl Context {
         for p in &mut self.player_projectiles {
             p.update(delta);
 
-            if(p.expired) {
+            if p.expired {
                 self.entity_manager.remove_entity(p.entity_id);
             }
         }
@@ -108,57 +106,14 @@ impl Context {
 
                 // spawn projectile with dir
 
-
-
-                let clr = na::Vector3::new(0.0,  0.0, 0.0);
-                let cube = cube::Cube::new(&self.render_context.res, clr, &self.render_context.gl).unwrap();
-
                 let player_pos = match self.entity_manager.get_entity(self.player_id) {
                     Some(p) => p.pos,
                     _ => return // Can we shoot when dead, and should all exit. Maybe just update shooting in own function
                 };
 
-
                 let p_id = self.entity_manager.add_entity_with_vel(self.player_projectile_model_id, player_pos, dir);
-
                 let shot = shot::Shot::new(p_id, 300);
-
                 self.player_projectiles.push(shot);
-
-
-
-
-                /*
-                let mut projectile_e = entity::Entity::new(cube, self.player.pos);
-
-
-                let mut found = false;
-                'find: for p in &mut self.player_projectiles {
-                if p.expired {
-                found = true;
-                p.entity.velocity = dir;
-                p.entity.pos = self.player.pos;
-                p.time_remaining = 300;
-                p.expired = false;
-                break 'find;
-            }
-            }
-
-                if ! found {
-
-                let clr = na::Vector3::new(0.0,  0.0, 0.0);
-                let cube = cube::Cube::new(&self.render_context.res, clr, &self.render_context.gl).unwrap();
-
-                entity_manager.add_player_projectile(cube, self.player.pos, d
-                let mut projectile_e = entity::Entity::new(cube, self.player.pos);
-                projectile_e.velocity = dir;
-                let projectile = shot::Shot::new(projectile_e, 300);
-
-                self.player_projectiles.push(projectile);
-            }
-
-
-                 */
             }
             _ => {}
         }

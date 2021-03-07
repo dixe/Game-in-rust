@@ -94,7 +94,7 @@ impl Controls {
                 },
                 Event::ControllerAxisMotion {axis, value,..} => {
 
-                    let mut f_value = (value as f32) / 32768.0;
+                    let f_value = (value as f32) / 32768.0;
 
                     match axis {
                         sdl2::controller::Axis::LeftX => {
@@ -127,8 +127,7 @@ impl Controls {
                 Event::ControllerDeviceAdded {which,..} => {
                     ctx.set_controller(which);
                 },
-                evt => {
-                    //println!("EVENT ALL RIGHT {}", evt.is_joy());
+                _ => {
 
                 }
             }
@@ -173,10 +172,4 @@ impl Controls {
             self.shoot_dir = None;
         }
     }
-}
-
-
-
-fn is_dead_zone(value: i16) -> bool{
-    value < 12768 && value > -12768
 }

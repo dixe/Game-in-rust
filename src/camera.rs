@@ -42,18 +42,6 @@ impl Camera {
         }
     }
 
-    pub fn move_distance(&mut self, dir: na::Vector3::<f32>) {
-
-        if dir.x == 0.0 && dir.y == 0.0 && dir.z == 0.0 {
-            return;
-        }
-        // use camera speed instead of 0.1
-        let unit_dir = dir.normalize() * 0.5;
-
-        self.pos = self.pos + unit_dir;
-
-    }
-
     pub fn projection(self) -> na::Matrix4::<f32> {
 
         self.projection

@@ -1,23 +1,14 @@
 use nalgebra as na;
 
-
-use crate::render_gl::Renderable;
-
-use crate::render_gl;
 use crate::cube;
 
-use crate::shot::Shot;
-use crate::cube::Cube;
 use crate::entity::Entity;
 
 
 pub struct EntityManager {
 
     next_id: usize,
-
     pub entities: std::collections::HashMap<usize, Entity>,
-
-
     models: Vec<cube::Cube>,
 
 }
@@ -137,16 +128,4 @@ impl EntityManager {
 
 fn empty_vec() -> na::Vector3::<f32> {
     na::Vector3::new(0.0, 0.0, 0.0)
-}
-
-
-fn create_new_entity(id: usize, model_id: usize, pos: na::Vector3::<f32>, direction: na::Vector3::<f32>) -> Entity {
-    Entity {
-        id,
-        model_id,
-        pos,
-        velocity: direction,
-        acceleration: 0.05,
-        max_speed: 0.15
-    }
 }

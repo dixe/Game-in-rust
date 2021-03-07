@@ -1,8 +1,3 @@
-use nalgebra as na;
-
-
-use crate::entity;
-
 pub struct Shot {
     pub entity_id: usize,
     pub time_remaining: i32,

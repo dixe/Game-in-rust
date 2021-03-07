@@ -1,8 +1,6 @@
 use nalgebra as na;
 
-use crate::render_gl;
 use crate::cube;
-
 
 #[derive(Copy, Clone)]
 pub struct Entity {
