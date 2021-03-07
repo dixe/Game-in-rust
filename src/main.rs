@@ -55,24 +55,11 @@ fn run() -> Result<(), failure::Error> {
         }
 
 
-
-        //let mut player = ctx.entity_manager.get_entity_mut(ctx.player_id);
-
-
-        //        let enemies = ctx.entity_manager.get_entity
-
-        //physics::process1(player: &mut entity::Entity, enemies: &mut [&mut entity::Entity], controls: &controls::Controls,scene: &scene::Scene) ;
         //PHYSICS PROCESSING
-
-
-
-
-
-
-        physics::process(&mut ctx);
+        let collisions = physics::process(&mut ctx);
 
         // SPAWN PROJECTILES, HANDLE COLLISION THAT WAS NOT WITH ENVIROMENT
-        ctx.update_game_state();
+        ctx.update_game_state(&collisions);
 
         // RENDERING
         ctx.render();

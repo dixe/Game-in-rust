@@ -28,7 +28,8 @@ pub fn collision_side(vertices: Vec::<na::Vector3::<f32>>, side: &NormalSide) ->
     let mut crossing = false;
 
     let mut m_val_min = 1.0;
-    'check: for v in &vertices {
+
+    for v in &vertices {
 
         let m: na::Matrix1::<f32>  = side.w.transpose() * v - side.b;
         let m_val: f32 = *m.index(0);

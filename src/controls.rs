@@ -158,14 +158,14 @@ impl Controls {
             self.movement_dir.y += - 1.0;
         }
 
-
         //CONTROLLER DEADZONE HANDLING
         if self.movement_dir.magnitude() < 0.3 {
             self.movement_dir.x = 0.0;
             self.movement_dir.y = 0.0;
         }
 
-        if shoot_dir.magnitude() > 0.3 {
+        if shoot_dir.magnitude() > 0.6 {
+            //println!("{} - {}", shoot_dir, shoot_dir.magnitude());
             self.shoot_dir = Some(shoot_dir.normalize());
         }
         else{

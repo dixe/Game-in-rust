@@ -33,7 +33,7 @@ impl Model {
 
         println!("{}", scale_mat);
 
-        xself.model_mat = scale_mat * self.model_mat;
+        self.model_mat = scale_mat * self.model_mat;
     }
 
     pub fn render(&self, gl: &gl::Gl, projection: &na::Matrix4<f32>, view: &na::Matrix4<f32>, pos: na::Vector3::<f32>) {

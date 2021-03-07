@@ -8,19 +8,31 @@ use crate::game;
 use crate::physics::projection_collision::{collision_sat, CollisionBox, generate_sides, generate_vertices, collision_side};
 
 
+pub struct Collisions {
+    pub enemies_hit: Vec<Hit>
+
+}
+
+pub struct Hit {
+
+    pub entity_id: usize,
+    pub projectile_id: usize,
+
+}
 
 
-pub fn process(ctx: &mut game::Context) {
+pub fn process(ctx: &mut game::Context) -> Collisions {
 
+    let mut collisions = Collisions {
+        enemies_hit: Vec::<Hit>::new(),
+    };
 
     let delta = ctx.get_delta_time();
 
     let mut player = match ctx.entity_manager.get_entity(ctx.player_id) {
         Some(p) => p,
-        None => return
+        None => return collisions
     };
-
-
 
     entity_update_movement(&mut player, delta, &ctx.controls.movement_dir, &ctx.scene);
 
@@ -36,7 +48,21 @@ pub fn process(ctx: &mut game::Context) {
 
         entity_update_movement(&mut e, delta, &move_dir, &ctx.scene);
 
+        for proj in &mut ctx.player_projectiles {
+            let mut p = match ctx.entity_manager.get_entity(proj.entity_id) {
+                Some(e) => e,
+                None => continue
+            };
 
+            // println!("{}", p.velocity);
+            p.set_position(p.pos + p.velocity*delta);
+            ctx.entity_manager.update_entity(p);
+
+            if entities_collide(&p, &e) {
+                collisions.enemies_hit.push(Hit { entity_id: e.id, projectile_id: e.id});
+            }
+
+        }
 
 
         if entities_collide(&player, &e) {
@@ -64,6 +90,8 @@ pub fn process(ctx: &mut game::Context) {
 
 
     ctx.entity_manager.update_entity(player);
+
+    collisions
 }
 
 
@@ -100,8 +128,6 @@ fn entity_update_movement(entity: &mut entity::Entity, delta: f32, movement_dir:
             side_len: 1.0,
         };
 
-        let sides = vec![*wall_side];
-
         let (col, dir) = collision_side(generate_vertices(&entity_col_box), &wall_side);
 
         if col {
@@ -113,15 +139,6 @@ fn entity_update_movement(entity: &mut entity::Entity, delta: f32, movement_dir:
     entity.set_velocity(new_entity_velocity);
 
 }
-
-
-#[derive(Debug)]
-struct Collision {
-    col: bool,
-    x_col: bool,
-    y_col: bool
-}
-
 
 
 fn new_velocity(dir: &na::Vector3::<f32>, old_velocity: &na::Vector3::<f32>, acceleration: f32, max_speed: f32) -> na::Vector3::<f32> {

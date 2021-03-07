@@ -9,7 +9,7 @@ use crate::level;
 use crate::controls;
 use crate::deltatime;
 use crate::shot;
-
+use crate::physics;
 
 pub struct Context {
 
@@ -84,9 +84,6 @@ impl Context {
     }
 
 
-
-
-
     // Call once pr update step
     pub fn update_delta(&mut self) {
         self.delta_time.update();
@@ -101,8 +98,28 @@ impl Context {
     }
 
 
-    pub fn update_game_state(&mut self) {
+    pub fn update_game_state(&mut self, collisions: &physics::Collisions) {
 
+        self.update_player_shoot();
+
+
+        for c in &collisions.enemies_hit {
+
+            let enemy = match self.entity_manager.get_entity(c.entity_id) {
+                Some(e) => e,
+                _ => continue
+            };
+
+            self.entity_manager.remove_entity(c.projectile_id);
+
+        }
+
+    }
+
+
+
+
+    fn update_player_shoot(&mut self) {
         let delta = self.get_delta_millis();
         for p in &mut self.player_projectiles {
             p.update(delta);
@@ -137,7 +154,6 @@ impl Context {
             }
             _ => {}
         }
-
     }
 
 
