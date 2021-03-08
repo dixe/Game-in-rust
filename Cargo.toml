@@ -10,6 +10,7 @@ edition = "2018"
 gl = { path = "lib/gl" }
 failure = "0.1"
 render_gl_derive = { path = "render_gl_derive" }
+entity_component_derive = { path = "entity_component_derive" }
 vec-2-10-10-10  = "0.1.2"
 half = "1.1.1"
 nalgebra = "0.16"

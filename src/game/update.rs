@@ -57,10 +57,11 @@ fn update_player_shoot(ctx: &mut game::Context) {
             player_pos.z += 0.5;
 
             let speed = 30.0;
-
+            /*
             let p_id = ctx.ecs.add_entity_with_vel(ctx.player_projectile_model_id, player_pos, dir * speed);
             let shot = shot::Shot::new(p_id, 300);
             ctx.player_projectiles.push(shot);
+             */
         }
         _ => {}
     }

@@ -81,7 +81,22 @@ impl Context {
 
         let player_model_id = self.ecs.add_model(player_model);
 
-        let player_id = self.ecs.add_entity(player_model_id, player_pos);
+        let player_id = self.ecs.add_entity();
+
+        self.ecs.set_model(player_id, player_model_id);
+
+        let physics = entity::Physics {
+            pos: player_pos,
+            velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
+            max_speed: 10.0,
+            acceleration: 3.0,
+            //TODO remove from phyiscs
+            model_id: player_model_id,
+
+
+        };
+
+        self.ecs.set_physics(player_id, physics);
 
         self.player_id = player_id;
 
@@ -108,7 +123,7 @@ impl Context {
     }
 
     fn add_enemy(&mut self) {
-
+        /*
         // ENEMY
         let enemy_pos = na::Vector3::new(-3.0, -3.0, 0.0);
 
@@ -121,13 +136,14 @@ impl Context {
         self.ecs.set_health(enemy_id, health);
 
         match self.ecs.get_physics(enemy_id) {
-            Some(mut e) => {
-                e.max_speed = 8.0;
-                self.ecs.update_entity(enemy_id, e);
-            },
-            None => {}
-        };
+        Some(mut e) => {
+        e.max_speed = 8.0;
+        self.ecs.set_physics(enemy_id, e);
+    },
+        None => {}
+    };
 
+         */
     }
 
 
@@ -177,6 +193,9 @@ impl Context {
 
 
 
+
+
+
 fn empty() -> Result<Context, failure::Error> {
 
     let render_context = render_gl::context::setup()?;
@@ -184,6 +203,7 @@ fn empty() -> Result<Context, failure::Error> {
     let background_color_buffer = render_gl::ColorBuffer::from_color(na::Vector3::new(0.3, 0.3, 0.5));
 
     let ecs = entity::EntityComponentSystem::new();
+
 
     background_color_buffer.set_used(&render_context.gl);
 

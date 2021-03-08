@@ -4,6 +4,7 @@ extern crate vec_2_10_10_10;
 extern crate nalgebra;
 #[macro_use] extern crate failure;
 #[macro_use] extern crate render_gl_derive;
+#[macro_use] extern crate entity_component_derive;
 
 
 pub mod render_gl;
@@ -37,7 +38,6 @@ fn main() {
 fn run() -> Result<(), failure::Error> {
 
     let mut ctx = game::Context::new()?;
-
 
 
     'main: loop{

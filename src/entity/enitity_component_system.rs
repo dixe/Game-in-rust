@@ -2,13 +2,16 @@ use nalgebra as na;
 
 use crate::entity::{Physics, Model, Health};
 
-
+#[derive(ComponentSystem)]
 pub struct EntityComponentSystem {
 
     next_id: usize,
-    pub entities: std::collections::HashMap<usize, Physics>,
+    #[component = "Physics"]
+    pub physics: std::collections::HashMap<usize, Physics>,
     models: Vec<Model>,
     pub healths: std::collections::HashMap<usize, Health>,
+    pub model_reference: std::collections::HashMap<usize, usize>,
+
 
 }
 
@@ -18,28 +21,13 @@ impl EntityComponentSystem {
     pub fn new () -> Self {
         return EntityComponentSystem {
             next_id: 1,
-            entities: std::collections::HashMap::new(),
+            physics: std::collections::HashMap::new(),
             healths: std::collections::HashMap::new(),
-            models: Vec::<Model>::new()
+            models: Vec::<Model>::new(),
+            model_reference: std::collections::HashMap::new(),
         }
     }
 
-
-    fn next_entity (&mut self, model_id: usize, pos: na::Vector3::<f32>, direction: na::Vector3::<f32>) -> usize {
-        let id = self.next_id;
-        self.next_id += 1;
-
-        let e = Physics {
-            model_id,
-            pos,
-            velocity: direction,
-            acceleration: 10.0,
-            max_speed: 10.0
-        };
-
-        self.entities.insert(id, e);
-        id
-    }
 
 
     pub fn set_health(&mut self, entity_id: usize, hp: Health) {
@@ -47,34 +35,17 @@ impl EntityComponentSystem {
     }
 
 
-    pub fn update_entity(&mut self, entity_id: usize, entity: Physics) {
-        self.entities.insert(entity_id, entity);
-    }
 
 
-    pub fn remove_entity(&mut self, id: usize) {
-
-        self.entities.remove(&id);
-        self.healths.remove(&id);
-    }
-
-
-
-    pub fn add_entity (&mut self, model_id: usize, pos: na::Vector3::<f32>) -> usize {
-        // maybe check it we have dead ones?
-        let id = self.next_entity(model_id, pos, empty_vec());
-        id
-    }
-
-    pub fn add_entity_with_vel(&mut self, model_id: usize, pos: na::Vector3::<f32>, vel: na::Vector3::<f32>) -> usize {
-        // maybe check it we have dead ones?
-        let id = self.next_entity(model_id, pos, vel);
+    pub fn add_entity (&mut self) -> usize {
+        let id = self.next_id;
+        self.next_id += 1;
         id
     }
 
 
     pub fn get_physics(&self, id: usize) -> Option<Physics> {
-        match &self.entities.get(&id) {
+        match &self.physics.get(&id) {
             Some(e) => Some(**e),
             None => None
         }
@@ -87,6 +58,12 @@ impl EntityComponentSystem {
             None => None
         }
     }
+
+    pub fn set_model(&mut self, entity_id: usize, model_id: usize)  {
+        self.model_reference.insert(entity_id, model_id);
+    }
+
+
 
 
     pub fn add_model(&mut self, model: Model) -> usize {

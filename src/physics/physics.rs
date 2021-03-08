@@ -57,7 +57,7 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
 
 
             p.set_position(p.pos + p.velocity*delta);
-            ctx.ecs.update_entity(proj.entity_id, p);
+            ctx.ecs.set_physics(proj.entity_id, p);
 
             let (col, _) = entities_collide(&p, &e);
             if col {
@@ -76,7 +76,7 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
             collisions.player_enemies_collision.push(*e_id);
         }
 
-        ctx.ecs.update_entity(*e_id, e);
+        ctx.ecs.set_physics(*e_id, e);
     }
 
 
@@ -89,13 +89,13 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
 
         // println!("{}", p.velocity);
         p.set_position(p.pos + p.velocity*delta);
-        ctx.ecs.update_entity(proj.entity_id, p);
+        ctx.ecs.set_physics(proj.entity_id, p);
 
 
     }
 
 
-    ctx.ecs.update_entity(ctx.player_id, player);
+    ctx.ecs.set_physics(ctx.player_id, player);
 
     collisions
 }

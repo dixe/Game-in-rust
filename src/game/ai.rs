@@ -14,7 +14,7 @@ pub fn run_ai(ctx: &mut game::Context) {
     };
 
     player.velocity = new_velocity(&player, ctx.controls.movement_dir);
-    ctx.ecs.update_entity(ctx.player_id, player);
+    ctx.ecs.set_physics(ctx.player_id, player);
 
 
 
@@ -26,7 +26,7 @@ pub fn run_ai(ctx: &mut game::Context) {
 
         let move_dir = (player.pos - enemy.pos).normalize();
         enemy.velocity = new_velocity( &enemy, move_dir);
-        ctx.ecs.update_entity(*e, enemy);
+        ctx.ecs.set_physics(*e, enemy);
 
     }
 }
