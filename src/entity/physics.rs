@@ -1,7 +1,7 @@
 use nalgebra as na;
 
 #[derive(Copy, Clone)]
-pub struct Entity {
+pub struct Physics {
 
     pub pos: na::Vector3::<f32>,
     pub velocity: na::Vector3::<f32>,
@@ -13,7 +13,7 @@ pub struct Entity {
 }
 
 
-impl Entity {
+impl Physics {
 
 
     pub fn set_position(&mut self, pos: na::Vector3::<f32>) {

@@ -1,22 +1,22 @@
 use nalgebra as na;
 
-use crate::entity::{Entity, Model, Health};
+use crate::entity::{Physics, Model, Health};
 
 
-pub struct EntityManager {
+pub struct EntityComponentSystem {
 
     next_id: usize,
-    pub entities: std::collections::HashMap<usize, Entity>,
+    pub entities: std::collections::HashMap<usize, Physics>,
     models: Vec<Model>,
     pub healths: std::collections::HashMap<usize, Health>,
 
 }
 
 
-impl EntityManager {
+impl EntityComponentSystem {
 
     pub fn new () -> Self {
-        return EntityManager {
+        return EntityComponentSystem {
             next_id: 1,
             entities: std::collections::HashMap::new(),
             healths: std::collections::HashMap::new(),
@@ -29,7 +29,7 @@ impl EntityManager {
         let id = self.next_id;
         self.next_id += 1;
 
-        let e = Entity {
+        let e = Physics {
             model_id,
             pos,
             velocity: direction,
@@ -42,12 +42,12 @@ impl EntityManager {
     }
 
 
-    pub fn set_entity_health(&mut self, entity_id: usize, hp: Health) {
+    pub fn set_health(&mut self, entity_id: usize, hp: Health) {
         self.healths.insert(entity_id, hp);
     }
 
 
-    pub fn update_entity(&mut self, entity_id: usize, entity: Entity) {
+    pub fn update_entity(&mut self, entity_id: usize, entity: Physics) {
         self.entities.insert(entity_id, entity);
     }
 
@@ -73,7 +73,7 @@ impl EntityManager {
     }
 
 
-    pub fn get_entity(&self, id: usize) -> Option<Entity> {
+    pub fn get_physics(&self, id: usize) -> Option<Physics> {
         match &self.entities.get(&id) {
             Some(e) => Some(**e),
             None => None
@@ -99,7 +99,7 @@ impl EntityManager {
 
 
     pub fn render(&self, entity_id:usize, gl: &gl::Gl, projection: &na::Matrix4<f32>, view: &na::Matrix4<f32>) {
-        match self.get_entity(entity_id) {
+        match self.get_physics(entity_id) {
             Some(e) => match self.models.get(e.model_id as usize) {
                 Some(m) => m.render(gl, projection, view, e.pos),
                 None => {}

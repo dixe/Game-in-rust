@@ -8,25 +8,25 @@ use crate::entity;
 
 pub fn run_ai(ctx: &mut game::Context) {
 
-    let mut player = match ctx.entity_manager.get_entity(ctx.player_id) {
+    let mut player = match ctx.ecs.get_physics(ctx.player_id) {
         Some(e) => e,
         None => return, // Dead player, don't care about ai update
     };
 
     player.velocity = new_velocity(&player, ctx.controls.movement_dir);
-    ctx.entity_manager.update_entity(ctx.player_id, player);
+    ctx.ecs.update_entity(ctx.player_id, player);
 
 
 
     for e in &ctx.enemies {
-        let mut enemy = match ctx.entity_manager.get_entity(*e) {
+        let mut enemy = match ctx.ecs.get_physics(*e) {
             Some(e) => e,
             None => continue, // Dead player, don't care about ai update
         };
 
         let move_dir = (player.pos - enemy.pos).normalize();
         enemy.velocity = new_velocity( &enemy, move_dir);
-        ctx.entity_manager.update_entity(*e, enemy);
+        ctx.ecs.update_entity(*e, enemy);
 
     }
 }
@@ -34,7 +34,7 @@ pub fn run_ai(ctx: &mut game::Context) {
 
 
 
-fn new_velocity( entity: &entity::Entity, new_dir: na::Vector3::<f32>,) -> na::Vector3::<f32> {
+fn new_velocity( entity: &entity::Physics, new_dir: na::Vector3::<f32>,) -> na::Vector3::<f32> {
 
     if new_dir.x == 0.0 && new_dir.y == 0.0 && new_dir.z == 0.0 {
         return na::Vector3::new(0.0, 0.0, 0.0);

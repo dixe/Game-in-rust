@@ -34,7 +34,7 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
 
     let delta = ctx.get_delta_time();
 
-    let mut player = match ctx.entity_manager.get_entity(ctx.player_id) {
+    let mut player = match ctx.ecs.get_physics(ctx.player_id) {
         Some(p) => p,
         None => return collisions
     };
@@ -42,7 +42,7 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
     entity_update_movement_scene(&mut player, delta, &ctx.scene);
 
     for e_id in &mut ctx.enemies {
-        let mut e = match ctx.entity_manager.get_entity(*e_id) {
+        let mut e = match ctx.ecs.get_physics(*e_id) {
             Some(en) => en,
             None => continue
         };
@@ -50,14 +50,14 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
         entity_update_movement_scene(&mut e, delta, &ctx.scene);
 
         for proj in &mut ctx.player_projectiles {
-            let mut p = match ctx.entity_manager.get_entity(proj.entity_id) {
+            let mut p = match ctx.ecs.get_physics(proj.entity_id) {
                 Some(e) => e,
                 None => continue
             };
 
 
             p.set_position(p.pos + p.velocity*delta);
-            ctx.entity_manager.update_entity(proj.entity_id, p);
+            ctx.ecs.update_entity(proj.entity_id, p);
 
             let (col, _) = entities_collide(&p, &e);
             if col {
@@ -76,32 +76,32 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
             collisions.player_enemies_collision.push(*e_id);
         }
 
-        ctx.entity_manager.update_entity(*e_id, e);
+        ctx.ecs.update_entity(*e_id, e);
     }
 
 
     // handle
     for proj in &mut ctx.player_projectiles {
-        let mut p = match ctx.entity_manager.get_entity(proj.entity_id) {
+        let mut p = match ctx.ecs.get_physics(proj.entity_id) {
             Some(e) => e,
             None => continue
         };
 
         // println!("{}", p.velocity);
         p.set_position(p.pos + p.velocity*delta);
-        ctx.entity_manager.update_entity(proj.entity_id, p);
+        ctx.ecs.update_entity(proj.entity_id, p);
 
 
     }
 
 
-    ctx.entity_manager.update_entity(ctx.player_id, player);
+    ctx.ecs.update_entity(ctx.player_id, player);
 
     collisions
 }
 
 
-fn entities_collide(entity_1: &entity::Entity, entity_2: &entity::Entity) -> (bool, na::Vector3::<f32>) {
+fn entities_collide(entity_1: &entity::Physics, entity_2: &entity::Physics) -> (bool, na::Vector3::<f32>) {
 
     let entity_1_col_box = CollisionBox {
         pos: entity_1.pos,
@@ -117,7 +117,7 @@ fn entities_collide(entity_1: &entity::Entity, entity_2: &entity::Entity) -> (bo
 }
 
 
-fn entity_update_movement_scene(entity: &mut entity::Entity, delta: f32, scene: &scene::Scene) {
+fn entity_update_movement_scene(entity: &mut entity::Physics, delta: f32, scene: &scene::Scene) {
 
     let mut entity_pos_updated = entity.pos + entity.velocity * delta;
 

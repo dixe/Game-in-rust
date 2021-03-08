@@ -10,7 +10,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &physics::Collisio
 
 
     for c in &collisions.enemies_hit {
-        let mut enemy_hp = match ctx.entity_manager.get_health(c.entity_id) {
+        let mut enemy_hp = match ctx.ecs.get_health(c.entity_id) {
             Some(e) => e,
             _ => continue
         };
@@ -18,13 +18,13 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &physics::Collisio
         let dead = enemy_hp.damage(1.0);
 
         if dead {
-            ctx.entity_manager.remove_entity(c.entity_id);
+            ctx.ecs.remove_entity(c.entity_id);
         }
         else {
-            ctx.entity_manager.set_entity_health(c.entity_id, enemy_hp);
+            ctx.ecs.set_health(c.entity_id, enemy_hp);
         }
 
-        ctx.entity_manager.remove_entity(c.projectile_id);
+        ctx.ecs.remove_entity(c.projectile_id);
     }
 }
 
@@ -35,7 +35,7 @@ fn update_player_shoot(ctx: &mut game::Context) {
         p.update(delta);
 
         if p.expired {
-            ctx.entity_manager.remove_entity(p.entity_id);
+            ctx.ecs.remove_entity(p.entity_id);
         }
     }
 
@@ -49,7 +49,7 @@ fn update_player_shoot(ctx: &mut game::Context) {
 
             // spawn projectile with dir
 
-            let mut player_pos = match ctx.entity_manager.get_entity(ctx.player_id) {
+            let mut player_pos = match ctx.ecs.get_physics(ctx.player_id) {
                 Some(p) => p.pos,
                 _ => return // Can we shoot when dead, and should all exit. Maybe just update shooting in own function
             };
@@ -58,7 +58,7 @@ fn update_player_shoot(ctx: &mut game::Context) {
 
             let speed = 30.0;
 
-            let p_id = ctx.entity_manager.add_entity_with_vel(ctx.player_projectile_model_id, player_pos, dir * speed);
+            let p_id = ctx.ecs.add_entity_with_vel(ctx.player_projectile_model_id, player_pos, dir * speed);
             let shot = shot::Shot::new(p_id, 300);
             ctx.player_projectiles.push(shot);
         }

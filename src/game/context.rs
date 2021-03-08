@@ -27,7 +27,7 @@ pub struct Context {
     pub render_context: render_gl::context::Context,
     pub camera: camera::Camera,
 
-    pub entity_manager: entity::EntityManager,
+    pub ecs: entity::EntityComponentSystem,
 
     pub player_projectile_model_id: usize,
     pub enemy_model_id: usize,
@@ -62,7 +62,7 @@ impl Context {
 
         let e_model = entity::Model::new(enemy_cube);
 
-        self.enemy_model_id = self.entity_manager.add_model(e_model);
+        self.enemy_model_id = self.ecs.add_model(e_model);
 
         Ok(())
 
@@ -79,14 +79,14 @@ impl Context {
 
         let player_model = entity::Model::new(player_cube);
 
-        let player_model_id = self.entity_manager.add_model(player_model);
+        let player_model_id = self.ecs.add_model(player_model);
 
-        let player_id = self.entity_manager.add_entity(player_model_id, player_pos);
+        let player_id = self.ecs.add_entity(player_model_id, player_pos);
 
         self.player_id = player_id;
 
         let health = entity::Health::new(100.0);
-        self.entity_manager.set_entity_health(player_id, health);
+        self.ecs.set_health(player_id, health);
 
 
         // PLAYER PROJECTILE
@@ -100,7 +100,7 @@ impl Context {
         let scale = &na::Vector3::new(0.3,0.3,0.3);
         proj_model.scale(&scale);
 
-        let player_projectile_model_id = self.entity_manager.add_model(proj_model);
+        let player_projectile_model_id = self.ecs.add_model(proj_model);
 
         self.player_projectile_model_id = player_projectile_model_id;
 
@@ -112,18 +112,18 @@ impl Context {
         // ENEMY
         let enemy_pos = na::Vector3::new(-3.0, -3.0, 0.0);
 
-        let enemy_id = self.entity_manager.add_entity(self.enemy_model_id, enemy_pos);
+        let enemy_id = self.ecs.add_entity(self.enemy_model_id, enemy_pos);
 
         self.enemies.push(enemy_id);
 
         let health = entity::Health::new(100.0);
 
-        self.entity_manager.set_entity_health(enemy_id, health);
+        self.ecs.set_health(enemy_id, health);
 
-        match self.entity_manager.get_entity(enemy_id) {
+        match self.ecs.get_physics(enemy_id) {
             Some(mut e) => {
                 e.max_speed = 8.0;
-                self.entity_manager.update_entity(enemy_id, e);
+                self.ecs.update_entity(enemy_id, e);
             },
             None => {}
         };
@@ -158,17 +158,17 @@ impl Context {
 
 
         // player
-        self.entity_manager.render(self.player_id, &self.render_context.gl, &self.camera.projection(), &self.camera.view());
+        self.ecs.render(self.player_id, &self.render_context.gl, &self.camera.projection(), &self.camera.view());
 
 
         // enemies
         for id in &self.enemies {
-            self.entity_manager.render(*id, &self.render_context.gl, &self.camera.projection(), &self.camera.view());
+            self.ecs.render(*id, &self.render_context.gl, &self.camera.projection(), &self.camera.view());
         }
 
 
         for p in &self.player_projectiles {
-            self.entity_manager.render(p.entity_id, &self.render_context.gl, &self.camera.projection(), &self.camera.view());
+            self.ecs.render(p.entity_id, &self.render_context.gl, &self.camera.projection(), &self.camera.view());
         }
 
         self.render_context.window.gl_swap_window();
@@ -183,7 +183,7 @@ fn empty() -> Result<Context, failure::Error> {
 
     let background_color_buffer = render_gl::ColorBuffer::from_color(na::Vector3::new(0.3, 0.3, 0.5));
 
-    let entity_manager = entity::EntityManager::new();
+    let ecs = entity::EntityComponentSystem::new();
 
     background_color_buffer.set_used(&render_context.gl);
 
@@ -211,7 +211,7 @@ fn empty() -> Result<Context, failure::Error> {
         level,
         camera,
         delta_time,
-        entity_manager,
+        ecs,
         enemies,
         player_projectile_model_id: 9999,
         enemy_model_id: 9999,

@@ -1,14 +1,14 @@
-mod entity;
+mod physics;
 
-pub use self::entity::{Entity};
+pub use self::physics::{Physics};
 
 
 mod model;
 pub use self::model::{Model};
 
 
-mod manager;
-pub use self::manager::{EntityManager};
+mod enitity_component_system;
+pub use self::enitity_component_system::{EntityComponentSystem};
 
 
 mod health;
