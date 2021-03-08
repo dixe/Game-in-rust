@@ -5,7 +5,7 @@ use crate::scene;
 use crate::entity;
 use crate::game;
 
-use crate::physics::projection_collision::{collision_sat, CollisionBox, generate_sides, generate_vertices, collision_side};
+use crate::physics::projection_collision::{collision_sat, CollisionBox, generate_side_from_bb, generate_vertices, collision_side};
 
 
 pub struct Collisions {
@@ -113,7 +113,7 @@ fn entities_collide(entity_1: &entity::Physics, entity_2: &entity::Physics) -> (
         side_len: 1.0,
     };
 
-    collision_sat(generate_vertices(&entity_1_col_box), generate_sides(&entity_2_col_box).as_slice())
+    collision_sat(generate_vertices(&entity_1_col_box), generate_side_from_bb(&entity_2_col_box).as_slice())
 }
 
 

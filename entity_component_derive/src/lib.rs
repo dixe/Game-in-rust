@@ -80,6 +80,7 @@ fn generater_field_methods(body: &syn::Body) -> Vec<quote::Tokens> {
 
     let remove_body = syn::Ident::new(remove_statements);
     let remove_tokens = quote! {
+        #[allow(unsued_varaibles)]
         pub fn remove_entity(&mut self, id: usize) {
             #remove_body
         }
@@ -97,7 +98,7 @@ fn generater_field_body(field: &syn::Field) -> (quote::Tokens, Option<String>) {
         None => String::from(""),
     };
 
-    let component_attr = match (field.attrs.iter().filter(|a| a.value.name() == "component").next()) {
+    let component_attr = match field.attrs.iter().filter(|a| a.value.name() == "component").next() {
         Some(a) => a,
         None => return (quote::Tokens::new(), None)
     };

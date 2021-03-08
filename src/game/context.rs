@@ -48,7 +48,7 @@ impl Context {
 
         ctx.setup_enemy_models()?;
 
-        ctx.add_enemy();
+        //ctx.add_enemy();
 
         Ok(ctx)
     }
