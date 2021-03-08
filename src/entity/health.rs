@@ -22,10 +22,7 @@ impl Health {
 
 
         let dead = self.health <= 0.0;
-        println!("{}, {}", dead, self.health);
 
         dead
     }
-
-
 }

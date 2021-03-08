@@ -20,8 +20,6 @@ pub fn component_set_derive(input: proc_macro::TokenStream) -> proc_macro::Token
 }
 
 
-
-
 fn generate_impl(ast: &syn::DeriveInput) -> quote::Tokens {
 
     let ident = &ast.ident;
@@ -114,24 +112,31 @@ fn generater_field_body(field: &syn::Field) -> (quote::Tokens, Option<String>) {
         _ => panic!("String was not a string {:?}", component_value_literal),
     };
 
-    let type_name_lower = type_name.to_lowercase();
 
-
-    let set_signature = syn::Ident::new(format!("pub fn set_{}(&mut self, entity_id: usize, component: {})", type_name_lower, type_name,));
+    let set_signature = syn::Ident::new(format!("pub fn set_{}(&mut self, entity_id: usize, component: {})", field_name, type_name,));
 
 
     let set_body = syn::Ident::new(format!("self.{}.insert(entity_id, component);", field_name));
 
-    let end = syn::Ident::new("}");
+
+    let get_signature = syn::Ident::new(format!("pub fn get_{}(& self, entity_id: usize) -> Option<{}> ", field_name, type_name,));
+
+
+    let get_body = syn::Ident::new(format!("match &self.{}.get(&entity_id) {} Some(e) => Some(**e), None => None {}", field_name, "{", "}"));
+
 
     let tokens =  quote! {
 
         #set_signature {
             #set_body
         }
+
+        #get_signature {
+            #get_body
+        }
     };
 
 
-    (tokens, Some(type_name_lower))
+    (tokens, Some(field_name))
 
 }

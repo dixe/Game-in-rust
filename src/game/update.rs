@@ -47,21 +47,7 @@ fn update_player_shoot(ctx: &mut game::Context) {
         {
             //todo check cooldown/shooting speed
 
-            // spawn projectile with dir
-
-            let mut player_pos = match ctx.ecs.get_physics(ctx.player_id) {
-                Some(p) => p.pos,
-                _ => return // Can we shoot when dead, and should all exit. Maybe just update shooting in own function
-            };
-
-            player_pos.z += 0.5;
-
-            let speed = 30.0;
-            /*
-            let p_id = ctx.ecs.add_entity_with_vel(ctx.player_projectile_model_id, player_pos, dir * speed);
-            let shot = shot::Shot::new(p_id, 300);
-            ctx.player_projectiles.push(shot);
-             */
+            ctx.add_player_projectile(dir);
         }
         _ => {}
     }

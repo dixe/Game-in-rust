@@ -92,8 +92,6 @@ impl Context {
             acceleration: 3.0,
             //TODO remove from phyiscs
             model_id: player_model_id,
-
-
         };
 
         self.ecs.set_physics(player_id, physics);
@@ -123,30 +121,66 @@ impl Context {
     }
 
     fn add_enemy(&mut self) {
-        /*
+
         // ENEMY
         let enemy_pos = na::Vector3::new(-3.0, -3.0, 0.0);
 
-        let enemy_id = self.ecs.add_entity(self.enemy_model_id, enemy_pos);
+        let enemy_id = self.ecs.add_entity();
 
         self.enemies.push(enemy_id);
 
         let health = entity::Health::new(100.0);
 
+        let physics = entity::Physics {
+            pos: enemy_pos,
+            velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
+            max_speed: 10.0,
+            acceleration: 3.0,
+            //TODO remove from phyiscs
+            model_id: self.enemy_model_id,
+        };
+
+        self.ecs.set_physics(enemy_id, physics);
+
         self.ecs.set_health(enemy_id, health);
 
         match self.ecs.get_physics(enemy_id) {
-        Some(mut e) => {
-        e.max_speed = 8.0;
-        self.ecs.set_physics(enemy_id, e);
-    },
-        None => {}
-    };
-
-         */
+            Some(mut e) => {
+                e.max_speed = 8.0;
+                self.ecs.set_physics(enemy_id, e);
+            },
+            None => {}
+        };
     }
 
+    pub fn add_player_projectile(&mut self, dir: na::Vector3::<f32>){
 
+        let mut player_pos = match self.ecs.get_physics(self.player_id) {
+            Some(p) => p.pos,
+            _ => return // we are dead, no shooting ;(
+        };
+
+        player_pos.z += 0.5;
+
+        let speed = 30.0;
+
+        let vel = dir.normalize() * speed;
+        let physics = entity::Physics {
+            pos: player_pos,
+            velocity: vel,
+            max_speed: speed,
+            acceleration: speed,
+            //TODO remove from phyiscs
+            model_id: self.player_projectile_model_id,
+        };
+
+        let id = self.ecs.add_entity();
+        self.ecs.set_physics(id, physics);
+        let shot = shot::Shot::new(id, 300);
+
+        self.player_projectiles.push(shot);
+
+    }
 
 
     // Call once pr update step

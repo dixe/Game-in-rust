@@ -6,11 +6,18 @@ use crate::entity::{Physics, Model, Health};
 pub struct EntityComponentSystem {
 
     next_id: usize,
-    #[component = "Physics"]
-    pub physics: std::collections::HashMap<usize, Physics>,
+
     models: Vec<Model>,
-    pub healths: std::collections::HashMap<usize, Health>,
-    pub model_reference: std::collections::HashMap<usize, usize>,
+
+
+    // Components
+    #[component = "Physics"]
+    physics: std::collections::HashMap<usize, Physics>,
+
+    #[component = "Health"]
+    health: std::collections::HashMap<usize, Health>,
+
+    model_reference: std::collections::HashMap<usize, usize>,
 
 
 }
@@ -22,20 +29,11 @@ impl EntityComponentSystem {
         return EntityComponentSystem {
             next_id: 1,
             physics: std::collections::HashMap::new(),
-            healths: std::collections::HashMap::new(),
+            health: std::collections::HashMap::new(),
             models: Vec::<Model>::new(),
             model_reference: std::collections::HashMap::new(),
         }
     }
-
-
-
-    pub fn set_health(&mut self, entity_id: usize, hp: Health) {
-        self.healths.insert(entity_id, hp);
-    }
-
-
-
 
     pub fn add_entity (&mut self) -> usize {
         let id = self.next_id;
@@ -43,34 +41,15 @@ impl EntityComponentSystem {
         id
     }
 
-
-    pub fn get_physics(&self, id: usize) -> Option<Physics> {
-        match &self.physics.get(&id) {
-            Some(e) => Some(**e),
-            None => None
-        }
-    }
-
-
-    pub fn get_health(&self, id: usize) -> Option<Health> {
-        match &self.healths.get(&id) {
-            Some(e) => Some(**e),
-            None => None
-        }
-    }
-
     pub fn set_model(&mut self, entity_id: usize, model_id: usize)  {
         self.model_reference.insert(entity_id, model_id);
     }
-
-
 
 
     pub fn add_model(&mut self, model: Model) -> usize {
         self.models.push(model);
 
         (self.models.len() - 1) as usize
-
 
     }
 
@@ -86,12 +65,4 @@ impl EntityComponentSystem {
 
     }
 
-
-
-
-}
-
-
-fn empty_vec() -> na::Vector3::<f32> {
-    na::Vector3::new(0.0, 0.0, 0.0)
 }
