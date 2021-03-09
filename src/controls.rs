@@ -40,6 +40,13 @@ impl Controls {
             None => na::Vector3::<f32>::new(0.0, 0.0, 0.0)
         };
 
+
+        if self.a || self.w || self.d || self.s {
+            self.movement_dir.x = 0.0;
+            self.movement_dir.y = 0.0;
+            self.movement_dir.z = 0.0;
+        }
+
         for event in self.event_pump.poll_iter() {
             use sdl2::event::Event;
             match event {
@@ -134,11 +141,6 @@ impl Controls {
 
         }
 
-        if self.a || self.w || self.d || self.s {
-            self.movement_dir.x = 0.0;
-            self.movement_dir.y = 0.0;
-            self.movement_dir.z = 0.0;
-        }
 
 
         if self.a {

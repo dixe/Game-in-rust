@@ -2,6 +2,20 @@ use nalgebra as na;
 use std::ops::Index;
 
 
+#[derive(Debug)]
+pub struct ConvexCollisionShape {
+
+    pub v1: na::Vector3::<f32>,
+    pub v2: na::Vector3::<f32>,
+    pub in_between: Vec<na::Vector3::<f32>>,
+    pub last: na::Vector3::<f32>,
+
+
+}
+
+
+
+
 pub struct CollisionBox {
     pub pos: na::Vector3::<f32>,
     pub side_len: f32,
@@ -37,7 +51,6 @@ pub fn collision_side(vertices: Vec::<na::Vector3::<f32>>, side: &NormalSide) ->
             //println!("{:#?} {:#?}", s, side);
             has_col |= col;
             if mag < min_mag {
-
                 min_mag = mag;
                 ret_correction = correction;
             }
@@ -137,6 +150,63 @@ fn collision_side_piece(side: &Side, normal_side: &NormalSide) -> (bool, na::Vec
     }
 }
 
+
+fn get_shape_vertices(shape: &ConvexCollisionShape) -> Vec<na::Vector3::<f32>> {
+
+    let mut res = Vec::new();
+
+    res.push(shape.v1);
+    res.push(shape.v2);
+
+    for v in &shape.in_between {
+        res.push(*v);
+    }
+
+    res.push(shape.last);
+    res
+}
+
+fn generate_shape_sides(shape: &ConvexCollisionShape) -> Vec<Side> {
+    let mut res = Vec::new();
+
+    res.push(  Side { v1: shape.v1, v2: shape.v2});
+
+    let mut next_v1 = shape.v2;
+
+    let mut next_v2 = shape.v2;
+
+
+
+    for v in &shape.in_between {
+
+        next_v1 = next_v2;
+
+        next_v2 = *v;
+
+        res.push(Side { v1: next_v1, v2: next_v2});
+    }
+
+    res.push(  Side { v1: next_v2, v2: shape.last});
+
+    res.push( Side { v1: shape.last, v2: shape.v1});
+
+    res
+}
+
+
+
+pub fn collision_sat_shapes(shape_1: &ConvexCollisionShape, shape_2 : &ConvexCollisionShape) -> (bool, na::Vector3::<f32>) {
+
+    let verticies_1 = get_shape_vertices(shape_1);
+
+    let edges = generate_shape_sides(shape_2);
+
+    // println!(" shape_1{:#?}", shape_1);
+
+    collision_sat(verticies_1, &edges)
+
+}
+
 pub fn collision_sat(vertices: Vec::<na::Vector3::<f32>>, sides: &[Side]) -> (bool, na::Vector3::<f32>) {
 
     let vertices_1 = vertices;
@@ -147,9 +217,10 @@ pub fn collision_sat(vertices: Vec::<na::Vector3::<f32>>, sides: &[Side]) -> (bo
     let mut smallest_overlap = 10000000000000000000.0;
     let mut smallest_overlap_dir = na::Vector3::new(0.0, 0.0, 0.0);
 
+    // println!("v1s: {:#?}", vertices_1);
     'sides: for s in sides {
 
-        let line = (s.v1 - s.v2).normalize();
+        let line = (s.v2 - s.v1).normalize();
 
         let wall = na::Vector3::new( - line.y, line.x, line.z).normalize();
 
@@ -160,6 +231,7 @@ pub fn collision_sat(vertices: Vec::<na::Vector3::<f32>>, sides: &[Side]) -> (bo
 
             box_1_max = f32::max(box_1_max, proj_dot);
             box_1_min = f32::min(box_1_min, proj_dot);
+            //println!("v1: {:#?}", proj_dot);
         }
 
 
@@ -169,15 +241,19 @@ pub fn collision_sat(vertices: Vec::<na::Vector3::<f32>>, sides: &[Side]) -> (bo
             let proj_dot = projection(v, &wall).dot(&wall);
             box_2_max = f32::max(box_2_max, proj_dot);
             box_2_min = f32::min(box_2_min, proj_dot);
+            //println!("v2: {:#?}", proj_dot);
         }
 
 
-        let overlap = (box_1_min <= box_2_min && box_1_max >= box_2_min) ||
-            (box_1_min <= box_2_max && box_1_max >= box_2_max);
 
-        has_gap = !overlap;
+        has_gap = box_1_min >= box_2_max || box_2_min >= box_1_max;
 
         if has_gap {
+            /*
+            println!(" gap side: {:#?}", s);
+            println!(" ({}, {}) - ({}, {})", box_1_min, box_1_max, box_2_min, box_2_max);
+            println!(" ({} - {})", box_1_min >= box_2_max, box_2_min >= box_1_max);
+             */
             break 'sides;
         }
 
@@ -225,6 +301,33 @@ pub fn generate_normal_side(v1: na::Vector3::<f32>, v2: na::Vector3::<f32>) -> N
 }
 
 
+pub fn generate_collision_shape(b: &CollisionBox) -> ConvexCollisionShape {
+    let v00 = na::Vector3::new(
+        b.pos.x,
+        b.pos.y,
+        0.0);
+    let v01 = na::Vector3::new(
+        b.pos.x,
+        b.pos.y + b.side_len,
+        0.0);
+    let v10 = na::Vector3::new(
+        b.pos.x + b.side_len,
+        b.pos.y,
+        0.0);
+    let v11 = na::Vector3::new(
+        b.pos.x + b.side_len,
+        b.pos.y + b.side_len,
+        0.0);
+
+
+    ConvexCollisionShape {
+        v1: v00,
+        v2: v10,
+        in_between: vec![v11],
+        last: v01
+    }
+}
+
 pub fn generate_vertices(b: &CollisionBox) -> Vec::<na::Vector3::<f32>> {
     let v00 = na::Vector3::new(
         b.pos.x,
@@ -254,7 +357,6 @@ pub fn generate_side(vertices: &Vec::<na::Vector3::<f32>>) -> Vec::<Side> {
         println!("empt all over");
         return res;
     }
-
 
     let max_idx = vertices.len() - 1;
 
@@ -518,4 +620,75 @@ mod tests {
     }
 
 
+    #[test]
+    fn sat_shape_true() {
+
+        let wall = create_wall_collision_shape(
+            na::Vector3::new(9.0, -10.0, 0.0),
+            na::Vector3::new(9.0, 9.0, 0.0));
+
+        let box1 = CollisionBox {
+            pos: na::Vector3::new(8.5, 0.0, 0.0),
+            side_len: 1.0,
+        };
+
+        let (has_col,_) = collision_sat_shapes(&generate_collision_shape(&box1), &wall);
+
+        assert!(has_col);
+
+    }
+
+    #[test]
+    fn sat_shape_false() {
+
+        let wall = create_wall_collision_shape(
+            na::Vector3::new(9.0, -10.0, 0.0),
+            na::Vector3::new(9.0, 9.0, 0.0));
+
+        let box1 = CollisionBox {
+            pos: na::Vector3::new(8.5, 20.0, 0.0),
+            side_len: 1.0,
+        };
+
+        let (has_col,_) = collision_sat_shapes(&generate_collision_shape(&box1), &wall);
+
+        assert!(!has_col);
+
+    }
+
+    #[test]
+    fn sat_shape_false_2() {
+
+        let wall = create_wall_collision_shape(
+            na::Vector3::new(-9.0, 9.0,0.0),
+            na::Vector3::new(9.0, 9.0,0.0));
+        let box1 = CollisionBox {
+            pos: na::Vector3::new(3.0, 3.0, 0.0),
+            side_len: 1.0,
+        };
+
+        let (has_col,_) = collision_sat_shapes(&generate_collision_shape(&box1), &wall);
+
+        assert!(!has_col);
+
+    }
+
+
+    fn create_wall_collision_shape(v1: na::Vector3::<f32>, v2: na::Vector3::<f32>) -> ConvexCollisionShape {
+
+        let line  = v2 - v1;
+        let last = na::Vector3::new( line.y, line.x, line.z);
+
+        let s = ConvexCollisionShape {
+            v1: v1,
+            v2: v2,
+            in_between : vec![],
+            last: last
+        };
+
+
+        println!("{:#?}",s);
+
+        s
+    }
 }

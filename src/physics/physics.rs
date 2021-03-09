@@ -5,14 +5,14 @@ use crate::scene;
 use crate::entity;
 use crate::game;
 
-use crate::physics::projection_collision::{collision_sat, CollisionBox, generate_side_from_bb, generate_vertices, collision_side};
+use crate::physics::projection_collision::{collision_sat, Side, CollisionBox, generate_side_from_bb, generate_vertices, collision_sat_shapes, generate_collision_shape};
+
+
 
 
 pub struct Collisions {
     pub enemies_hit: Vec<Hit>,
     pub player_enemies_collision: Vec<usize>,
-
-
 }
 
 
@@ -90,10 +90,7 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
         // println!("{}", p.velocity);
         p.set_position(p.pos + p.velocity*delta);
         ctx.ecs.set_physics(proj.entity_id, p);
-
-
     }
-
 
     ctx.ecs.set_physics(ctx.player_id, player);
 
@@ -121,15 +118,16 @@ fn entity_update_movement_scene(entity: &mut entity::Physics, delta: f32, scene:
 
     let mut entity_pos_updated = entity.pos + entity.velocity * delta;
 
-    for wall_side in scene.border_sides() {
+    for wall in scene.border_sides() {
         let entity_col_box = CollisionBox {
             pos: entity_pos_updated,
             side_len: 1.0,
         };
 
-        let (col, dir) = collision_side(generate_vertices(&entity_col_box), &wall_side);
+        let (col, dir) = collision_sat_shapes(&generate_collision_shape(&entity_col_box), &wall);
 
         if col {
+            //println!("col");
             entity_pos_updated -= dir;
         }
     }
