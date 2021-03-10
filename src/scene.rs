@@ -121,10 +121,11 @@ impl Scene {
             v2: pos + na::Vector3::new(1.0, 0.0, 0.0),
             in_between: vec![ pos + na::Vector3::new(1.0, 1.0, 0.0)] ,
             last: pos + na::Vector3::new(0.0, 1.0, 0.0),
-            center : (pos
-                      + pos + na::Vector3::new(1.0, 0.0, 0.0)
-                      + pos + na::Vector3::new(1.0, 1.0, 0.0)
-                      + pos  +na::Vector3::new(0.0, 1.0, 0.0)) / 4.0
+            /*            center : (pos
+            + pos + na::Vector3::new(1.0, 0.0, 0.0)
+            + pos + na::Vector3::new(1.0, 1.0, 0.0)
+            + pos  +na::Vector3::new(0.0, 1.0, 0.0)) / 4.0
+             */
         });
 
         self.border_positions.push(pos);
@@ -143,14 +144,13 @@ fn create_wall_collision_shape(v1: na::Vector3::<f32>, v2: na::Vector3::<f32>) -
 
     let flip = dir2.cross(&dir1).z > 0.0;
 
-    let center = (v1 + v2 + behind) / 3.0;
+
     let s = if flip {
         physics::ConvexCollisionShape {
             v1: v2,
             v2: v1,
             in_between : vec![],
             last: behind,
-            center
 
         }
     } else {
@@ -159,7 +159,6 @@ fn create_wall_collision_shape(v1: na::Vector3::<f32>, v2: na::Vector3::<f32>) -
             v2: v2,
             in_between : vec![],
             last: behind,
-            center
         }
     };
 

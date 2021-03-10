@@ -1,6 +1,8 @@
 use nalgebra as na;
 
+
 #[derive(Copy, Clone)]
+
 pub struct Physics {
 
     pub pos: na::Vector3::<f32>,
@@ -14,7 +16,6 @@ pub struct Physics {
 
 
 impl Physics {
-
 
     pub fn set_position(&mut self, pos: na::Vector3::<f32>) {
         self.pos = pos;

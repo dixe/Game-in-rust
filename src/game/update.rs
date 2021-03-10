@@ -1,4 +1,3 @@
-use crate::shot;
 use crate::game;
 use crate::physics;
 
@@ -11,7 +10,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &physics::Collisio
 
     for c in &collisions.enemies_hit {
         let mut enemy_hp = match ctx.ecs.get_health(c.entity_id) {
-            Some(e) => e,
+            Some(e) => *e,
             _ => continue
         };
 

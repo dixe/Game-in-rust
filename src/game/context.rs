@@ -85,6 +85,7 @@ impl Context {
 
         self.ecs.set_model(player_id, player_model_id);
 
+
         let physics = entity::Physics {
             pos: player_pos,
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
@@ -131,6 +132,7 @@ impl Context {
 
         let health = entity::Health::new(100.0);
 
+
         let physics = entity::Physics {
             pos: enemy_pos,
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
@@ -145,9 +147,10 @@ impl Context {
         self.ecs.set_health(enemy_id, health);
 
         match self.ecs.get_physics(enemy_id) {
-            Some(mut e) => {
-                e.max_speed = 8.0;
-                self.ecs.set_physics(enemy_id, e);
+            Some(e) => {
+                let mut phy = *e;
+                phy.max_speed = 8.0;
+                self.ecs.set_physics(enemy_id, phy);
             },
             None => {}
         };
@@ -165,6 +168,7 @@ impl Context {
         let speed = 30.0;
 
         let vel = dir.normalize() * speed;
+
         let physics = entity::Physics {
             pos: player_pos,
             velocity: vel,
@@ -172,6 +176,7 @@ impl Context {
             acceleration: speed,
             //TODO remove from phyiscs
             model_id: self.player_projectile_model_id,
+
         };
 
         let id = self.ecs.add_entity();

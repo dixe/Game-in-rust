@@ -1,21 +1,49 @@
 use nalgebra as na;
 
 
-#[derive(Debug)]
+
+#[derive(Debug, Clone)]
 pub struct ConvexCollisionShape {
     pub v1: na::Vector3::<f32>,
     pub v2: na::Vector3::<f32>,
     pub in_between: Vec<na::Vector3::<f32>>,
     pub last: na::Vector3::<f32>,
-    pub center: na::Vector3::<f32>,
 }
 
 
-pub struct CollisionBox {
-    pub pos: na::Vector3::<f32>,
-    pub side_len: f32,
-}
 
+impl ConvexCollisionShape {
+
+
+    pub fn generate_rectangle_collision_shape(bottom_left: &na::Vector3::<f32>, height: f32, width: f32 ) -> ConvexCollisionShape {
+
+        let v00 = *bottom_left ;
+        let v01 = *bottom_left +
+            na::Vector3::new(
+                0.0,
+                height,
+                0.0);
+        let v10 = bottom_left +
+            na::Vector3::new(
+                width,
+                0.0,
+                0.0);
+        let v11 = bottom_left +
+            na::Vector3::new(
+                width,
+                height,
+                0.0);
+
+        ConvexCollisionShape {
+            v1: v00,
+            v2: v01,
+            in_between: vec! [  v11],
+            last : v10
+        }
+
+    }
+
+}
 
 #[derive(Copy, Clone, Debug)]
 pub struct Side {
@@ -24,6 +52,48 @@ pub struct Side {
 }
 
 
+/*
+fn get_entity_vertices(entity: &entity::Physics) -> Vec<na::Vector3::<f32>> {
+
+let mut res = Vec::new();
+
+res.push(entity.collision_shape.v1 + entity.pos);
+res.push(entity.collision_shape.v2 + entity.pos);
+
+for v in &entity.collision_shape.in_between {
+res.push(*v + entity.pos);
+    }
+
+    res.push(entity.collision_shape.last + entity.pos);
+    res
+}
+
+
+fn generate_entity_sides(entity: &entity::Physics) -> Vec<Side> {
+let mut res = Vec::new();
+
+res.push(  Side { v1: entity.collision_shape.v1 + entity.pos, v2: entity.collision_shape.v2 + entity.pos});
+
+let mut next_v1;
+
+let mut next_v2 = entity.collision_shape.v2 + entity.pos;
+
+for v in &entity.collision_shape.in_between {
+
+next_v1 = next_v2;
+
+next_v2 = *v + entity.pos;
+
+res.push(Side { v1: next_v1, v2: next_v2});
+    }
+
+    res.push(  Side { v1: next_v2, v2: entity.collision_shape.last + entity.pos});
+
+    res.push( Side { v1: entity.collision_shape.last + entity.pos, v2: entity.collision_shape.v1 + entity.pos});
+
+    res
+}
+*/
 fn get_shape_vertices(shape: &ConvexCollisionShape) -> Vec<na::Vector3::<f32>> {
 
     let mut res = Vec::new();
@@ -65,8 +135,7 @@ fn generate_shape_sides(shape: &ConvexCollisionShape) -> Vec<Side> {
 }
 
 
-
-pub fn collision_sat_shapes(shape_1: &ConvexCollisionShape, shape_2 : &ConvexCollisionShape) -> (bool, na::Vector3::<f32>) {
+pub fn collision_sat_shapes(shape_1: &ConvexCollisionShape, shape_2: &ConvexCollisionShape) -> (bool, na::Vector3::<f32>) {
 
     let verticies_1 = get_shape_vertices(shape_1);
 
@@ -75,9 +144,8 @@ pub fn collision_sat_shapes(shape_1: &ConvexCollisionShape, shape_2 : &ConvexCol
     let (col, dir, mag) = collision_sat(verticies_1, &edges);
 
     (col, dir * mag)
-
-
 }
+
 
 pub fn collision_sat(vertices: Vec::<na::Vector3::<f32>>, sides: &[Side]) -> (bool,  na::Vector3<f32>,f32) {
 
@@ -156,322 +224,272 @@ fn vertices_from_sides(sides: &[Side]) -> Vec::<na::Vector3::<f32>> {
     r
 }
 
-pub fn generate_collision_shape(b: &CollisionBox) -> ConvexCollisionShape {
-    let v00 = na::Vector3::new(
-        b.pos.x,
-        b.pos.y,
-        0.0);
-    let v01 = na::Vector3::new(
-        b.pos.x,
-        b.pos.y + b.side_len,
-        0.0);
-    let v10 = na::Vector3::new(
-        b.pos.x + b.side_len,
-        b.pos.y,
-        0.0);
-    let v11 = na::Vector3::new(
-        b.pos.x + b.side_len,
-        b.pos.y + b.side_len,
-        0.0);
-
-
-    ConvexCollisionShape {
-        v1: v00,
-        v2: v10,
-        in_between: vec![v11],
-        last: v01,
-        center : (v00 + v01 + v10 + v11)/4.0
-    }
-}
-
-pub fn generate_vertices(b: &CollisionBox) -> Vec::<na::Vector3::<f32>> {
-    let v00 = na::Vector3::new(
-        b.pos.x,
-        b.pos.y,
-        0.0);
-    let v01 = na::Vector3::new(
-        b.pos.x,
-        b.pos.y + b.side_len,
-        0.0);
-    let v10 = na::Vector3::new(
-        b.pos.x + b.side_len,
-        b.pos.y,
-        0.0);
-    let v11 = na::Vector3::new(
-        b.pos.x + b.side_len,
-        b.pos.y + b.side_len,
-        0.0);
-
-    vec! [ v00, v01, v11, v10]
-
-}
-
-
+/*
 pub fn generate_side_from_bb(b: &CollisionBox) -> Vec::<Side> {
-    let v00 = na::Vector3::new(
-        b.pos.x,
-        b.pos.y,
-        0.0);
-    let v01 = na::Vector3::new(
-        b.pos.x,
-        b.pos.y + b.side_len,
-        0.0);
-    let v10 = na::Vector3::new(
-        b.pos.x + b.side_len,
-        b.pos.y,
-        0.0);
-    let v11 = na::Vector3::new(
-        b.pos.x + b.side_len,
-        b.pos.y + b.side_len,
-        0.0);
+let v00 = na::Vector3::new(
+b.pos.x,
+b.pos.y,
+0.0);
+let v01 = na::Vector3::new(
+b.pos.x,
+b.pos.y + b.side_len,
+0.0);
+let v10 = na::Vector3::new(
+b.pos.x + b.side_len,
+b.pos.y,
+0.0);
+let v11 = na::Vector3::new(
+b.pos.x + b.side_len,
+b.pos.y + b.side_len,
+0.0);
 
-    let v =vec! [
-        Side {v1: v00, v2: v10},
-        Side {v1: v10, v2: v11},
-        Side {v1: v11, v2: v01},
-        Side {v1: v01, v2: v00}
-    ];
+let v =vec! [
+Side {v1: v00, v2: v10},
+Side {v1: v10, v2: v11},
+Side {v1: v11, v2: v01},
+Side {v1: v01, v2: v00}
+];
 
     v
 }
+     */
+
+    pub fn projection(from: &na::Vector3::<f32>, onto: &na::Vector3::<f32>) -> na::Vector3::<f32>  {
+        (from.dot(onto) / onto.dot(onto)) * onto
 
 
-pub fn projection(from: &na::Vector3::<f32>, onto: &na::Vector3::<f32>) -> na::Vector3::<f32>  {
-    (from.dot(onto) / onto.dot(onto)) * onto
-
-
-    //(from.dot(onto) / onto.mag() * onto.mag()) *
-}
-
-
-#[cfg(test)]
-mod tests {
-
-
-    use crate::physics::projection_collision::*;
-    use nalgebra as na;
-
-    #[test]
-    fn test_projection_1() {
-
-
-        let line =  na::Vector3::new(1.0, 0.0, 0.0);
-
-        let vertex1 = na::Vector3::new(1.9, 1.0, 0.0);
-
-        let proj1 = projection(&vertex1, &line);
-
-        assert_eq!(proj1, na::Vector3::new(1.9, 0.0, 0.0));
+        //(from.dot(onto) / onto.mag() * onto.mag()) *
     }
 
 
-    #[test]
-    fn collision_sat_intersect_1() {
-
-        let box1 = CollisionBox {
-            pos: na::Vector3::new(1.0, 0.8, 0.0),
-            side_len: 1.0,
-
-        };
+    #[cfg(test)]
+    mod tests {
 
 
-        let box2 = CollisionBox {
-            pos: na::Vector3::new(1.0, 0.0, 0.0),
-            side_len: 1.0,
+        use crate::physics::projection_collision::*;
+        use nalgebra as na;
 
-        };
+        #[test]
+        fn test_projection_1() {
+
+
+            let line =  na::Vector3::new(1.0, 0.0, 0.0);
+
+            let vertex1 = na::Vector3::new(1.9, 1.0, 0.0);
+
+            let proj1 = projection(&vertex1, &line);
+
+            assert_eq!(proj1, na::Vector3::new(1.9, 0.0, 0.0));
+        }
+
+
+        #[test]
+        fn collision_sat_intersect_1() {
+
+            let box1 = CollisionBox {
+                pos: na::Vector3::new(1.0, 0.8, 0.0),
+                side_len: 1.0,
+
+            };
+
+
+            let box2 = CollisionBox {
+                pos: na::Vector3::new(1.0, 0.0, 0.0),
+                side_len: 1.0,
+
+            };
 
 
 
-        let (has_col, _, _) = collision_sat(generate_vertices(&box1), generate_side_from_bb(&box2).as_slice());
+            let (has_col, _, _) = collision_sat(generate_vertices(&box1), generate_side_from_bb(&box2).as_slice());
 
-        assert!(has_col);
+            assert!(has_col);
 
+        }
+
+        #[test]
+        fn collision_sat_intersect_2() {
+
+            let box1 = CollisionBox {
+                pos: na::Vector3::new(1.0, 0.0, 0.0),
+                side_len: 1.0,
+
+            };
+
+
+            let box2 = CollisionBox {
+                pos: na::Vector3::new(1.1, 0.0, 0.0),
+                side_len: 1.0,
+
+            };
+
+
+
+            let (has_col, _, _) = collision_sat(generate_vertices(&box1), generate_side_from_bb(&box2).as_slice());
+
+            assert!(has_col);
+
+        }
+
+        #[test]
+        fn collision_sat_no_intersect() {
+
+            let box1 = CollisionBox {
+                pos: na::Vector3::new(1.0, 0.0, 0.0),
+                side_len: 1.0,
+
+            };
+
+
+            let box2 = CollisionBox {
+                pos: na::Vector3::new(2.1, 0.0, 0.0),
+                side_len: 1.0,
+
+            };
+
+            let (has_col, _, _) = collision_sat(generate_vertices(&box1), generate_side_from_bb(&box2).as_slice());
+
+            assert!(!has_col);
+        }
+
+
+
+        #[test]
+        fn sat_shape_true_top_left() {
+
+            let box_ = CollisionBox {
+                pos: na::Vector3::new(3.0, 0.0, 0.0),
+                side_len: 1.0,
+            };
+
+            let player =  CollisionBox {
+                pos: na::Vector3::new(3.9, 0.5, 0.0),
+                side_len: 1.0,
+            };
+
+            let (has_col, dir) = collision_sat_shapes(&generate_collision_shape(&player), &generate_collision_shape(&box_));
+
+            println!("TOP LEFT CORRECTION DIRECTION: {:#?} {}", dir, has_col);
+            assert!(dir.x < 0.0);
+            assert!(dir.y.abs() < 0.001);
+            assert!(has_col);
+
+        }
+
+
+        #[test]
+        fn sat_shape_true_above() {
+
+            let box_ = CollisionBox {
+                pos: na::Vector3::new(3.1, 0.0, 0.0),
+                side_len: 1.0,
+            };
+
+            let player =  CollisionBox {
+                pos: na::Vector3::new(3.0, 0.9, 0.0),
+                side_len: 1.0,
+            };
+
+            let (has_col, dir) = collision_sat_shapes(&generate_collision_shape(&player), &generate_collision_shape(&box_));
+
+            println!("ABOVE CORRECTION DIRECTION: {:#?} {}", dir, has_col);
+            assert!(dir.y < 0.0);
+            assert!(has_col);
+
+        }
+
+        #[test]
+        fn sat_shape_true_below() {
+
+            let box_ = CollisionBox {
+                pos: na::Vector3::new(3.0, 0.0, 0.0),
+                side_len: 1.0,
+            };
+
+            let player =  CollisionBox {
+                pos: na::Vector3::new(3.0, -0.9, 0.0),
+                side_len: 1.0,
+            };
+
+            let (has_col, dir) = collision_sat_shapes(&generate_collision_shape(&player), &generate_collision_shape(&box_));
+
+            println!("BELOW CORRECTION DIRECTION: {:#?} {}", dir, has_col);
+            assert!(dir.y > 0.0);
+            assert!(has_col);
+
+        }
+
+
+        #[test]
+        fn sat_shape_true_1() {
+
+            let wall = create_wall_collision_shape(
+                na::Vector3::new(-9.0, 9.0,0.0),
+                na::Vector3::new(9.0, 9.0,0.0));
+            let box1 = CollisionBox {
+                pos: na::Vector3::new(3.0, 3.0, 0.0),
+                side_len: 1.0,
+            };
+
+            let (has_col,_) = collision_sat_shapes(&generate_collision_shape(&box1), &wall);
+
+            assert!(!has_col);
+
+        }
+
+
+        #[test]
+        fn sat_shape_false() {
+
+            let wall = create_wall_collision_shape(
+                na::Vector3::new(9.0, -10.0, 0.0),
+                na::Vector3::new(9.0, 9.0, 0.0));
+
+            let box1 = CollisionBox {
+                pos: na::Vector3::new(8.5, 20.0, 0.0),
+                side_len: 1.0,
+            };
+
+            let (has_col,_) = collision_sat_shapes(&generate_collision_shape(&box1), &wall);
+
+            assert!(!has_col);
+
+        }
+
+        #[test]
+        fn sat_shape_false_2() {
+
+            let wall = create_wall_collision_shape(
+                na::Vector3::new(-9.0, 9.0,0.0),
+                na::Vector3::new(9.0, 9.0,0.0));
+            let box1 = CollisionBox {
+                pos: na::Vector3::new(3.0, 3.0, 0.0),
+                side_len: 1.0,
+            };
+
+            let (has_col,_) = collision_sat_shapes(&generate_collision_shape(&box1), &wall);
+
+            assert!(!has_col);
+
+        }
+
+
+        fn create_wall_collision_shape(v1: na::Vector3::<f32>, v2: na::Vector3::<f32>) -> ConvexCollisionShape {
+
+            let line  = v2 - v1;
+            let last = na::Vector3::new( line.y, line.x, line.z);
+
+            let s = ConvexCollisionShape {
+                v1: v1,
+                v2: v2,
+                in_between : vec![],
+                last: last,
+                center: (v1 + v2 + last)/3.0
+            };
+
+
+            println!("{:#?}",s);
+
+            s
+        }
     }
-
-    #[test]
-    fn collision_sat_intersect_2() {
-
-        let box1 = CollisionBox {
-            pos: na::Vector3::new(1.0, 0.0, 0.0),
-            side_len: 1.0,
-
-        };
-
-
-        let box2 = CollisionBox {
-            pos: na::Vector3::new(1.1, 0.0, 0.0),
-            side_len: 1.0,
-
-        };
-
-
-
-        let (has_col, _, _) = collision_sat(generate_vertices(&box1), generate_side_from_bb(&box2).as_slice());
-
-        assert!(has_col);
-
-    }
-
-    #[test]
-    fn collision_sat_no_intersect() {
-
-        let box1 = CollisionBox {
-            pos: na::Vector3::new(1.0, 0.0, 0.0),
-            side_len: 1.0,
-
-        };
-
-
-        let box2 = CollisionBox {
-            pos: na::Vector3::new(2.1, 0.0, 0.0),
-            side_len: 1.0,
-
-        };
-
-        let (has_col, _, _) = collision_sat(generate_vertices(&box1), generate_side_from_bb(&box2).as_slice());
-
-        assert!(!has_col);
-    }
-
-
-
-    #[test]
-    fn sat_shape_true_top_left() {
-
-        let box_ = CollisionBox {
-            pos: na::Vector3::new(3.0, 0.0, 0.0),
-            side_len: 1.0,
-        };
-
-        let player =  CollisionBox {
-            pos: na::Vector3::new(3.9, 0.5, 0.0),
-            side_len: 1.0,
-        };
-
-        let (has_col, dir) = collision_sat_shapes(&generate_collision_shape(&player), &generate_collision_shape(&box_));
-
-        println!("TOP LEFT CORRECTION DIRECTION: {:#?} {}", dir, has_col);
-        assert!(dir.x < 0.0);
-        assert!(dir.y.abs() < 0.001);
-        assert!(has_col);
-
-    }
-
-
-    #[test]
-    fn sat_shape_true_above() {
-
-        let box_ = CollisionBox {
-            pos: na::Vector3::new(3.1, 0.0, 0.0),
-            side_len: 1.0,
-        };
-
-        let player =  CollisionBox {
-            pos: na::Vector3::new(3.0, 0.9, 0.0),
-            side_len: 1.0,
-        };
-
-        let (has_col, dir) = collision_sat_shapes(&generate_collision_shape(&player), &generate_collision_shape(&box_));
-
-        println!("ABOVE CORRECTION DIRECTION: {:#?} {}", dir, has_col);
-        assert!(dir.y < 0.0);
-        assert!(has_col);
-
-    }
-
-    #[test]
-    fn sat_shape_true_below() {
-
-        let box_ = CollisionBox {
-            pos: na::Vector3::new(3.0, 0.0, 0.0),
-            side_len: 1.0,
-        };
-
-        let player =  CollisionBox {
-            pos: na::Vector3::new(3.0, -0.9, 0.0),
-            side_len: 1.0,
-        };
-
-        let (has_col, dir) = collision_sat_shapes(&generate_collision_shape(&player), &generate_collision_shape(&box_));
-
-        println!("BELOW CORRECTION DIRECTION: {:#?} {}", dir, has_col);
-        assert!(dir.y > 0.0);
-        assert!(has_col);
-
-    }
-
-
-    #[test]
-    fn sat_shape_true_1() {
-
-        let wall = create_wall_collision_shape(
-            na::Vector3::new(-9.0, 9.0,0.0),
-            na::Vector3::new(9.0, 9.0,0.0));
-        let box1 = CollisionBox {
-            pos: na::Vector3::new(3.0, 3.0, 0.0),
-            side_len: 1.0,
-        };
-
-        let (has_col,_) = collision_sat_shapes(&generate_collision_shape(&box1), &wall);
-
-        assert!(!has_col);
-
-    }
-
-
-    #[test]
-    fn sat_shape_false() {
-
-        let wall = create_wall_collision_shape(
-            na::Vector3::new(9.0, -10.0, 0.0),
-            na::Vector3::new(9.0, 9.0, 0.0));
-
-        let box1 = CollisionBox {
-            pos: na::Vector3::new(8.5, 20.0, 0.0),
-            side_len: 1.0,
-        };
-
-        let (has_col,_) = collision_sat_shapes(&generate_collision_shape(&box1), &wall);
-
-        assert!(!has_col);
-
-    }
-
-    #[test]
-    fn sat_shape_false_2() {
-
-        let wall = create_wall_collision_shape(
-            na::Vector3::new(-9.0, 9.0,0.0),
-            na::Vector3::new(9.0, 9.0,0.0));
-        let box1 = CollisionBox {
-            pos: na::Vector3::new(3.0, 3.0, 0.0),
-            side_len: 1.0,
-        };
-
-        let (has_col,_) = collision_sat_shapes(&generate_collision_shape(&box1), &wall);
-
-        assert!(!has_col);
-
-    }
-
-
-    fn create_wall_collision_shape(v1: na::Vector3::<f32>, v2: na::Vector3::<f32>) -> ConvexCollisionShape {
-
-        let line  = v2 - v1;
-        let last = na::Vector3::new( line.y, line.x, line.z);
-
-        let s = ConvexCollisionShape {
-            v1: v1,
-            v2: v2,
-            in_between : vec![],
-            last: last,
-            center: (v1 + v2 + last)/3.0
-        };
-
-
-        println!("{:#?}",s);
-
-        s
-    }
-}

@@ -1,15 +1,13 @@
 use nalgebra as na;
 
-use crate::shot;
 use crate::game;
-use crate::physics;
 use crate::entity;
 
 
 pub fn run_ai(ctx: &mut game::Context) {
 
     let mut player = match ctx.ecs.get_physics(ctx.player_id) {
-        Some(e) => e,
+        Some(e) => *e,
         None => return, // Dead player, don't care about ai update
     };
 
@@ -20,7 +18,7 @@ pub fn run_ai(ctx: &mut game::Context) {
 
     for e in &ctx.enemies {
         let mut enemy = match ctx.ecs.get_physics(*e) {
-            Some(e) => e,
+            Some(e) => *e,
             None => continue, // Dead player, don't care about ai update
         };
 

@@ -2,6 +2,9 @@ use nalgebra as na;
 
 use crate::entity::{Physics, Model, Health};
 
+use crate::physics::{ConvexCollisionShape};
+
+
 #[derive(ComponentSystem)]
 pub struct EntityComponentSystem {
 
@@ -16,6 +19,7 @@ pub struct EntityComponentSystem {
 
     #[component = "Health"]
     health: std::collections::HashMap<usize, Health>,
+
 
     model_reference: std::collections::HashMap<usize, usize>,
 

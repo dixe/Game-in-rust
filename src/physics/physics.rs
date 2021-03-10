@@ -1,5 +1,3 @@
-use nalgebra as na;
-
 
 use crate::scene;
 use crate::entity;
@@ -8,12 +6,12 @@ use crate::game;
 use crate::physics::projection_collision::*;
 
 
-
-
 pub struct Collisions {
     pub enemies_hit: Vec<Hit>,
     pub player_enemies_collision: Vec<usize>,
 }
+
+
 
 
 
@@ -35,61 +33,65 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
     let delta = ctx.get_delta_time();
 
     let mut player = match ctx.ecs.get_physics(ctx.player_id) {
-        Some(p) => p,
+        Some(p) => *p,
         None => return collisions
     };
 
+
+    // todo take collision_shape and return collision. i.e. dont make it mutable
     entity_update_movement_scene(&mut player, delta, &ctx.scene);
 
-    for e_id in &mut ctx.enemies {
-        let mut e = match ctx.ecs.get_physics(*e_id) {
-            Some(en) => en,
+
+    let player_collision = ConvexCollisionShape::generate_rectangle_collision_shape(&player.pos, 1.0, 1.0);
+
+    for enemy_id in &mut ctx.enemies {
+        let mut enemy = match ctx.ecs.get_physics(*enemy_id) {
+            Some(en) => *en,
             None => continue
         };
 
-        entity_update_movement_scene(&mut e, delta, &ctx.scene);
+        let enemy_collision = ConvexCollisionShape::generate_rectangle_collision_shape(&enemy.pos, 1.0, 1.0);
+
+        entity_update_movement_scene(&mut enemy, delta, &ctx.scene);
 
         for proj in &mut ctx.player_projectiles {
-            let mut p = match ctx.ecs.get_physics(proj.entity_id) {
-                Some(e) => e,
+            let mut proj_physics = match ctx.ecs.get_physics(proj.entity_id) {
+                Some(e) => *e,
                 None => continue
             };
 
+            let proj_collision = ConvexCollisionShape::generate_rectangle_collision_shape(&proj_physics.pos, 1.0, 1.0);
 
-            p.set_position(p.pos + p.velocity*delta);
-            ctx.ecs.set_physics(proj.entity_id, p);
 
-            let (col, _) = entities_collide(&p, &e);
+            proj_physics.set_position(proj_physics.pos + proj_physics.velocity*delta);
+            ctx.ecs.set_physics(proj.entity_id, proj_physics);
+
+            let (col, _) = collision_sat_shapes(&proj_collision, &enemy_collision);
             if col {
-                collisions.enemies_hit.push(Hit { entity_id: *e_id, projectile_id: proj.entity_id});
+                collisions.enemies_hit.push(Hit { entity_id: *enemy_id, projectile_id: proj.entity_id});
             }
 
         }
 
-
-
-
-        let (col, dir) = entities_collide(&player, &e);
+        let (col, dir) = collision_sat_shapes(&player_collision, &enemy_collision);
 
         if col {
-            e.pos -= dir;
-            collisions.player_enemies_collision.push(*e_id);
+            enemy.pos -= dir;
+            collisions.player_enemies_collision.push(*enemy_id);
         }
 
-        ctx.ecs.set_physics(*e_id, e);
+        ctx.ecs.set_physics(*enemy_id, enemy);
     }
 
 
-    // handle
     for proj in &mut ctx.player_projectiles {
-        let mut p = match ctx.ecs.get_physics(proj.entity_id) {
-            Some(e) => e,
+        let mut projectile = match ctx.ecs.get_physics(proj.entity_id) {
+            Some(e) => *e,
             None => continue
         };
 
-        // println!("{}", p.velocity);
-        p.set_position(p.pos + p.velocity*delta);
-        ctx.ecs.set_physics(proj.entity_id, p);
+        projectile.set_position(projectile.pos + projectile.velocity * delta);
+        ctx.ecs.set_physics(proj.entity_id, projectile);
     }
 
     ctx.ecs.set_physics(ctx.player_id, player);
@@ -98,39 +100,22 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
 }
 
 
-fn entities_collide(entity_1: &entity::Physics, entity_2: &entity::Physics) -> (bool, na::Vector3::<f32>) {
-
-    let entity_1_col_box = CollisionBox {
-        pos: entity_1.pos,
-        side_len: 1.0,
-    };
-
-    let entity_2_col_box = CollisionBox {
-        pos: entity_2.pos,
-        side_len: 1.0,
-    };
-
-    collision_sat_shapes(&generate_collision_shape(&entity_1_col_box), &generate_collision_shape(&entity_2_col_box))
-}
-
 
 fn entity_update_movement_scene(entity: &mut entity::Physics, delta: f32, scene: &scene::Scene) {
 
     let mut entity_pos_updated = entity.pos + entity.velocity * delta;
 
     for wall in scene.border_sides() {
-        let entity_col_box = CollisionBox {
-            pos: entity_pos_updated,
-            side_len: 1.0,
-        };
 
-        let (col, dir) = collision_sat_shapes(&generate_collision_shape(&entity_col_box), &wall);
+        let col_shape = ConvexCollisionShape::generate_rectangle_collision_shape(&entity_pos_updated, 1.0, 1.0);
+
+        let (col, dir) = collision_sat_shapes(&col_shape, &wall);
 
         if col {
+            //println!("{:#?}", dir);
             entity_pos_updated -= dir;
         }
     }
 
     entity.set_position(entity_pos_updated);
-
 }
