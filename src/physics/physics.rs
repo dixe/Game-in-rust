@@ -110,7 +110,7 @@ fn entities_collide(entity_1: &entity::Physics, entity_2: &entity::Physics) -> (
         side_len: 1.0,
     };
 
-    collision_sat(generate_vertices(&entity_1_col_box), generate_side_from_bb(&entity_2_col_box).as_slice())
+    collision_sat_shapes(&generate_collision_shape(&entity_1_col_box), &generate_collision_shape(&entity_2_col_box))
 }
 
 
@@ -124,10 +124,17 @@ fn entity_update_movement_scene(entity: &mut entity::Physics, delta: f32, scene:
             side_len: 1.0,
         };
 
+        let w_col_box = CollisionBox {
+            pos: wall.v1,
+            side_len: 1.0,
+        };
+
         let (col, dir) = collision_sat_shapes(&generate_collision_shape(&entity_col_box), &wall);
+        //let (col, dir) = collision_sat(generate_vertices(&entity_col_box), generate_side_from_bb(&w_col_box).as_slice());
 
         if col {
-            //println!("col");
+            //println!(" DIR: {:#?}", dir);
+            //println!(" wall: {:#?}", wall.v1);
             entity_pos_updated -= dir;
         }
     }

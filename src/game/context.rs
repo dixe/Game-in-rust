@@ -247,7 +247,9 @@ fn empty() -> Result<Context, failure::Error> {
 
     let level = level::Level::load(&render_context.res,"levels/debugLevel1.txt")?;
 
-    let scene = scene::Scene::new(&level, &render_context)?;
+    let mut scene = scene::Scene::new(&level, &render_context)?;
+
+    scene.add_box(na::Vector3::new(3.0, 0.0, 0.0));
 
     let controls = controls::Controls::new(event_pump);
 
