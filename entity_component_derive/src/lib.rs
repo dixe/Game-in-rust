@@ -120,10 +120,10 @@ fn generater_field_body(field: &syn::Field) -> (quote::Tokens, Option<String>) {
     let set_body = syn::Ident::new(format!("self.{}.insert(entity_id, component);", field_name));
 
 
-    let get_signature = syn::Ident::new(format!("pub fn get_{}(& self, entity_id: usize) -> Option<{}> ", field_name, type_name,));
+    let get_signature = syn::Ident::new(format!("pub fn get_{}(& self, entity_id: usize) -> Option<&{}> ", field_name, type_name,));
 
 
-    let get_body = syn::Ident::new(format!("match &self.{}.get(&entity_id) {} Some(e) => Some(**e), None => None {}", field_name, "{", "}"));
+    let get_body = syn::Ident::new(format!("match &self.{}.get(&entity_id) {} Some(e) => Some(*e), None => None {}", field_name, "{", "}"));
 
 
     let tokens =  quote! {
