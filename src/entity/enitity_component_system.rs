@@ -2,8 +2,6 @@ use nalgebra as na;
 
 use crate::entity::{Physics, Model, Health};
 
-use crate::physics::{ConvexCollisionShape};
-
 
 #[derive(ComponentSystem)]
 pub struct EntityComponentSystem {
