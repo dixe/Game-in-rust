@@ -112,23 +112,17 @@ impl Scene {
     }
 
 
-    pub fn add_box(&mut self, pos: na::Vector3<f32>) {
+    pub fn add_box(&mut self, center: na::Vector3<f32>) {
 
-
-        // bottom
         self.border_sides.push( physics::ConvexCollisionShape {
-            v1: pos,
-            v2: pos + na::Vector3::new(1.0, 0.0, 0.0),
-            in_between: vec![ pos + na::Vector3::new(1.0, 1.0, 0.0)] ,
-            last: pos + na::Vector3::new(0.0, 1.0, 0.0),
-            /*            center : (pos
-            + pos + na::Vector3::new(1.0, 0.0, 0.0)
-            + pos + na::Vector3::new(1.0, 1.0, 0.0)
-            + pos  +na::Vector3::new(0.0, 1.0, 0.0)) / 4.0
-             */
+            v1: center + na::Vector3::new(-0.5, -0.5, 0.0),
+            v2: center + na::Vector3::new(-0.5, 0.5, 0.0),
+            in_between: vec![ center + na::Vector3::new(0.5, 0.5, 0.0)] ,
+            last: center + na::Vector3::new(0.5, -0.5, 0.0),
+
         });
 
-        self.border_positions.push(pos);
+        self.border_positions.push(center);
 
     }
 }
@@ -146,24 +140,21 @@ fn create_wall_collision_shape(v1: na::Vector3::<f32>, v2: na::Vector3::<f32>) -
 
 
     let s = if flip {
+
         physics::ConvexCollisionShape {
-            v1: v2,
-            v2: v1,
+            v1: v2 + na::Vector3::new(-0.5, -0.5, 0.0),
+            v2: v1 + na::Vector3::new(-0.5, -0.5, 0.0),
             in_between : vec![],
             last: behind,
 
         }
     } else {
         physics::ConvexCollisionShape {
-            v1: v1,
-            v2: v2,
+            v1: v1 + na::Vector3::new(-0.5, -0.5, 0.0),
+            v2: v2 + na::Vector3::new(-0.5, -0.5, 0.0),
             in_between : vec![],
             last: behind,
         }
     };
-
-
-    //println!("{:#?}\n {} \n",s, cross);
-
     s
 }

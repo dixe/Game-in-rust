@@ -73,7 +73,7 @@ impl Context {
 
         // PLAYER
         let player_pos = na::Vector3::new(3.0, 3.0, 0.0);
-        let player_color = na::Vector3::new(0.0,  1.0, 1.0);
+        let player_color = na::Vector3::new(0.0, 1.0, 1.0);
 
         let player_cube = cube::Cube::new(&self.render_context.res, player_color, &self.render_context.gl)?;
 

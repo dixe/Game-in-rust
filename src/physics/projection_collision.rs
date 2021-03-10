@@ -15,24 +15,15 @@ pub struct ConvexCollisionShape {
 impl ConvexCollisionShape {
 
 
-    pub fn rectangle(bottom_left: &na::Vector3::<f32>, height: f32, width: f32 ) -> ConvexCollisionShape {
+    pub fn rectangle(center: &na::Vector3::<f32>, height: f32, width: f32 ) -> ConvexCollisionShape {
 
-        let v00 = *bottom_left ;
-        let v01 = *bottom_left +
-            na::Vector3::new(
-                0.0,
-                height,
-                0.0);
-        let v10 = bottom_left +
-            na::Vector3::new(
-                width,
-                0.0,
-                0.0);
-        let v11 = bottom_left +
-            na::Vector3::new(
-                width,
-                height,
-                0.0);
+        let half_width = width / 2.0;
+        let half_height = height / 2.0;
+
+        let v00 = *center + na::Vector3::new(-half_width, -half_height, 0.0);
+        let v01 = *center + na::Vector3::new(-half_width, half_height, 0.0);
+        let v11 = *center + na::Vector3::new(half_width, half_height, 0.0);
+        let v10 = *center + na::Vector3::new(half_width, -half_height, 0.0);
 
         ConvexCollisionShape {
             v1: v00,
@@ -51,49 +42,6 @@ pub struct Side {
     pub v2: na::Vector3::<f32>
 }
 
-
-/*
-fn get_entity_vertices(entity: &entity::Physics) -> Vec<na::Vector3::<f32>> {
-
-let mut res = Vec::new();
-
-res.push(entity.collision_shape.v1 + entity.pos);
-res.push(entity.collision_shape.v2 + entity.pos);
-
-for v in &entity.collision_shape.in_between {
-res.push(*v + entity.pos);
-    }
-
-    res.push(entity.collision_shape.last + entity.pos);
-    res
-}
-
-
-fn generate_entity_sides(entity: &entity::Physics) -> Vec<Side> {
-let mut res = Vec::new();
-
-res.push(  Side { v1: entity.collision_shape.v1 + entity.pos, v2: entity.collision_shape.v2 + entity.pos});
-
-let mut next_v1;
-
-let mut next_v2 = entity.collision_shape.v2 + entity.pos;
-
-for v in &entity.collision_shape.in_between {
-
-next_v1 = next_v2;
-
-next_v2 = *v + entity.pos;
-
-res.push(Side { v1: next_v1, v2: next_v2});
-    }
-
-    res.push(  Side { v1: next_v2, v2: entity.collision_shape.last + entity.pos});
-
-    res.push( Side { v1: entity.collision_shape.last + entity.pos, v2: entity.collision_shape.v1 + entity.pos});
-
-    res
-}
-*/
 fn get_shape_vertices(shape: &ConvexCollisionShape) -> Vec<na::Vector3::<f32>> {
 
     let mut res = Vec::new();
@@ -108,6 +56,7 @@ fn get_shape_vertices(shape: &ConvexCollisionShape) -> Vec<na::Vector3::<f32>> {
     res.push(shape.last);
     res
 }
+
 
 fn generate_shape_sides(shape: &ConvexCollisionShape) -> Vec<Side> {
     let mut res = Vec::new();
