@@ -1,18 +1,19 @@
 use nalgebra as na;
 
 
-#[derive(Copy, Clone)]
+#[derive(Debug,Copy, Clone)]
 
 pub struct Physics {
 
+    pub entity_id: usize,
     pub pos: na::Vector3::<f32>,
     pub velocity: na::Vector3::<f32>,
     pub max_speed: f32,
     pub acceleration: f32,
     //
     pub model_id: usize,
-
 }
+
 
 
 impl Physics {

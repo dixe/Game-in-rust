@@ -48,7 +48,7 @@ impl Context {
 
         ctx.setup_enemy_models()?;
 
-        //ctx.add_enemy();
+        ctx.add_enemy();
 
         Ok(ctx)
     }
@@ -87,6 +87,7 @@ impl Context {
 
 
         let physics = entity::Physics {
+            entity_id: player_id,
             pos: player_pos,
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             max_speed: 10.0,
@@ -134,6 +135,7 @@ impl Context {
 
 
         let physics = entity::Physics {
+            entity_id: enemy_id,
             pos: enemy_pos,
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             max_speed: 10.0,
@@ -169,7 +171,10 @@ impl Context {
 
         let vel = dir.normalize() * speed;
 
+        let id = self.ecs.add_entity();
+
         let physics = entity::Physics {
+            entity_id: id,
             pos: player_pos,
             velocity: vel,
             max_speed: speed,
@@ -179,7 +184,7 @@ impl Context {
 
         };
 
-        let id = self.ecs.add_entity();
+
         self.ecs.set_physics(id, physics);
         let shot = shot::Shot::new(id, 300);
 
@@ -203,7 +208,15 @@ impl Context {
 
 
     pub fn handle_inputs(&mut self) {
-        self.controls.handle_inputs(&mut self.render_context);
+        let action = self.controls.handle_inputs(&mut self.render_context);
+
+
+
+
+        match action {
+            controls::Action::AddEnemy => self.add_enemy(),
+            controls::Action::NoAction => { },
+        };
     }
 
     pub fn render(&self){

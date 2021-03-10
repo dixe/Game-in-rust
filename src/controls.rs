@@ -15,6 +15,12 @@ pub struct Controls {
 
 }
 
+#[derive(Debug)]
+pub enum Action {
+    AddEnemy,
+    NoAction
+}
+
 
 impl Controls {
 
@@ -33,8 +39,9 @@ impl Controls {
         }
     }
 
-    pub fn handle_inputs(&mut self,  ctx: &mut render_gl::context::Context)  {
+    pub fn handle_inputs(&mut self,  ctx: &mut render_gl::context::Context) -> Action  {
 
+        let mut action = Action::NoAction;
         let mut shoot_dir = match self.shoot_dir {
             Some(dir) => dir,
             None => na::Vector3::<f32>::new(0.0, 0.0, 0.0)
@@ -95,6 +102,11 @@ impl Controls {
                         Some(sdl2::keyboard::Keycode::M) =>  {
                             println!("switch");
                             ctx.switch_mode();
+                        },
+
+                        // ACTION KEYS
+                        Some(sdl2::keyboard::Keycode::N) =>  {
+                            action = Action::AddEnemy
                         },
                         _ => {}
                     }
@@ -173,5 +185,7 @@ impl Controls {
         else{
             self.shoot_dir = None;
         }
+
+        action
     }
 }

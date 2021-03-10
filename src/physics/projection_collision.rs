@@ -15,7 +15,7 @@ pub struct ConvexCollisionShape {
 impl ConvexCollisionShape {
 
 
-    pub fn generate_rectangle_collision_shape(bottom_left: &na::Vector3::<f32>, height: f32, width: f32 ) -> ConvexCollisionShape {
+    pub fn rectangle(bottom_left: &na::Vector3::<f32>, height: f32, width: f32 ) -> ConvexCollisionShape {
 
         let v00 = *bottom_left ;
         let v01 = *bottom_left +
@@ -165,38 +165,38 @@ pub fn collision_sat(vertices: Vec::<na::Vector3::<f32>>, sides: &[Side]) -> (bo
 
         let wall = na::Vector3::new( - line.y, line.x, line.z).normalize();
 
-        let mut box_1_max = vertices_1[0].dot(&wall);
-        let mut box_1_min = vertices_1[0].dot(&wall);
+        let mut shape_1_max = vertices_1[0].dot(&wall);
+        let mut shape_1_min = vertices_1[0].dot(&wall);
         for v in &vertices_1 {
             let proj_dot = projection(v, &wall).dot(&wall);
 
-            box_1_max = f32::max(box_1_max, proj_dot);
-            box_1_min = f32::min(box_1_min, proj_dot);
+            shape_1_max = f32::max(shape_1_max, proj_dot);
+            shape_1_min = f32::min(shape_1_min, proj_dot);
             //println!("v1: {:#?}", proj_dot);
         }
 
 
-        let mut box_2_max = s.v1.dot(&wall);
-        let mut box_2_min = s.v2.dot(&wall);
+        let mut shape_2_max = s.v1.dot(&wall);
+        let mut shape_2_min = s.v2.dot(&wall);
         for v in &vertices_2 {
             let proj_dot = projection(v, &wall).dot(&wall);
-            box_2_max = f32::max(box_2_max, proj_dot);
-            box_2_min = f32::min(box_2_min, proj_dot);
+            shape_2_max = f32::max(shape_2_max, proj_dot);
+            shape_2_min = f32::min(shape_2_min, proj_dot);
         }
 
-        has_gap = box_1_min >= box_2_max || box_2_min >= box_1_max;
+        has_gap = shape_1_min >= shape_2_max || shape_2_min >= shape_1_max;
 
         if has_gap {
             break 'sides;
         }
 
-        //println!("DIFF 1 AND DIFF 2 ({}, {})", box_1_max - box_2_min, box_2_max - box_1_min );
-        let smaller = f32::min(box_1_max - box_2_min, box_2_max - box_1_min);
+        //println!("DIFF 1 AND DIFF 2 ({}, {})", shape_1_max - shape_2_min, shape_2_max - shape_1_min );
+        let smaller = f32::min(shape_1_max - shape_2_min, shape_2_max - shape_1_min);
 
         if smaller < smallest_overlap {
             // if the smallest overlap is from below then we have to reverse the direction.
             // this is a fix for parallel lines in boxes
-            below = box_1_max - box_2_min > box_2_max - box_1_min ;
+            below = shape_1_max - shape_2_min > shape_2_max - shape_1_min ;
 
             smallest_overlap = smaller;
             smallest_overlap_dir = wall;
@@ -286,22 +286,24 @@ Side {v1: v01, v2: v00}
         #[test]
         fn collision_sat_intersect_1() {
 
-            let box1 = CollisionBox {
-                pos: na::Vector3::new(1.0, 0.8, 0.0),
-                side_len: 1.0,
+            let box1 = ConvexCollisionShape::rectangle(
+                &na::Vector3::new(1.0, 0.8, 0.0),
+                1.0,
+                1.0
 
-            };
-
-
-            let box2 = CollisionBox {
-                pos: na::Vector3::new(1.0, 0.0, 0.0),
-                side_len: 1.0,
-
-            };
+            );
 
 
+            let box2 = ConvexCollisionShape::rectangle(
+                &na::Vector3::new(1.0, 0.0, 0.0),
+                1.0,
+                1.0
 
-            let (has_col, _, _) = collision_sat(generate_vertices(&box1), generate_side_from_bb(&box2).as_slice());
+            );
+
+
+
+            let (has_col, _) = collision_sat_shapes(&box1, &box2);
 
             assert!(has_col);
 
@@ -310,22 +312,24 @@ Side {v1: v01, v2: v00}
         #[test]
         fn collision_sat_intersect_2() {
 
-            let box1 = CollisionBox {
-                pos: na::Vector3::new(1.0, 0.0, 0.0),
-                side_len: 1.0,
+            let box1 = ConvexCollisionShape::rectangle(
+                &na::Vector3::new(1.0, 0.0, 0.0),
+                1.0,
+                1.0
 
-            };
-
-
-            let box2 = CollisionBox {
-                pos: na::Vector3::new(1.1, 0.0, 0.0),
-                side_len: 1.0,
-
-            };
+            );
 
 
+            let box2 = ConvexCollisionShape::rectangle(
+                &na::Vector3::new(1.1, 0.0, 0.0),
+                1.0,
+                1.0
 
-            let (has_col, _, _) = collision_sat(generate_vertices(&box1), generate_side_from_bb(&box2).as_slice());
+            );
+
+
+
+            let (has_col, _) = collision_sat_shapes(&box1, &box2);
 
             assert!(has_col);
 
@@ -334,20 +338,21 @@ Side {v1: v01, v2: v00}
         #[test]
         fn collision_sat_no_intersect() {
 
-            let box1 = CollisionBox {
-                pos: na::Vector3::new(1.0, 0.0, 0.0),
-                side_len: 1.0,
+            let box1 = ConvexCollisionShape::rectangle(
+                &na::Vector3::new(1.0, 0.0, 0.0),
+                1.0,
+                1.0
 
-            };
+            );
 
 
-            let box2 = CollisionBox {
-                pos: na::Vector3::new(2.1, 0.0, 0.0),
-                side_len: 1.0,
+            let box2 = ConvexCollisionShape::rectangle(
+               &na::Vector3::new(2.1, 0.0, 0.0),
+                1.0,
+                1.0
+            );
 
-            };
-
-            let (has_col, _, _) = collision_sat(generate_vertices(&box1), generate_side_from_bb(&box2).as_slice());
+            let (has_col, _) = collision_sat_shapes(&box1, &box2);
 
             assert!(!has_col);
         }
@@ -356,18 +361,20 @@ Side {v1: v01, v2: v00}
 
         #[test]
         fn sat_shape_true_top_left() {
+            let box_ = ConvexCollisionShape::rectangle(
+                &na::Vector3::new(3.0, 0., 0.0),
+                1.0,
+                1.0
+            );
 
-            let box_ = CollisionBox {
-                pos: na::Vector3::new(3.0, 0.0, 0.0),
-                side_len: 1.0,
-            };
+            let player = ConvexCollisionShape::rectangle(
+                &na::Vector3::new(3.9, 0.5, 0.0),
+                1.0,
+                1.0
+            );
 
-            let player =  CollisionBox {
-                pos: na::Vector3::new(3.9, 0.5, 0.0),
-                side_len: 1.0,
-            };
 
-            let (has_col, dir) = collision_sat_shapes(&generate_collision_shape(&player), &generate_collision_shape(&box_));
+            let (has_col, dir) = collision_sat_shapes(&player, &box_);
 
             println!("TOP LEFT CORRECTION DIRECTION: {:#?} {}", dir, has_col);
             assert!(dir.x < 0.0);
@@ -380,17 +387,15 @@ Side {v1: v01, v2: v00}
         #[test]
         fn sat_shape_true_above() {
 
-            let box_ = CollisionBox {
-                pos: na::Vector3::new(3.1, 0.0, 0.0),
-                side_len: 1.0,
-            };
+            let box_ = ConvexCollisionShape::rectangle(
+                &na::Vector3::new(3.1, 0.0, 0.0),
+                1.0,
+                    1.0
+            );
 
-            let player =  CollisionBox {
-                pos: na::Vector3::new(3.0, 0.9, 0.0),
-                side_len: 1.0,
-            };
+            let shape = ConvexCollisionShape::rectangle(&na::Vector3::new(3.0, 0.9, 0.0), 1.0, 1.0);
 
-            let (has_col, dir) = collision_sat_shapes(&generate_collision_shape(&player), &generate_collision_shape(&box_));
+            let (has_col, dir) = collision_sat_shapes(&shape, &box_);
 
             println!("ABOVE CORRECTION DIRECTION: {:#?} {}", dir, has_col);
             assert!(dir.y < 0.0);
@@ -401,17 +406,15 @@ Side {v1: v01, v2: v00}
         #[test]
         fn sat_shape_true_below() {
 
-            let box_ = CollisionBox {
-                pos: na::Vector3::new(3.0, 0.0, 0.0),
-                side_len: 1.0,
-            };
+            let box_ = ConvexCollisionShape::rectangle(
+                &na::Vector3::new(3.0, 0.0, 0.0),
+                1.0,
+                1.0
+            );
 
-            let player =  CollisionBox {
-                pos: na::Vector3::new(3.0, -0.9, 0.0),
-                side_len: 1.0,
-            };
+            let shape = ConvexCollisionShape::rectangle(&na::Vector3::new(3.0, -0.9, 0.0), 1.0, 1.0);
 
-            let (has_col, dir) = collision_sat_shapes(&generate_collision_shape(&player), &generate_collision_shape(&box_));
+            let (has_col, dir) = collision_sat_shapes(&shape, &box_);
 
             println!("BELOW CORRECTION DIRECTION: {:#?} {}", dir, has_col);
             assert!(dir.y > 0.0);
@@ -426,12 +429,10 @@ Side {v1: v01, v2: v00}
             let wall = create_wall_collision_shape(
                 na::Vector3::new(-9.0, 9.0,0.0),
                 na::Vector3::new(9.0, 9.0,0.0));
-            let box1 = CollisionBox {
-                pos: na::Vector3::new(3.0, 3.0, 0.0),
-                side_len: 1.0,
-            };
 
-            let (has_col,_) = collision_sat_shapes(&generate_collision_shape(&box1), &wall);
+            let shape = ConvexCollisionShape::rectangle(&na::Vector3::new(3.0, 3.0, 0.0), 1.0, 1.0);
+
+            let (has_col,dir) = collision_sat_shapes(&shape, &wall);
 
             assert!(!has_col);
 
@@ -445,12 +446,9 @@ Side {v1: v01, v2: v00}
                 na::Vector3::new(9.0, -10.0, 0.0),
                 na::Vector3::new(9.0, 9.0, 0.0));
 
-            let box1 = CollisionBox {
-                pos: na::Vector3::new(8.5, 20.0, 0.0),
-                side_len: 1.0,
-            };
+            let shape = ConvexCollisionShape::rectangle(&na::Vector3::new(8.5, 20.0, 0.0), 1.0, 1.0);
 
-            let (has_col,_) = collision_sat_shapes(&generate_collision_shape(&box1), &wall);
+            let (has_col,_) = collision_sat_shapes(&shape, &wall);
 
             assert!(!has_col);
 
@@ -462,12 +460,10 @@ Side {v1: v01, v2: v00}
             let wall = create_wall_collision_shape(
                 na::Vector3::new(-9.0, 9.0,0.0),
                 na::Vector3::new(9.0, 9.0,0.0));
-            let box1 = CollisionBox {
-                pos: na::Vector3::new(3.0, 3.0, 0.0),
-                side_len: 1.0,
-            };
 
-            let (has_col,_) = collision_sat_shapes(&generate_collision_shape(&box1), &wall);
+            let shape = ConvexCollisionShape::rectangle(&na::Vector3::new(3.0, 3.0, 0.0), 1.0, 1.0);
+
+            let (has_col,_) = collision_sat_shapes(&shape, &wall);
 
             assert!(!has_col);
 
@@ -484,7 +480,6 @@ Side {v1: v01, v2: v00}
                 v2: v2,
                 in_between : vec![],
                 last: last,
-                center: (v1 + v2 + last)/3.0
             };
 
 
