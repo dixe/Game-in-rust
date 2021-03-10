@@ -1,7 +1,7 @@
 extern crate sdl2;
 extern crate gl;
 extern crate vec_2_10_10_10;
-extern crate nalgebra;
+extern crate nalgebra as na;
 #[macro_use] extern crate failure;
 #[macro_use] extern crate render_gl_derive;
 #[macro_use] extern crate entity_component_derive;
@@ -56,6 +56,7 @@ fn run() -> Result<(), failure::Error> {
 
 
 
+
         game::run_ai(&mut ctx);
 
         //PHYSICS PROCESSING
@@ -64,8 +65,29 @@ fn run() -> Result<(), failure::Error> {
         // SPAWN PROJECTILES, HANDLE COLLISION THAT WAS NOT WITH ENVIROMENT
         game::update_game_state(&mut ctx, &collisions);
 
+
+
+
+
+
+
         // RENDERING
         ctx.render();
+
+
+
+        let enemy_color = na::Vector3::new(1.0, 1.0, 1.0);
+        let cube = cube::Cube::new(&ctx.render_context.res, enemy_color, &ctx.render_context.gl)?;
+
+        let mut model = entity::Model::new(cube);
+
+        model.scale(&na::Vector3::new(5.0, 5.0, 5.0));
+        let pos = na::Vector3::new(0.0, 0.0, 0.0);
+        model.render(&ctx.render_context.gl, &ctx.camera.projection(), &ctx.camera.view(), pos);
+
+        ctx.render_context.gl_swap_window();
+
+
     }
 
     Ok(())

@@ -42,6 +42,13 @@ impl Context {
         self.wire_frame = !self.wire_frame
     }
 
+
+    pub fn gl_swap_window(&self) {
+
+        self.window.gl_swap_window();
+    }
+
+
     pub fn set_controller(&mut self, which: u32) {
         let ctrl = self.controller_subsystem.open(which).unwrap();
 

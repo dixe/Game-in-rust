@@ -72,7 +72,7 @@ impl Context {
     fn setup_player(&mut self) -> Result<(), failure::Error>  {
 
         // PLAYER
-        let player_pos = na::Vector3::new(3.0, 3.0, 0.0);
+        let player_pos = na::Vector3::new(3.0, 3.0, 1.0);
         let player_color = na::Vector3::new(0.0, 1.0, 1.0);
 
         let player_cube = cube::Cube::new(&self.render_context.res, player_color, &self.render_context.gl)?;
@@ -165,7 +165,7 @@ impl Context {
             _ => return // we are dead, no shooting ;(
         };
 
-        player_pos.z += 0.5;
+        player_pos.z += 0.3;
 
         let speed = 30.0;
 
@@ -239,7 +239,7 @@ impl Context {
             self.ecs.render(p.entity_id, &self.render_context.gl, &self.camera.projection(), &self.camera.view());
         }
 
-        self.render_context.window.gl_swap_window();
+
     }
 }
 

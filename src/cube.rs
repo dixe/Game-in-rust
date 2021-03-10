@@ -37,18 +37,16 @@ impl Cube {
         let vertices: Vec<f32> = vec![
             // vertecies             // colors
             // front
-            0.0, 0.0, 1.0,    clr.x, clr.y, clr.z,
-            1.0, 0.0, 1.0,     clr.x, clr.y, clr.z,
-            1.0, 1.0, 1.0,     clr.x, clr.y, clr.z,
-            0.0, 1.0, 1.0,    clr.x, clr.y, clr.z,
+            -0.5, -0.5, -0.5,    clr.x, clr.y, clr.z,
+            0.5, -0.5, -0.5,     clr.x, clr.y, clr.z,
+            0.5, 0.5, -0.5,     clr.x, clr.y, clr.z,
+            -0.5, 0.5, -0.5,    clr.x, clr.y, clr.z,
 
             //back
-            0.0, 0.0, 0.0,    clr.x, clr.y, clr.z,
-            1.0, 0.0, 0.0,     clr.x, clr.y, clr.z,
-            1.0, 1.0, 0.0,     clr.x, clr.y, clr.z,
-            0.0, 1.0, 0.0,    clr.x, clr.y, clr.z,
-
-
+            -0.5, -0.5, 0.5,    clr.x, clr.y, clr.z,
+            0.5, -0.5, 0.5,     clr.x, clr.y, clr.z,
+            0.5, 0.5, 0.5,     clr.x, clr.y, clr.z,
+            -0.5, 0.5, 0.5,    clr.x, clr.y, clr.z,
         ];
 
 

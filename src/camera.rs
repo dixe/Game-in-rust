@@ -15,10 +15,10 @@ impl Camera {
 
     pub fn new() -> Camera {
 
-        let pos = na::Vector3::new(0.0, -3.5, 20.0);
+        let pos = na::Vector3::new(0.0, -10.5, 20.0);
         let up = na::Vector3::new(0.0, 1.0, 0.0);
-        let yawn: f32 = - 90.0_f32.to_radians();
-        let pitch: f32 = 10.0_f32.to_radians();
+        let yawn: f32 = -90.0_f32.to_radians();
+        let pitch: f32 = 20.0_f32.to_radians();
         let front = na::Vector3::new(
             yawn.cos() * pitch.cos(),
             pitch.sin(),
