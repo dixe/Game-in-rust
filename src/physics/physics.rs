@@ -5,7 +5,7 @@ use crate::scene;
 use crate::entity;
 use crate::game;
 
-use crate::physics::projection_collision::{collision_sat, Side, CollisionBox, generate_side_from_bb, generate_vertices, collision_sat_shapes, generate_collision_shape};
+use crate::physics::projection_collision::*;
 
 
 
@@ -124,17 +124,9 @@ fn entity_update_movement_scene(entity: &mut entity::Physics, delta: f32, scene:
             side_len: 1.0,
         };
 
-        let w_col_box = CollisionBox {
-            pos: wall.v1,
-            side_len: 1.0,
-        };
-
         let (col, dir) = collision_sat_shapes(&generate_collision_shape(&entity_col_box), &wall);
-        //let (col, dir) = collision_sat(generate_vertices(&entity_col_box), generate_side_from_bb(&w_col_box).as_slice());
 
         if col {
-            //println!(" DIR: {:#?}", dir);
-            //println!(" wall: {:#?}", wall.v1);
             entity_pos_updated -= dir;
         }
     }

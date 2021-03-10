@@ -31,8 +31,6 @@ impl Model {
                 0.0, 0.0, 0.0, 1.0,
             );
 
-        println!("{}", scale_mat);
-
         self.model_mat = scale_mat * self.model_mat;
     }
 

@@ -141,8 +141,6 @@ fn create_wall_collision_shape(v1: na::Vector3::<f32>, v2: na::Vector3::<f32>) -
 
     let dir2 = behind - dir1;
 
-    let cross =  dir2.cross(&dir1);
-
     let flip = dir2.cross(&dir1).z > 0.0;
 
     let center = (v1 + v2 + behind) / 3.0;
@@ -166,7 +164,7 @@ fn create_wall_collision_shape(v1: na::Vector3::<f32>, v2: na::Vector3::<f32>) -
     };
 
 
-    println!("{:#?}\n {} \n",s, cross);
+    //println!("{:#?}\n {} \n",s, cross);
 
     s
 }
