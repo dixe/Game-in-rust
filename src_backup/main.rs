@@ -39,16 +39,6 @@ fn run() -> Result<(), failure::Error> {
 
     let mut ctx = game::Context::new()?;
 
-    let light_color = na::Vector3::new(1.0, 1.0, 1.0);
-    let light_cube = cube::Cube::new(light_color, &ctx.render_context.gl);
-
-    let mut light_model = entity::Model::new(light_cube);
-
-    let pos = na::Vector3::new(0.0, 0.0, 5.0);
-
-
-
-
     'main: loop{
 
         ctx.update_delta();
@@ -63,9 +53,6 @@ fn run() -> Result<(), failure::Error> {
             ctx.render_context.gl.Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }
 
-
-
-
         game::run_ai(&mut ctx);
 
         //PHYSICS PROCESSING
@@ -78,10 +65,18 @@ fn run() -> Result<(), failure::Error> {
         // RENDERING
         ctx.render();
 
+        let light_color = na::Vector3::new(1.0, 1.0, 1.0);
+        let cube = cube::Cube::new(ctx.cube_shader, light_color, &ctx.render_context.gl)?;
 
-        ctx.light_shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera.projection(), ctx.camera.view());
-        //light_model.render(&ctx.render_context.gl, &ctx.light_shader, pos);
+        let mut light_model = entity::Model::new(cube);
+
+        let pos = na::Vector3::new(0.0, 0.0, 5.0);
+
+        light_model.render(&ctx.render_context.gl, &ctx.camera.projection(), &ctx.camera.view(), pos);
+
+
         ctx.render_context.gl_swap_window();
+
 
     }
 
