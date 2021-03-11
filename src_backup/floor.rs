@@ -165,12 +165,13 @@ impl Floor {
                 self.model_mat.as_slice().as_ptr() as *const f32);
 
             // draw
-            gl.DrawElements(
+
+            gl.DrawArrays(
                 gl::TRIANGLES,
-                12,
-                gl::UNSIGNED_BYTE,
-                0 as *const gl::types::GLvoid
+                0,
+                12
             );
+
         }
     }
 }

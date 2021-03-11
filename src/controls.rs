@@ -146,7 +146,12 @@ impl Controls {
                 Event::ControllerDeviceAdded {which,..} => {
                     ctx.set_controller(which);
                 },
+                Event::MouseWheel {y, ..} => {
+                    println!("Mouse wheel - y: {} ", y);
+                },
+
                 _ => {
+
 
                 }
             }

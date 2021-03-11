@@ -29,7 +29,7 @@ impl Shader {
 
     }
 
-    pub fn set_vec3(&self, gl: &gl::Gl,  name: &str, vec3: na::Vector3<f32>) {
+    pub fn set_vec3(&self, gl: &gl::Gl, name: &str, vec3: na::Vector3<f32>) {
         self.program.set_used();
         let vec_str = std::ffi::CString::new(name).unwrap();
 
@@ -39,7 +39,8 @@ impl Shader {
                 self.program.id(),
                 vec_str.as_ptr() as *mut gl::types::GLchar);
 
-            println!("lightLoc: Location {}:", vec_loc);
+            // println!("{}_loc: {} ", name, vec_loc);
+
 
             gl.Uniform3f(vec_loc, vec3.x, vec3.y, vec3.z);
         }
@@ -60,7 +61,6 @@ impl Shader {
                 self.program.id(),
                 view_str.as_ptr() as *mut gl::types::GLchar);
 
-            println!("proj_loc: {} vew_loc: {}", proj_loc, view_loc);
             gl.UniformMatrix4fv(
                 proj_loc,
                 1,

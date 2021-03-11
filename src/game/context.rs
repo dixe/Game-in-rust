@@ -75,7 +75,7 @@ impl Context {
     fn setup_player(&mut self) -> Result<(), failure::Error>  {
 
         // PLAYER
-        let player_pos = na::Vector3::new(3.0, 3.0, 1.0);
+        let player_pos = na::Vector3::new(3.0, 3.0, 0.5);
         let player_color = na::Vector3::new(0.0, 1.0, 1.0);
 
         let player_cube = cube::Cube::new(player_color, &self.render_context.gl);
@@ -128,7 +128,7 @@ impl Context {
     fn add_enemy(&mut self) {
 
         // ENEMY
-        let enemy_pos = na::Vector3::new(-3.0, -3.0, 0.0);
+        let enemy_pos = na::Vector3::new(-3.0, -3.0, -0.5);
 
         let enemy_id = self.ecs.add_entity();
 
@@ -223,7 +223,10 @@ impl Context {
     pub fn render(&self){
         // RENDER SCENE WITH CUBE SHADER
         self.cube_shader.set_used();
+        // CAN BE MOVED OUTSIDE THE LOOP
+        self.cube_shader.set_vec3(&self.render_context.gl, "lightPos", na::Vector3::new(0.0, 0.0, 5.0));
         self.cube_shader.set_vec3(&self.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
+
         self.cube_shader.set_projection_and_view(&self.render_context.gl, self.camera.projection(), self.camera.view());
 
         self.scene.render(&self.render_context.gl, self.camera.projection(), self.camera.view(), &self.cube_shader);
@@ -269,13 +272,13 @@ fn empty() -> Result<Context, failure::Error> {
 
     let level = level::Level::load(&render_context.res,"levels/debugLevel1.txt")?;
 
-    let cube_shader = render_gl::Shader::new("difuse", &render_context.res, &render_context.gl)?;
+    let cube_shader = render_gl::Shader::new("diffuse", &render_context.res, &render_context.gl)?;
 
     let light_shader = render_gl::Shader::new("lightcube", &render_context.res, &render_context.gl)?;
 
     let mut scene = scene::Scene::new(&level, &render_context)?;
 
-    scene.add_box(na::Vector3::new(3.0, 0.0, 0.0));
+    scene.add_box(na::Vector3::new(3.0, 0.0, 0.5));
 
     let controls = controls::Controls::new(event_pump);
 

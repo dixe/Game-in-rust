@@ -27,10 +27,6 @@ impl Cube {
 
     pub fn new(clr: na::Vector3<f32>, gl: &gl::Gl) -> Cube {
 
-
-
-
-
         let vertices: Vec<f32> = vec![
             // vertecies             // colors          //normal
             -0.5, -0.5, -0.5,    clr.x, clr.y, clr.z,     0.0,  0.0, -1.0,
@@ -75,7 +71,7 @@ impl Cube {
         let vbo = buffer::ArrayBuffer::new(gl);
         let vao = buffer::VertexArray::new(gl);
 
-
+        let stride = 9;
         unsafe {
             // 1
             vao.bind();
@@ -91,7 +87,7 @@ impl Cube {
                 3,
                 gl::FLOAT,
                 gl::FALSE,
-                (9 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                (stride * std::mem::size_of::<f32>()) as gl::types::GLint,
                 0 as *const gl::types::GLvoid,
             );
             gl.EnableVertexAttribArray(0);
@@ -102,11 +98,24 @@ impl Cube {
                 3,
                 gl::FLOAT,
                 gl::FALSE,
-                (9 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                (stride * std::mem::size_of::<f32>()) as gl::types::GLint,
                 (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
             );
 
             gl.EnableVertexAttribArray(1);
+
+            // normals
+            gl.VertexAttribPointer(
+                2,
+                3,
+                gl::FLOAT,
+                gl::FALSE,
+                (stride * std::mem::size_of::<f32>()) as gl::types::GLint,
+                (6 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
+            );
+
+            gl.EnableVertexAttribArray(2);
+
         }
 
         vbo.unbind();

@@ -29,7 +29,8 @@ impl Scene {
 
         let floor_clr = na::Vector3::new(0.50, 0.33, 0.6);
 
-        let floor = floor::Floor::new(&ctx.res, floor_clr, &ctx.gl)?;
+
+        let floor = floor::Floor::new(floor_clr, &ctx.gl)?;
 
 
         // create border sides, by only exposing the sides that a entity can reach
@@ -76,7 +77,8 @@ impl Scene {
 
             let y = ((i as i32) / level.height) - level.height /2;
 
-            let border_pos = na::Vector3::new(x as f32 , y as f32, 0.0);
+            let z = 0.5;
+            let border_pos = na::Vector3::new(x as f32 , y as f32, z);
 
             //println!("{}, {}", x,y);
 
@@ -99,7 +101,7 @@ impl Scene {
 
     pub fn render(&self, gl: &gl::Gl, projection: na::Matrix4<f32>, view: na::Matrix4<f32>, shader: &render_gl::Shader) {
 
-        self.floor.render(gl, projection, view);
+        self.floor.render(gl, shader, projection, view);
 
         for pos in &self.border_positions {
 

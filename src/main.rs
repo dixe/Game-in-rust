@@ -44,7 +44,9 @@ fn run() -> Result<(), failure::Error> {
 
     let mut light_model = entity::Model::new(light_cube);
 
-    let pos = na::Vector3::new(0.0, 0.0, 5.0);
+    let pos = na::Vector3::new(0.0, 0.0, 15.0);
+
+    let triangle_pos = na::Vector3::new(0.0, 0.0, 5.0);
 
 
 
@@ -64,8 +66,6 @@ fn run() -> Result<(), failure::Error> {
         }
 
 
-
-
         game::run_ai(&mut ctx);
 
         //PHYSICS PROCESSING
@@ -78,9 +78,14 @@ fn run() -> Result<(), failure::Error> {
         // RENDERING
         ctx.render();
 
+        let tri = triangle::Triangle::new(&ctx.render_context.res, pos, light_color, &ctx.render_context.gl)?;
+
 
         ctx.light_shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera.projection(), ctx.camera.view());
         //light_model.render(&ctx.render_context.gl, &ctx.light_shader, pos);
+
+        //tri.render(&ctx.render_context.gl);
+
         ctx.render_context.gl_swap_window();
 
     }
