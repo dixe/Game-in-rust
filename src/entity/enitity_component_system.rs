@@ -1,5 +1,7 @@
 use nalgebra as na;
 
+
+use crate::render_gl;
 use crate::entity::{Physics, Model, Health};
 
 
@@ -56,10 +58,10 @@ impl EntityComponentSystem {
     }
 
 
-    pub fn render(&self, entity_id:usize, gl: &gl::Gl, projection: &na::Matrix4<f32>, view: &na::Matrix4<f32>) {
+    pub fn render(&self, entity_id:usize, gl: &gl::Gl, shader: &render_gl::Shader) {
         match self.get_physics(entity_id) {
             Some(e) => match self.models.get(e.model_id as usize) {
-                Some(m) => m.render(gl, projection, view, e.pos),
+                Some(m) => m.render(gl, shader, e.pos),
                 None => {}
             },
             None => {}

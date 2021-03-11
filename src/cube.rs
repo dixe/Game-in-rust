@@ -1,7 +1,5 @@
 use gl;
-use failure;
 use crate::render_gl::{self, data, buffer};
-use crate::resources::Resources;
 use nalgebra as na;
 
 
@@ -18,7 +16,6 @@ struct Vertex {
 
 
 pub struct Cube {
-    program: render_gl::Program,
     vao: buffer::VertexArray,
     _vbo: buffer::ArrayBuffer,
     _ebo: buffer::ElementArrayBuffer,
@@ -27,12 +24,7 @@ pub struct Cube {
 
 impl Cube {
 
-    pub fn new(res: &Resources,  clr: na::Vector3<f32>, gl: &gl::Gl) -> Result<Cube, failure::Error> {
-
-
-
-        let program = render_gl::Program::from_res(gl, res, "shaders/cube" ).unwrap();
-
+    pub fn new(clr: na::Vector3<f32>, gl: &gl::Gl) -> Cube {
 
         let vertices: Vec<f32> = vec![
             // vertecies             // colors
@@ -121,53 +113,18 @@ impl Cube {
         vao.unbind();
 
 
-        Ok(Cube {
-            program,
+        Cube {
             vao,
             _vbo: vbo,
             _ebo: ebo
-        })
+        }
     }
 
-    pub fn render(&self, gl: &gl::Gl, projection: na::Matrix4<f32>,  view: na::Matrix4<f32>, model: na::Matrix4<f32>,) {
-        self.program.set_used();
+    pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader, model: na::Matrix4<f32>,) {
+        shader.set_model(gl, model);
 
         self.vao.bind();
         unsafe {
-
-            let proj_str = std::ffi::CString::new("projection").unwrap();
-            let view_str = std::ffi::CString::new("view").unwrap();
-            let model_str = std::ffi::CString::new("model").unwrap();
-
-            let proj_loc = gl.GetUniformLocation(
-                self.program.id(),
-                proj_str.as_ptr() as *mut gl::types::GLchar);
-
-            let view_loc = gl.GetUniformLocation(
-                self.program.id(),
-                view_str.as_ptr() as *mut gl::types::GLchar);
-
-            let model_loc = gl.GetUniformLocation(
-                self.program.id(),
-                model_str.as_ptr() as *mut gl::types::GLchar);
-
-
-            gl.UniformMatrix4fv(
-                proj_loc,
-                1,
-                gl::FALSE,
-                projection.as_slice().as_ptr() as *const f32);
-            gl.UniformMatrix4fv(
-                view_loc,
-                1,
-                gl::FALSE,
-                view.as_slice().as_ptr() as *const f32);
-            gl.UniformMatrix4fv(
-                model_loc,
-                1,
-                gl::FALSE,
-                model.as_slice().as_ptr() as *const f32);
-
             // draw
             gl.DrawElements(
                 gl::TRIANGLES,

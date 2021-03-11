@@ -75,7 +75,7 @@ fn run() -> Result<(), failure::Error> {
         ctx.render();
 
 
-
+        /*
         let enemy_color = na::Vector3::new(1.0, 1.0, 1.0);
         let cube = cube::Cube::new(&ctx.render_context.res, enemy_color, &ctx.render_context.gl)?;
 
@@ -85,8 +85,9 @@ fn run() -> Result<(), failure::Error> {
         let pos = na::Vector3::new(0.0, 0.0, 0.0);
         model.render(&ctx.render_context.gl, &ctx.camera.projection(), &ctx.camera.view(), pos);
 
-        ctx.render_context.gl_swap_window();
 
+         */
+        ctx.render_context.gl_swap_window();
 
     }
 

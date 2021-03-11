@@ -32,6 +32,8 @@ pub struct Context {
     pub player_projectile_model_id: usize,
     pub enemy_model_id: usize,
 
+    pub cube_shader: render_gl::Shader,
+
     delta_time: deltatime::Deltatime,
 
 }
@@ -58,7 +60,7 @@ impl Context {
 
         let enemy_color = na::Vector3::new(0.3, 0.0, 0.0);
 
-        let enemy_cube = cube::Cube::new(&self.render_context.res, enemy_color, &self.render_context.gl)?;
+        let enemy_cube = cube::Cube::new(enemy_color, &self.render_context.gl);
 
         let e_model = entity::Model::new(enemy_cube);
 
@@ -75,7 +77,7 @@ impl Context {
         let player_pos = na::Vector3::new(3.0, 3.0, 1.0);
         let player_color = na::Vector3::new(0.0, 1.0, 1.0);
 
-        let player_cube = cube::Cube::new(&self.render_context.res, player_color, &self.render_context.gl)?;
+        let player_cube = cube::Cube::new(player_color, &self.render_context.gl);
 
         let player_model = entity::Model::new(player_cube);
 
@@ -108,7 +110,7 @@ impl Context {
 
         let player_projectile_color = na::Vector3::new(0.2,  1.0, 0.2);
 
-        let player_projectile_cube = cube::Cube::new(&self.render_context.res, player_projectile_color, &self.render_context.gl)?;
+        let player_projectile_cube = cube::Cube::new(player_projectile_color, &self.render_context.gl);
 
         let mut proj_model = entity::Model::new(player_projectile_cube);
 
@@ -210,9 +212,6 @@ impl Context {
     pub fn handle_inputs(&mut self) {
         let action = self.controls.handle_inputs(&mut self.render_context);
 
-
-
-
         match action {
             controls::Action::AddEnemy => self.add_enemy(),
             controls::Action::NoAction => { },
@@ -221,22 +220,23 @@ impl Context {
 
     pub fn render(&self){
 
+        self.cube_shader.set_projection_and_view(&self.render_context.gl, self.camera.projection(), self.camera.view());
 
-        self.scene.render(&self.render_context.gl, self.camera.projection(), self.camera.view());
+        self.scene.render(&self.render_context.gl, self.camera.projection(), self.camera.view(), &self.cube_shader);
 
 
         // player
-        self.ecs.render(self.player_id, &self.render_context.gl, &self.camera.projection(), &self.camera.view());
+        self.ecs.render(self.player_id, &self.render_context.gl, &self.cube_shader);
 
 
         // enemies
         for id in &self.enemies {
-            self.ecs.render(*id, &self.render_context.gl, &self.camera.projection(), &self.camera.view());
+            self.ecs.render(*id, &self.render_context.gl, &self.cube_shader);
         }
 
 
         for p in &self.player_projectiles {
-            self.ecs.render(p.entity_id, &self.render_context.gl, &self.camera.projection(), &self.camera.view());
+            self.ecs.render(p.entity_id, &self.render_context.gl, &self.cube_shader);
         }
 
 
@@ -265,6 +265,8 @@ fn empty() -> Result<Context, failure::Error> {
 
     let level = level::Level::load(&render_context.res,"levels/debugLevel1.txt")?;
 
+    let cube_shader = render_gl::Shader::new("cube", &render_context.res, &render_context.gl)?;
+
     let mut scene = scene::Scene::new(&level, &render_context)?;
 
     scene.add_box(na::Vector3::new(3.0, 0.0, 0.0));
@@ -289,5 +291,6 @@ fn empty() -> Result<Context, failure::Error> {
         enemies,
         player_projectile_model_id: 9999,
         enemy_model_id: 9999,
+        cube_shader
     })
 }

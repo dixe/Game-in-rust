@@ -1,238 +1,74 @@
+use failure;
 use gl;
-use std;
-use std::ffi::{CString, CStr};
 
-use crate::resources::{self, Resources} ;
-
-pub struct Program {
-    gl: gl::Gl,
-    id: gl::types::GLuint,
-}
-
-#[derive(Debug, Fail)]
-pub enum Error {
-    #[fail(display = "Failed to load resource {}", name)]
-    ResourceLoad { name: String, inner: resources::Error },
-    #[fail(display = "Can not determine shader type for resource {}", name)]
-    CanNotDetermineShaderTypeForResource { name: String },
-    #[fail(display = "Failed to compile shader {}: {}", name, message)]
-    CompileError { name: String, message: String },
-    #[fail(display = "Failed to link program {}: {}", name, message)]
-    LinkError { name: String, message: String },
-}
-
-impl Program {
-    pub fn from_res(gl: &gl::Gl, res: &Resources, name: &str) -> Result<Program, Error> {
-        const POSSIBLE_EXT: [&str; 2] = [
-            ".vert",
-            ".frag",
-        ];
-
-
-        let shaders = POSSIBLE_EXT.iter()
-            .map(|file_extension| {
-                Shader::from_res(gl, res, &format!("{}{}", name, file_extension))
-            })
-            .collect::<Result<Vec<Shader>, Error>>()?;
-
-        Program::from_shaders(gl, &shaders[..]).map_err(|message| Error::LinkError {
-            name: name.into(),
-            message
-        })
-    }
-
-    pub fn from_shaders(gl: &gl::Gl, shaders: &[Shader]) -> Result<Program, String> {
-        let program_id = unsafe { gl.CreateProgram() };
-
-        for shader in shaders {
-            unsafe { gl.AttachShader(program_id, shader.id()); }
-        }
-
-        unsafe { gl.LinkProgram(program_id); }
-
-        let mut success: gl::types::GLint = 1;
-
-        unsafe {
-            gl.GetProgramiv(program_id, gl::LINK_STATUS, &mut success);
-        }
-
-        if success == 0 {
-
-            let mut len: gl::types::GLint = 0;
-            unsafe {
-                gl.GetProgramiv(program_id, gl::INFO_LOG_LENGTH, &mut len);
-            }
-
-            let error: CString = create_whitespace_cstring_with_len(len as usize);
-
-            unsafe {
-                gl.GetProgramInfoLog(
-                    program_id,
-                    len,
-                    std::ptr::null_mut(),
-                    error.as_ptr() as *mut gl::types::GLchar
-                );
-            }
-
-            return Err(error.to_string_lossy().into_owned());
-
-        }
-
-        for shader in shaders {
-            unsafe { gl.DetachShader(program_id, shader.id); }
-        }
-
-        Ok(Program {
-            gl: gl.clone(),
-            id : program_id
-        })
-    }
-
-
-    pub fn set_used(&self) {
-        unsafe {
-            self.gl.UseProgram(self.id)
-        }
-    }
-
-    pub fn id(&self) -> gl::types::GLuint {
-        self.id
-    }
-}
-
-
-impl Drop for Program {
-    fn drop(&mut self) {
-        unsafe {
-            self.gl.DeleteProgram(self.id);
-        }
-    }
-}
+use crate::resources::Resources;
+use crate::render_gl;
 
 
 
 pub struct Shader {
-    gl: gl::Gl,
-    id: gl::types::GLuint,
-}
+    program: render_gl::Program,
 
+}
 
 impl Shader {
 
-    pub fn from_res(gl: &gl::Gl, res: &Resources, name: &str) -> Result<Shader, Error> {
-        const POSSIBLE_EXT: [(&str, gl::types::GLenum); 2] = [
-            (".vert", gl::VERTEX_SHADER),
-            (".frag", gl::FRAGMENT_SHADER),
-        ];
+    pub fn new(shader_name: &str, res: &Resources, gl: &gl::Gl) -> Result<Shader, failure::Error> {
 
+        let shader_prefix = "shaders/".to_owned();
+        let full_name = shader_prefix + shader_name;
+        let program = render_gl::Program::from_res(gl, res, &full_name).unwrap();
 
-        let shader_kind = POSSIBLE_EXT.iter()
-            .find(|&&(file_extension, _)| {
-                name.ends_with(file_extension)
-            })
-            .map(|&(_, kind)| kind)
-            .ok_or_else(|| Error::CanNotDetermineShaderTypeForResource {
-                name: name.into()
-            })?;
-
-
-        let source = res.load_cstring(name)
-            .map_err(|e| Error::ResourceLoad {
-                name: name.into()
-                    , inner: e
-            })?;
-
-        Shader::from_source(gl, &source, shader_kind).map_err(|message| Error::CompileError {
-            name: name.into(),
-            message
+        Ok(Shader {
+            program
         })
-
     }
 
-
-
-    fn from_source(
-        gl: &gl::Gl,
-        source: &CStr,
-        kind: gl::types::GLenum
-    ) -> Result<Shader, String> {
-        let id = shader_from_source(gl, source, kind)?;
-        Ok(Shader { gl: gl.clone(), id })
-    }
-
-
-
-    pub fn from_vert_source(gl: &gl::Gl, source: &CStr) -> Result<Shader, String> {
-        Shader::from_source(gl, source, gl::VERTEX_SHADER)
-    }
-
-    pub fn from_frag_source(gl: &gl::Gl, source: &CStr) -> Result<Shader, String> {
-        Shader::from_source(gl, source, gl::FRAGMENT_SHADER)
-    }
-
-    pub fn id(&self) -> gl::types::GLuint {
-        self.id
-    }
-}
-
-
-impl Drop for Shader {
-    fn drop(&mut self) {
-        unsafe {
-            self.gl.DeleteShader(self.id);
-        }
-    }
-}
-
-
-fn shader_from_source(
-    gl: &gl::Gl,
-    source: &CStr,
-    kind: gl::types::GLenum
-) -> Result<gl::types::GLuint,String> {
-
-    let id = unsafe { gl.CreateShader(kind) };
-
-    unsafe {
-        gl.ShaderSource(id, 1, &source.as_ptr(), std::ptr::null());
-        gl.CompileShader(id)
-    };
-
-    let mut success: gl::types::GLint = 1;
-
-    unsafe {
-        gl.GetShaderiv(id,gl::COMPILE_STATUS, &mut success);
-    }
-
-    if success == 0 {
-        let mut len: gl::types::GLint = 0;
-        unsafe {
-            gl.GetShaderiv(id, gl::INFO_LOG_LENGTH, &mut len);
-        }
-
-        let error: CString = create_whitespace_cstring_with_len(len as usize);
+    pub fn set_projection_and_view(&self, gl: &gl::Gl, projection: na::Matrix4<f32>, view: na::Matrix4<f32>) {
+        self.program.set_used();
 
         unsafe {
-            gl.GetShaderInfoLog(
-                id,
-                len,
-                std::ptr::null_mut(),
-                error.as_ptr() as *mut gl::types::GLchar
-            );
-        }
+            let proj_str = std::ffi::CString::new("projection").unwrap();
+            let view_str = std::ffi::CString::new("view").unwrap();
 
-        return Err(error.to_string_lossy().into_owned());
+            let proj_loc = gl.GetUniformLocation(
+                self.program.id(),
+                proj_str.as_ptr() as *mut gl::types::GLchar);
+
+            let view_loc = gl.GetUniformLocation(
+                self.program.id(),
+                view_str.as_ptr() as *mut gl::types::GLchar);
+
+
+            gl.UniformMatrix4fv(
+                proj_loc,
+                1,
+                gl::FALSE,
+                projection.as_slice().as_ptr() as *const f32);
+            gl.UniformMatrix4fv(
+                view_loc,
+                1,
+                gl::FALSE,
+                view.as_slice().as_ptr() as *const f32);
+        }
     }
 
-    Ok(id)
-}
+    pub fn set_model(&self, gl: &gl::Gl, model: na::Matrix4<f32>) {
+        self.program.set_used();
 
+        unsafe {
+            let model_str = std::ffi::CString::new("model").unwrap();
 
+            let model_loc = gl.GetUniformLocation(
+                self.program.id(),
+                model_str.as_ptr() as *mut gl::types::GLchar);
 
-fn create_whitespace_cstring_with_len(len: usize) -> CString {
-    let mut buffer: Vec<u8> = Vec::with_capacity(len as usize + 1);
-    buffer.extend([b' '].iter().cycle().take(len as usize));
-    unsafe {
-        return CString::from_vec_unchecked(buffer)
-    };
+            gl.UniformMatrix4fv(
+                model_loc,
+                1,
+                gl::FALSE,
+                model.as_slice().as_ptr() as *const f32);
+        }
+
+    }
 }

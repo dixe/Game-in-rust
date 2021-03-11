@@ -1,5 +1,6 @@
 use crate::cube;
 
+use crate::render_gl;
 use nalgebra as na;
 
 
@@ -34,11 +35,11 @@ impl Model {
         self.model_mat = scale_mat * self.model_mat;
     }
 
-    pub fn render(&self, gl: &gl::Gl, projection: &na::Matrix4<f32>, view: &na::Matrix4<f32>, pos: na::Vector3::<f32>) {
+    pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader, pos: na::Vector3::<f32>) {
 
         let trans = na::Matrix4::new_translation(&pos);
 
-        self.model.render(gl, *projection, *view, trans * self.model_mat);
+        self.model.render(gl, shader, trans * self.model_mat);
     }
 
 }

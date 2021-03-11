@@ -25,7 +25,7 @@ impl Scene {
 
         let clr = na::Vector3::new(0.6, 0.5, 0.4);
         //TODO should be model ids
-        let border = cube::Cube::new(&ctx.res, clr, &ctx.gl)?;
+        let border = cube::Cube::new(clr, &ctx.gl);
 
         let floor_clr = na::Vector3::new(0.50, 0.33, 0.6);
 
@@ -97,7 +97,7 @@ impl Scene {
 
 
 
-    pub fn render(&self, gl: &gl::Gl, projection: na::Matrix4<f32>,  view: na::Matrix4<f32>) {
+    pub fn render(&self, gl: &gl::Gl, projection: na::Matrix4<f32>, view: na::Matrix4<f32>, shader: &render_gl::Shader) {
 
         self.floor.render(gl, projection, view);
 
@@ -107,7 +107,7 @@ impl Scene {
 
             let model_mat = translation *  na::Matrix4::identity();
 
-            self.border.render(gl, projection, view, model_mat);
+            self.border.render(gl, shader, model_mat);
         }
     }
 

@@ -28,6 +28,9 @@ pub struct Context {
 
 impl Context {
     pub fn switch_mode(&mut self){
+
+        self.wire_frame = !self.wire_frame;
+
         if self.wire_frame {
             unsafe {
                 self.gl.PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
@@ -39,12 +42,11 @@ impl Context {
             }
         }
 
-        self.wire_frame = !self.wire_frame
+
     }
 
 
     pub fn gl_swap_window(&self) {
-
         self.window.gl_swap_window();
     }
 
@@ -93,13 +95,14 @@ pub fn setup() -> Result<Context, failure::Error>
 
     viewport.set_used(&gl);
 
-    let wire_frame = true;
+    let wire_frame = false;
 
     let transform = na::Matrix4::identity();
 
     unsafe {
         gl.Enable(gl::DEPTH_TEST);
     }
+
 
     Ok(Context{
         res,
