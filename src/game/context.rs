@@ -223,9 +223,7 @@ impl Context {
     pub fn render(&self){
         // RENDER SCENE WITH CUBE SHADER
         self.cube_shader.set_used();
-
         self.cube_shader.set_vec3(&self.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
-
         self.cube_shader.set_projection_and_view(&self.render_context.gl, self.camera.projection(), self.camera.view());
 
         self.scene.render(&self.render_context.gl, self.camera.projection(), self.camera.view(), &self.cube_shader);
@@ -271,7 +269,7 @@ fn empty() -> Result<Context, failure::Error> {
 
     let level = level::Level::load(&render_context.res,"levels/debugLevel1.txt")?;
 
-    let cube_shader = render_gl::Shader::new("ambient", &render_context.res, &render_context.gl)?;
+    let cube_shader = render_gl::Shader::new("difuse", &render_context.res, &render_context.gl)?;
 
     let light_shader = render_gl::Shader::new("lightcube", &render_context.res, &render_context.gl)?;
 
