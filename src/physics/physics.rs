@@ -112,17 +112,17 @@ fn do_collisions(entities: &mut CollisionEntities, scene: &scene::Scene) -> Coll
 
 
 
-    entity_update_movement_scene(&mut entities.player, scene);
+    entity_update_collision_scene(&mut entities.player, scene);
 
     // updated to be inside the walls
 
-    let player_collision = ConvexCollisionShape::rectangle(&mut entities.player.pos, 1.0, 1.0);
+    let player_collision = ConvexCollisionShape::rectangle(&mut entities.player.pos, 1.0, 1.0, entities.player.rotation_cos, entities.player.rotation_sin);
 
     for enemy in entities.enemies.values_mut() {
-        entity_update_movement_scene(enemy, scene);
+        entity_update_collision_scene(enemy, scene);
 
 
-        let enemy_collision = ConvexCollisionShape::rectangle(&enemy.pos, 1.0, 1.0);
+        let enemy_collision = ConvexCollisionShape::rectangle(&enemy.pos, 1.0, 1.0, enemy.rotation_cos, enemy.rotation_sin);
 
         let (col, dir) = collision_sat_shapes(&player_collision, &enemy_collision);
         if col {
@@ -131,7 +131,7 @@ fn do_collisions(entities: &mut CollisionEntities, scene: &scene::Scene) -> Coll
 
         for projectile in entities.projectiles.values() {
 
-            let projectile_collision = ConvexCollisionShape::rectangle(&projectile.pos, 1.0, 1.0);
+            let projectile_collision = ConvexCollisionShape::rectangle(&projectile.pos, 1.0, 1.0, projectile.rotation_cos, projectile.rotation_sin);
 
             let (col, _) = collision_sat_shapes(&projectile_collision, &enemy_collision);
 
@@ -164,7 +164,7 @@ fn handle_collisions(collisions: &Collisions, entities: &mut CollisionEntities, 
 
 
 
-        let (col, correction) = entity_update_movement_scene(enemy, scene);
+        let (col, correction) = entity_update_collision_scene(enemy, scene);
         if col {
             entities.player.pos -= correction;
         };
@@ -173,7 +173,7 @@ fn handle_collisions(collisions: &Collisions, entities: &mut CollisionEntities, 
 }
 
 
-fn entity_update_movement_scene( entity: &mut entity::Physics, scene: &scene::Scene) -> (bool, na::Vector3::<f32>) {
+fn entity_update_collision_scene( entity: &mut entity::Physics, scene: &scene::Scene) -> (bool, na::Vector3::<f32>) {
 
     let mut entity_pos_updated = entity.pos;
     let mut hit = false;
@@ -181,7 +181,7 @@ fn entity_update_movement_scene( entity: &mut entity::Physics, scene: &scene::Sc
 
     for wall in scene.border_sides() {
 
-        let col_shape = ConvexCollisionShape::rectangle(&entity_pos_updated, 1.0, 1.0);
+        let col_shape = ConvexCollisionShape::rectangle(&entity_pos_updated, 1.0, 1.0, entity.rotation_cos, entity.rotation_sin);
 
         let (col, correction) = collision_sat_shapes(&col_shape, &wall);
 

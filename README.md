@@ -6,6 +6,7 @@ A game in rust to learn rust and some opengl
 
 
 # Tasks
-- [ ] Shoots collision shoul also rotate
-- [ ] Cool down on shots
+- [x] Shots collision should also rotate
+- [x] Cool down on shots
 - [ ] Enemy Shooting at player
+- [ ] Enemies collide with each other

@@ -3,6 +3,8 @@ use crate::physics;
 use crate::shot;
 use crate::entity;
 
+
+
 pub fn update_game_state(ctx: &mut game::Context, collisions: &physics::Collisions) {
 
     let delta = ctx.get_delta_millis();
@@ -13,6 +15,18 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &physics::Collisio
 
 
     update_player_shoot(ctx);
+
+
+    // PLAYER MOVEMENT
+
+    let mut player = match ctx.ecs.get_physics(ctx.player_id) {
+        Some(e) => *e,
+        None => return, // Dead player, don't care about ai update
+    };
+
+    game::update_velocity_and_rotation(&mut player, ctx.controls.movement_dir);
+
+    ctx.ecs.set_physics(ctx.player_id, player);
 
 
 
@@ -94,9 +108,7 @@ fn add_projectile(ctx: &mut game::Context, shoot_dir: na::Vector3::<f32>, entity
     entity_pos.z += 0.3; // get shoot heght from shooter
 
 
-    let rotation_cos = na::Vector3::new(1.0, 0.0, 0.0).dot(&shoot_dir.normalize());
-    let rotation_sin_vec = na::Vector3::new(1.0, 0.0, 0.0).cross(&shoot_dir.normalize());
-    let rotation_sin = rotation_sin_vec.z.signum() * rotation_sin_vec.magnitude();
+    let rotation = game::get_rotation(&shoot_dir);
 
 
     let id = ctx.ecs.add_entity();
@@ -108,8 +120,8 @@ fn add_projectile(ctx: &mut game::Context, shoot_dir: na::Vector3::<f32>, entity
         pos: entity_pos,
         velocity: vel,
         max_speed: shooter.speed,
-        rotation_sin,
-        rotation_cos,
+        rotation_sin: rotation.sin,
+        rotation_cos: rotation.cos,
         acceleration: shooter.speed,
         //TODO removee from phyiscs, and // get model id by entity_id
         model_id: ctx.player_projectile_model_id,
