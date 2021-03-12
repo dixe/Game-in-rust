@@ -13,7 +13,6 @@ use crate::shot;
 
 pub struct Context {
 
-
     //GAME STATE SHOULD MOVE INTO STRUCT/MODULE
     pub player_projectiles: Vec::<shot::Shot>,
 
@@ -73,24 +72,31 @@ impl Context {
 
 
     fn setup_player(&mut self) -> Result<(), failure::Error>  {
+        let player_id = self.ecs.add_entity();
 
-        // PLAYER
+
+        // PHYSICS
         let player_pos = na::Vector3::new(3.0, 3.0, 0.5);
+
+        // MODEL
         let player_color = na::Vector3::new(0.0, 1.0, 1.0);
-
         let player_cube = cube::Cube::new(player_color, &self.render_context.gl);
-
         let player_model = entity::Model::new(player_cube);
-
         let player_model_id = self.ecs.add_model(player_model);
 
-        let player_id = self.ecs.add_entity();
+
+        // SHOOTER
+        let player_shooter = entity::Shooter::default();
+        self.ecs.set_shooter(player_id, player_shooter);
+
 
         self.ecs.set_model(player_id, player_model_id);
 
 
         let physics = entity::Physics {
             entity_id: player_id,
+            rotation_sin: 0.0,
+            rotation_cos: 1.0,
             pos: player_pos,
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             max_speed: 10.0,
@@ -115,8 +121,8 @@ impl Context {
 
         let mut proj_model = entity::Model::new(player_projectile_cube);
 
-        let scale = &na::Vector3::new(0.3,0.3,0.3);
-        proj_model.scale(&scale);
+        //let scale = &na::Vector3::new(0.3,0.3,0.3);
+        //proj_model.scale(&scale);
 
         let player_projectile_model_id = self.ecs.add_model(proj_model);
 
@@ -128,7 +134,7 @@ impl Context {
     fn add_enemy(&mut self) {
 
         // ENEMY
-        let enemy_pos = na::Vector3::new(-3.0, -3.0, -0.5);
+        let enemy_pos = na::Vector3::new(-3.0, -3.0, 0.5);
 
         let enemy_id = self.ecs.add_entity();
 
@@ -139,6 +145,8 @@ impl Context {
 
         let physics = entity::Physics {
             entity_id: enemy_id,
+            rotation_sin: 0.0,
+            rotation_cos: 1.0,
             pos: enemy_pos,
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             max_speed: 10.0,
@@ -159,39 +167,6 @@ impl Context {
             },
             None => {}
         };
-    }
-
-    pub fn add_player_projectile(&mut self, dir: na::Vector3::<f32>){
-
-        let mut player_pos = match self.ecs.get_physics(self.player_id) {
-            Some(p) => p.pos,
-            _ => return // we are dead, no shooting ;(
-        };
-
-        player_pos.z += 0.3;
-
-        let speed = 30.0;
-
-        let vel = dir.normalize() * speed;
-
-        let id = self.ecs.add_entity();
-
-        let physics = entity::Physics {
-            entity_id: id,
-            pos: player_pos,
-            velocity: vel,
-            max_speed: speed,
-            acceleration: speed,
-            //TODO remove from phyiscs
-            model_id: self.player_projectile_model_id,
-        };
-
-
-        self.ecs.set_physics(id, physics);
-        let shot = shot::Shot::new(id, 300);
-
-        self.player_projectiles.push(shot);
-
     }
 
 
@@ -224,7 +199,7 @@ impl Context {
         // RENDER SCENE WITH CUBE SHADER
         self.cube_shader.set_used();
         // CAN BE MOVED OUTSIDE THE LOOP
-        self.cube_shader.set_vec3(&self.render_context.gl, "lightPos", na::Vector3::new(0.0, 0.0, 5.0));
+        self.cube_shader.set_vec3(&self.render_context.gl, "lightPos", na::Vector3::new(0.0, 0.0, 5.0)); //
         self.cube_shader.set_vec3(&self.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
 
         self.cube_shader.set_projection_and_view(&self.render_context.gl, self.camera.projection(), self.camera.view());
@@ -272,7 +247,7 @@ fn empty() -> Result<Context, failure::Error> {
 
     let level = level::Level::load(&render_context.res,"levels/debugLevel1.txt")?;
 
-    let cube_shader = render_gl::Shader::new("diffuse", &render_context.res, &render_context.gl)?;
+    let cube_shader = render_gl::Shader::new("light_color_shader", &render_context.res, &render_context.gl)?;
 
     let light_shader = render_gl::Shader::new("lightcube", &render_context.res, &render_context.gl)?;
 

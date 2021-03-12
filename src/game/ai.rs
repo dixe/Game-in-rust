@@ -23,7 +23,7 @@ pub fn run_ai(ctx: &mut game::Context) {
         };
 
         let move_dir = (player.pos - enemy.pos).normalize();
-        enemy.velocity = new_velocity( &enemy, move_dir);
+        //enemy.velocity = new_velocity( &enemy, move_dir);
         ctx.ecs.set_physics(*e, enemy);
 
     }

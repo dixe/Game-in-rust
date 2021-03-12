@@ -2,7 +2,6 @@ use nalgebra as na;
 
 
 #[derive(Debug,Copy, Clone)]
-
 pub struct Physics {
 
     pub entity_id: usize,
@@ -10,6 +9,8 @@ pub struct Physics {
     pub velocity: na::Vector3::<f32>,
     pub max_speed: f32,
     pub acceleration: f32,
+    pub rotation_sin: f32,
+    pub rotation_cos: f32,
     //
     pub model_id: usize,
 }

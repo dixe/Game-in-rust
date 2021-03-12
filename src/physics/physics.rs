@@ -67,8 +67,6 @@ fn create_collision_entities(ctx: &game::Context) -> Option<CollisionEntities> {
 
 pub fn process(ctx: &mut game::Context) -> Collisions {
 
-
-
     let mut col_entities = match create_collision_entities(ctx) {
         Some(col_en) => col_en,
         None => return Collisions {
@@ -78,9 +76,6 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
     };
 
     let delta = ctx.get_delta_time();
-
-
-
 
     // UPDATE POSITION AND DETECT COLLISIONS
     update_entities_position(&mut col_entities, delta);

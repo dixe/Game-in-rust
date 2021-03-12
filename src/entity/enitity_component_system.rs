@@ -2,24 +2,22 @@ use nalgebra as na;
 
 
 use crate::render_gl;
-use crate::entity::{Physics, Model, Health};
+use crate::entity::*;
 
 
 #[derive(ComponentSystem)]
 pub struct EntityComponentSystem {
 
     next_id: usize,
-
     models: Vec<Model>,
-
 
     // Components
     #[component = "Physics"]
     physics: std::collections::HashMap<usize, Physics>,
-
     #[component = "Health"]
     health: std::collections::HashMap<usize, Health>,
-
+    #[component = "Shooter"]
+    shooter: std::collections::HashMap<usize, Shooter>,
 
     model_reference: std::collections::HashMap<usize, usize>,
 
@@ -34,6 +32,7 @@ impl EntityComponentSystem {
             next_id: 1,
             physics: std::collections::HashMap::new(),
             health: std::collections::HashMap::new(),
+            shooter: std::collections::HashMap::new(),
             models: Vec::<Model>::new(),
             model_reference: std::collections::HashMap::new(),
         }
@@ -61,7 +60,7 @@ impl EntityComponentSystem {
     pub fn render(&self, entity_id:usize, gl: &gl::Gl, shader: &render_gl::Shader) {
         match self.get_physics(entity_id) {
             Some(e) => match self.models.get(e.model_id as usize) {
-                Some(m) => m.render(gl, shader, e.pos),
+                Some(m) => m.render(gl, shader, e.pos, e.rotation_sin, e.rotation_cos),
                 None => {}
             },
             None => {}
