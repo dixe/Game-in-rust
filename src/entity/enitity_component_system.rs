@@ -17,7 +17,7 @@ pub struct EntityComponentSystem {
     #[component = "Health"]
     health: std::collections::HashMap<usize, Health>,
     #[component = "Shooter"]
-    shooter: std::collections::HashMap<usize, Shooter>,
+    pub shooter: std::collections::HashMap<usize, Shooter>,
 
     model_reference: std::collections::HashMap<usize, usize>,
 

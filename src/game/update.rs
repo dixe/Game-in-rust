@@ -4,9 +4,16 @@ use crate::shot;
 use crate::entity;
 
 pub fn update_game_state(ctx: &mut game::Context, collisions: &physics::Collisions) {
-    // maybe not have this as member function, since it not realy here it should be
+
+    let delta = ctx.get_delta_millis();
+
+    // Update shooters, projectiles and othertime based stuff
+    update_projectiles(ctx, delta);
+    update_shooters(ctx, delta);
+
 
     update_player_shoot(ctx);
+
 
 
     for c in &collisions.enemies_hit {
@@ -29,8 +36,14 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &physics::Collisio
 }
 
 
-fn update_player_shoot(ctx: &mut game::Context) {
-    let delta = ctx.get_delta_millis();
+fn update_shooters(ctx: &mut game::Context, delta: i32) {
+
+    for shooter in ctx.ecs.shooter.values_mut() {
+        shooter.update(delta);
+    }
+}
+
+fn update_projectiles(ctx: &mut game::Context, delta: i32) {
     for p in &mut ctx.player_projectiles {
         p.update(delta);
 
@@ -39,16 +52,22 @@ fn update_player_shoot(ctx: &mut game::Context) {
         }
     }
 
+    // enemies shot when needed
+}
+
+
+fn update_player_shoot(ctx: &mut game::Context) {
+
+    let player_id = ctx.player_id;
     ctx.player_projectiles.retain(|p| !p.expired);
 
-
     let shoot_dir = ctx.controls.shoot_dir;
-    let player_id = ctx.player_id;
 
     match shoot_dir {
         Some(dir) =>
         {
             add_projectile(ctx,  dir, player_id);
+
         },
         _ => {}
     };
@@ -58,16 +77,19 @@ fn update_player_shoot(ctx: &mut game::Context) {
 
 fn add_projectile(ctx: &mut game::Context, shoot_dir: na::Vector3::<f32>, entity_id: usize) {
 
-    let shooter = match ctx.ecs.get_shooter(entity_id) {
-        Some(s) => s,
+    let mut shooter = match ctx.ecs.get_shooter(entity_id) {
+        Some(s) => *s,
         None => return,
     };
+
+    if !shooter.can_shoot() {
+        return;
+    }
 
     let mut entity_pos = match ctx.ecs.get_physics(entity_id) {
         Some(s) => s.pos,
         None => return,
     };
-
 
     entity_pos.z += 0.3; // get shoot heght from shooter
 
@@ -76,28 +98,36 @@ fn add_projectile(ctx: &mut game::Context, shoot_dir: na::Vector3::<f32>, entity
     let rotation_sin_vec = na::Vector3::new(1.0, 0.0, 0.0).cross(&shoot_dir.normalize());
     let rotation_sin = rotation_sin_vec.z.signum() * rotation_sin_vec.magnitude();
 
-    let speed = 30.0;
-
-    let vel = shoot_dir.normalize() * speed;
 
     let id = ctx.ecs.add_entity();
+    let vel = shoot_dir.normalize() * shooter.speed;
+
 
     let physics = entity::Physics {
         entity_id: id,
         pos: entity_pos,
         velocity: vel,
-        max_speed: speed,
+        max_speed: shooter.speed,
         rotation_sin,
         rotation_cos,
-        acceleration: speed,
+        acceleration: shooter.speed,
         //TODO removee from phyiscs, and // get model id by entity_id
         model_id: ctx.player_projectile_model_id,
     };
 
 
+
+
     ctx.ecs.set_physics(id, physics);
-    let shot = shot::Shot::new(id, 300);
+
+
+    let shot = shot::Shot::new(id, (shooter.speed * shooter.distance) as i32);
 
     ctx.player_projectiles.push(shot);
+
+    // update shooter component
+    shooter.shoot();
+    ctx.ecs.set_shooter(entity_id, shooter);
+
 
 }
