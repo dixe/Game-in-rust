@@ -124,8 +124,6 @@ fn add_projectile(ctx: &mut game::Context, shoot_dir: na::Vector3::<f32>, entity
     physics.acceleration = shooter.speed;
 
 
-
-
     ctx.ecs.set_physics(id, physics);
 
 

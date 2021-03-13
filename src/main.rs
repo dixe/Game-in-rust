@@ -38,19 +38,19 @@ fn main() {
 fn run() -> Result<(), failure::Error> {
 
     let mut ctx = game::Context::new()?;
-
+    /*
     let light_color = na::Vector3::new(1.0, 1.0, 1.0);
     let light_cube = cube::Cube::new(light_color, &ctx.render_context.gl);
 
-    let mut light_model = entity::Model::new(light_cube);
-
-    let pos = na::Vector3::new(0.0, 0.0, 15.0);
+    let light_model = entity::Model::new(light_cube);
 
     let triangle_pos = na::Vector3::new(0.0, 0.0, 5.0);
 
+    let tri = triangle::Triangle::new(&ctx.render_context.res, pos, light_color, &ctx.render_context.gl)?;
 
+    let pos = na::Vector3::new(0.0, 0.0, 15.0);
 
-
+     */
     'main: loop{
 
         ctx.update_delta();
@@ -78,7 +78,7 @@ fn run() -> Result<(), failure::Error> {
         // RENDERING
         ctx.render();
 
-        let tri = triangle::Triangle::new(&ctx.render_context.res, pos, light_color, &ctx.render_context.gl)?;
+
 
 
         ctx.light_shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera.projection(), ctx.camera.view());

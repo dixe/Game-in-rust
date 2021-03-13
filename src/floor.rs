@@ -1,7 +1,6 @@
 use gl;
 use failure;
 use crate::render_gl::{self, data, buffer};
-use crate::resources::Resources;
 use nalgebra as na;
 
 #[derive(VertexAttribPointers,Copy, Clone, Debug)]
@@ -102,7 +101,7 @@ impl Floor {
         })
     }
 
-    pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader, projection: na::Matrix4<f32>, view: na::Matrix4<f32>) {
+    pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader) {
         shader.set_used();
 
         shader.set_model(gl, self.model_mat);

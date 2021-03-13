@@ -9,4 +9,4 @@ A game in rust to learn rust and some opengl
 - [x] Shots collision should also rotate
 - [x] Cool down on shots
 - [ ] Enemy Shooting at player
-- [ ] Enemies collide with each other
+- [x] Enemies collide with each other

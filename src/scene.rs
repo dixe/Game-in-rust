@@ -99,9 +99,9 @@ impl Scene {
 
 
 
-    pub fn render(&self, gl: &gl::Gl, projection: na::Matrix4<f32>, view: na::Matrix4<f32>, shader: &render_gl::Shader) {
+    pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader) {
 
-        self.floor.render(gl, shader, projection, view);
+        self.floor.render(gl, shader);
 
         for pos in &self.border_positions {
 

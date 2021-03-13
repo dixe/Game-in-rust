@@ -1,6 +1,5 @@
 use nalgebra as na;
 
-use crate::scene;
 use crate::entity;
 use crate::game;
 
@@ -20,18 +19,7 @@ pub struct Manifold {
 pub fn do_impulse_correction(ctx: &mut game::Context) {
     let (mut impulse_entities, collision_shapes) = create_impulse_entities(ctx);
 
-    let delta = ctx.get_delta_time();
-
-    //println!("BEFORE {:#?}", impulse_entities);
-    update_entities_position(&mut impulse_entities, delta);
-
-    //println!("AFTER {:#?}", impulse_entities);
-
-    let manifolds = do_impulse_collisions(&mut impulse_entities, &collision_shapes, &ctx.scene);
-
-    //println!("{:#?}", manifolds);
-
-
+    let manifolds = do_impulse_collisions(&mut impulse_entities, &collision_shapes);
 
     impulse_collisions_resolution(ctx, manifolds, &mut impulse_entities);
 
@@ -52,8 +40,8 @@ fn impulse_collisions_resolution(ctx: &mut game::Context, manifolds: Vec<Manifol
         impulse_collision_resolution(&mut e1, &mut e2, &manifold);
         impulse_position_correction(&mut e1, &mut e2, &manifold);
         //println!("E1 AFTER {:#?}", e2);
-        std::mem::replace(&mut entities[manifold.entity_1_index], e1);
-        std::mem::replace(&mut entities[manifold.entity_2_index], e2);
+        let _ = std::mem::replace(&mut entities[manifold.entity_1_index], e1);
+        let _ = std::mem::replace(&mut entities[manifold.entity_2_index], e2);
     }
 }
 
@@ -89,7 +77,7 @@ fn impulse_collision_resolution(entity_1: &mut entity::Physics, entity_2: &mut e
     // 1 is no energy absorbed and everything goes to new velocity
     // with 1 object in motion does not lose energy when hitting fx a wall
     //
-    let e = 1.0;
+    let e = 0.6;
 
     // impulse scalar
     let mut j =  -(1.0 + e) * vel_along_normal;
@@ -161,7 +149,7 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
 
 }
 
-fn do_impulse_collisions(entities: &[entity::Physics], shapes: &[ConvexCollisionShape],scene: &scene::Scene) -> Vec<Manifold> {
+fn do_impulse_collisions(entities: &[entity::Physics], shapes: &[ConvexCollisionShape]) -> Vec<Manifold> {
 
     let mut res = Vec::new();
 
@@ -170,7 +158,7 @@ fn do_impulse_collisions(entities: &[entity::Physics], shapes: &[ConvexCollision
         for index_2 in (index_1+1)..entities.len() {
             let e2 = entities[index_2];
             // if both are a wall we don't care about collision
-            if e1.entity_id == 0 && e1.entity_id == 0 {
+            if e1.entity_id == 0 && e2.entity_id == 0 {
                 continue;
             }
             let (col, normal, penetration) = collision_sat_shapes_impulse(&shapes[index_1], &shapes[index_2]);
@@ -191,15 +179,4 @@ fn do_impulse_collisions(entities: &[entity::Physics], shapes: &[ConvexCollision
     //println!("{:#?}", res);
     res
 
-}
-
-
-
-fn update_entities_position(entities: &mut Vec<entity::Physics>, delta: f32) {
-
-    for index in 0..entities.len() {
-        let mut e = entities[index];
-        e.pos += e.velocity * delta;
-        std::mem::replace(&mut entities[index], e);
-    }
 }

@@ -1,10 +1,6 @@
 use nalgebra as na;
 
-use crate::physics;
-use crate::shot;
 use crate::entity;
-
-
 
 pub fn update_velocity_and_rotation(entity: &mut entity::Physics, new_dir: na::Vector3::<f32>,)  {
 
@@ -24,12 +20,15 @@ pub fn update_velocity_and_rotation(entity: &mut entity::Physics, new_dir: na::V
 
     //TODO maybe have a cap on rotation. so entities cannot turn around in 1 frame, but need like X frame for 1 full rotation
     // Just define a rotation_speed on entity
+
+
+    /* TODO kinda broken with physics, maybe the normals are getting wrong, or we rotate wrong direction? right vs left hand coordinate system ect.
     let rotation = get_rotation(&new_vel);
 
-    //entity.rotation_sin = rotation.sin;
-    //entity.rotation_cos = rotation.cos;
+    entity.rotation_sin = rotation.sin;
+    entity.rotation_cos = rotation.cos;
 
-
+     */
     entity.velocity = new_vel;
 }
 

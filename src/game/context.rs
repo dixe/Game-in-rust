@@ -110,8 +110,8 @@ impl Context {
 
         let mut proj_model = entity::Model::new(player_projectile_cube);
 
-        //let scale = &na::Vector3::new(0.3,0.3,0.3);
-        //proj_model.scale(&scale);
+        let scale = &na::Vector3::new(0.3,0.3,0.3);
+        proj_model.scale(&scale);
 
         let player_projectile_model_id = self.ecs.add_model(proj_model);
 
@@ -182,7 +182,7 @@ impl Context {
 
         self.cube_shader.set_projection_and_view(&self.render_context.gl, self.camera.projection(), self.camera.view());
 
-        self.scene.render(&self.render_context.gl, self.camera.projection(), self.camera.view(), &self.cube_shader);
+        self.scene.render(&self.render_context.gl, &self.cube_shader);
 
 
         // player

@@ -1,6 +1,3 @@
-use nalgebra as na;
-
-
 use crate::render_gl;
 use crate::entity::*;
 
@@ -13,7 +10,7 @@ pub struct EntityComponentSystem {
 
     // Components
     #[component = "Physics"]
-    physics: std::collections::HashMap<usize, Physics>,
+    pub physics: std::collections::HashMap<usize, Physics>,
     #[component = "Health"]
     health: std::collections::HashMap<usize, Health>,
     #[component = "Shooter"]

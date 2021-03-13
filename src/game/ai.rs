@@ -1,12 +1,8 @@
-use nalgebra as na;
-
 use crate::game;
-use crate::entity;
-
 
 pub fn run_ai(ctx: &mut game::Context) {
 
-    let mut player = match ctx.ecs.get_physics(ctx.player_id) {
+    let player = match ctx.ecs.get_physics(ctx.player_id) {
         Some(e) => *e,
         None => return, // Dead player, don't care about ai update
     };
@@ -19,7 +15,7 @@ pub fn run_ai(ctx: &mut game::Context) {
         };
 
         let move_dir = (player.pos - enemy.pos).normalize();
-        //game::update_velocity_and_rotation(&mut enemy, move_dir);
+        game::update_velocity_and_rotation(&mut enemy, move_dir);
         ctx.ecs.set_physics(*e, enemy);
 
     }
