@@ -6,6 +6,9 @@ extern crate nalgebra as na;
 #[macro_use] extern crate render_gl_derive;
 #[macro_use] extern crate entity_component_derive;
 
+use std::io;
+use std::sync::mpsc;
+use std::thread;
 
 pub mod render_gl;
 pub mod resources;
@@ -27,12 +30,43 @@ mod scene;
 mod physics;
 
 
+#[derive(Copy, Clone, Debug)]
+enum Command {
+    Nop,
+    SwitchRenderMode,
+}
+
+
+static mut command: Command = Command::Nop;
 
 fn main() {
+    // set up commands channel and thread
+    thread::spawn(move || {
+
+        let mut input = String::new();
+
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read line");
+
+
+        unsafe {
+            // parse input
+            let msg = match input {
+                _ => command = Command::SwitchRenderMode,
+            };
+
+        }
+    });
+
+
+    // start game
     if let Err(e) = run() {
         println!("{}", debug::failure_to_string(e));
     }
 }
+
+
 
 
 fn run() -> Result<(), failure::Error> {
@@ -88,7 +122,18 @@ fn run() -> Result<(), failure::Error> {
 
         ctx.render_context.gl_swap_window();
 
-    }
+        unsafe {
+            match command {
+                Command::Nop => {},
+                Command::SwitchRenderMode => {
+                    command = Command::Nop;
+                    ctx.render_context.switch_mode();
 
+
+                },
+
+            }
+        }
+    }
     Ok(())
 }

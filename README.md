@@ -10,3 +10,6 @@ A game in rust to learn rust and some opengl
 - [x] Cool down on shots
 - [ ] Enemy Shooting at player
 - [x] Enemies collide with each other
+- [ ] Be able to load models
+- [x] Take console input while running.
+- [ ] Change shaders on the fly, required console input
