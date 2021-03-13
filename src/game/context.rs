@@ -75,9 +75,6 @@ impl Context {
         let player_id = self.ecs.add_entity();
 
 
-        // PHYSICS
-        let player_pos = na::Vector3::new(3.0, 3.0, 0.5);
-
         // MODEL
         let player_color = na::Vector3::new(0.0, 1.0, 1.0);
         let player_cube = cube::Cube::new(player_color, &self.render_context.gl);
@@ -93,17 +90,9 @@ impl Context {
         self.ecs.set_model(player_id, player_model_id);
 
 
-        let physics = entity::Physics {
-            entity_id: player_id,
-            rotation_sin: 0.0,
-            rotation_cos: 1.0,
-            pos: player_pos,
-            velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
-            max_speed: 10.0,
-            acceleration: 3.0,
-            //TODO remove from phyiscs
-            model_id: player_model_id,
-        };
+        let mut physics = entity::Physics::new(player_id, player_model_id);
+        physics.pos =  na::Vector3::new(3.0, 3.0, 0.5);
+
 
         self.ecs.set_physics(player_id, physics);
 
@@ -134,8 +123,6 @@ impl Context {
     fn add_enemy(&mut self) {
 
         // ENEMY
-        let enemy_pos = na::Vector3::new(-3.0, -3.0, 0.5);
-
         let enemy_id = self.ecs.add_entity();
 
         self.enemies.push(enemy_id);
@@ -143,17 +130,8 @@ impl Context {
         let health = entity::Health::new(100.0);
 
 
-        let physics = entity::Physics {
-            entity_id: enemy_id,
-            rotation_sin: 0.0,
-            rotation_cos: 1.0,
-            pos: enemy_pos,
-            velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
-            max_speed: 10.0,
-            acceleration: 3.0,
-            //TODO remove from phyiscs
-            model_id: self.enemy_model_id,
-        };
+        let mut physics = entity::Physics::new(enemy_id, self.enemy_model_id);
+        physics.pos = na::Vector3::new(-3.0, -3.0, 0.5);
 
         self.ecs.set_physics(enemy_id, physics);
 

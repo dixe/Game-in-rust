@@ -115,17 +115,13 @@ fn add_projectile(ctx: &mut game::Context, shoot_dir: na::Vector3::<f32>, entity
     let vel = shoot_dir.normalize() * shooter.speed;
 
 
-    let physics = entity::Physics {
-        entity_id: id,
-        pos: entity_pos,
-        velocity: vel,
-        max_speed: shooter.speed,
-        rotation_sin: rotation.sin,
-        rotation_cos: rotation.cos,
-        acceleration: shooter.speed,
-        //TODO removee from phyiscs, and // get model id by entity_id
-        model_id: ctx.player_projectile_model_id,
-    };
+    let mut physics = entity::Physics::new(id,  ctx.player_projectile_model_id);
+    physics.pos = entity_pos;
+    physics.velocity = vel;
+    physics.max_speed = shooter.speed;
+    physics.rotation_sin = rotation.sin;
+    physics.rotation_cos = rotation.cos;
+    physics.acceleration = shooter.speed;
 
 
 

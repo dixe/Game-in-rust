@@ -7,19 +7,20 @@ use crate::game;
 
 use crate::physics::projection_collision::*;
 
+use crate::physics::impulse_resolution::*;
+
 
 pub struct Collisions {
     pub enemies_hit: Vec<Hit>,
     pub player_enemy_collision: std::collections::HashMap<usize, na::Vector3::<f32>>,
 }
 
-
-
 pub struct Hit {
 
     pub entity_id: usize,
     pub projectile_id: usize,
 }
+
 
 
 struct CollisionEntities {
@@ -75,11 +76,16 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
         }
     };
 
-    let delta = ctx.get_delta_time();
+
 
     // UPDATE POSITION AND DETECT COLLISIONS
-    update_entities_position(&mut col_entities, delta);
 
+
+
+    do_impulse_correction(ctx);
+
+
+    /*
     let collisions = do_collisions(&mut col_entities, &ctx.scene);
 
 
@@ -88,38 +94,65 @@ pub fn process(ctx: &mut game::Context) -> Collisions {
 
 
 
+
+
     // SET THE CALCULATED PHYSICS
     for enemy in col_entities.enemies.values_mut() {
-        ctx.ecs.set_physics(enemy.entity_id, *enemy);
+    ctx.ecs.set_physics(enemy.entity_id, *enemy);
 
-    }
+}
 
     for projectile in col_entities.projectiles.values_mut() {
-        ctx.ecs.set_physics(projectile.entity_id, *projectile);
-    }
+    ctx.ecs.set_physics(projectile.entity_id, *projectile);
+}
 
-    ctx.ecs.set_physics(ctx.player_id, col_entities.player);
+    //ctx.ecs.set_physics(ctx.player_id, col_entities.player);
+
+
+     */
+    let collisions = Collisions {
+        enemies_hit: Vec::<Hit>::new(),
+        player_enemy_collision: std::collections::HashMap::new(),
+
+    };
+
     collisions
 
 }
+
+
 
 fn do_collisions(entities: &mut CollisionEntities, scene: &scene::Scene) -> Collisions {
 
     let mut collisions = Collisions {
         enemies_hit: Vec::<Hit>::new(),
         player_enemy_collision: std::collections::HashMap::new(),
+
     };
 
+    let player_collision = ConvexCollisionShape::rectangle(&entities.player.pos, 1.0, 1.0, entities.player.rotation_cos, entities.player.rotation_sin);
+
+    entity_update_collision_scene(&entities.player, scene);
 
 
-    entity_update_collision_scene(&mut entities.player, scene);
 
-    // updated to be inside the walls
 
-    let player_collision = ConvexCollisionShape::rectangle(&mut entities.player.pos, 1.0, 1.0, entities.player.rotation_cos, entities.player.rotation_sin);
 
-    for enemy in entities.enemies.values_mut() {
-        entity_update_collision_scene(enemy, scene);
+    let enemies: Vec<entity::Physics> = entities.enemies.values().map(|e| *e).collect();
+
+
+    for index in 0..enemies.len() {
+
+        let mut enemy = enemies[index];
+
+        entity_update_collision_scene(&mut enemy, scene);
+
+
+
+        for index2 in index..enemies.len() {
+            let  enemy2 = enemies[index];
+            //println!("enemy1 - {} and enemy2 - {}", index, index2);
+        }
 
 
         let enemy_collision = ConvexCollisionShape::rectangle(&enemy.pos, 1.0, 1.0, enemy.rotation_cos, enemy.rotation_sin);
@@ -141,10 +174,10 @@ fn do_collisions(entities: &mut CollisionEntities, scene: &scene::Scene) -> Coll
         }
 
     }
-
     collisions
-
 }
+
+
 
 
 fn handle_collisions(collisions: &Collisions, entities: &mut CollisionEntities, scene: &scene::Scene) {
@@ -173,7 +206,7 @@ fn handle_collisions(collisions: &Collisions, entities: &mut CollisionEntities, 
 }
 
 
-fn entity_update_collision_scene( entity: &mut entity::Physics, scene: &scene::Scene) -> (bool, na::Vector3::<f32>) {
+fn entity_update_collision_scene( entity: &entity::Physics, scene: &scene::Scene) -> (bool, na::Vector3::<f32>) {
 
     let mut entity_pos_updated = entity.pos;
     let mut hit = false;
@@ -193,28 +226,5 @@ fn entity_update_collision_scene( entity: &mut entity::Physics, scene: &scene::S
         }
     }
 
-    //TODO should we do this?? I makes sence that we don't use a illegal position for the rest of the update code
-    entity.set_position(entity_pos_updated);
     (hit, wall_correction)
-}
-
-
-
-
-fn update_entities_position(entities: &mut CollisionEntities, delta: f32) {
-
-    update_entity_position(&mut entities.player, delta);
-
-    for entity in entities.enemies.values_mut() {
-        update_entity_position(entity, delta);
-    }
-
-
-    for entity in entities.projectiles.values_mut() {
-        update_entity_position(entity, delta);
-    }
-}
-
-fn update_entity_position(entity: &mut entity::Physics, delta: f32) {
-    entity.pos += entity.velocity * delta;
 }

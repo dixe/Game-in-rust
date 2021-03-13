@@ -26,11 +26,11 @@ pub fn update_velocity_and_rotation(entity: &mut entity::Physics, new_dir: na::V
     // Just define a rotation_speed on entity
     let rotation = get_rotation(&new_vel);
 
-    entity.rotation_sin = rotation.sin;
-    entity.rotation_cos = rotation.cos;
+    //entity.rotation_sin = rotation.sin;
+    //entity.rotation_cos = rotation.cos;
 
 
-    entity.velocity =  new_vel;
+    entity.velocity = new_vel;
 }
 
 
