@@ -71,6 +71,8 @@ impl Context {
     fn setup_player(&mut self) -> Result<(), failure::Error>  {
         let player_id = self.ecs.add_entity();
 
+        let loaded_model = render_gl::Model::load_from_path(&self.render_context.gl, "models/sphere.obj", &self.render_context.res);
+
 
         // MODEL
         let player_color = na::Vector3::new(0.0, 1.0, 1.0);
@@ -106,9 +108,6 @@ impl Context {
         let player_projectile_cube = cube::Cube::new(player_projectile_color, &self.render_context.gl);
 
         let mut proj_model = entity::Model::new(player_projectile_cube);
-
-        let scale = &na::Vector3::new(0.3,0.3,0.3);
-        proj_model.scale(&scale);
 
         let player_projectile_model_id = self.ecs.add_model(proj_model);
 

@@ -17,7 +17,9 @@ pub use self::viewport::Viewport;
 mod color_buffer;
 pub use self::color_buffer::ColorBuffer;
 
-
-
 mod shader;
 pub use self::shader::{Shader};
+
+
+mod model;
+pub use self::model::{Model};

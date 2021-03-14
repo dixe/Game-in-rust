@@ -57,7 +57,7 @@ impl EntityComponentSystem {
     pub fn render(&self, entity_id:usize, gl: &gl::Gl, shader: &render_gl::Shader) {
         match self.get_physics(entity_id) {
             Some(e) => match self.models.get(e.model_id as usize) {
-                Some(m) => m.render(gl, shader, e.pos, e.rotation_sin, e.rotation_cos),
+                Some(m) => m.render(gl, shader, e.pos, e.rotation_sin, e.rotation_cos, e.scale),
                 None => {}
             },
             None => {}

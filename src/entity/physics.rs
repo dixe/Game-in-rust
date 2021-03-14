@@ -10,6 +10,7 @@ pub struct Physics {
     pub max_speed: f32,
     pub rotation_sin: f32,
     pub rotation_cos: f32,
+    pub scale: f32,
     //
     pub model_id: usize,
     pub inverse_mass: f32,
@@ -31,6 +32,7 @@ impl Physics {
             //TODO remove from phyiscs
             model_id: model_id,
             inverse_mass: 1.0,
+            scale: 1.0
         }
     }
 }

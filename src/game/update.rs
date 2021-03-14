@@ -109,13 +109,10 @@ fn add_projectile(ctx: &mut game::Context, shoot_dir: na::Vector3::<f32>, entity
 
     entity_pos.z += 0.3; // get shoot heght from shooter
 
-
     let rotation = game::get_rotation(&shoot_dir);
-
 
     let id = ctx.ecs.add_entity();
     let vel = shoot_dir.normalize() * shooter.speed;
-
 
     let mut physics = entity::Physics::new(id,  ctx.player_projectile_model_id);
     physics.pos = entity_pos;
@@ -124,6 +121,7 @@ fn add_projectile(ctx: &mut game::Context, shoot_dir: na::Vector3::<f32>, entity
     physics.rotation_sin = rotation.sin;
     physics.rotation_cos = rotation.cos;
     physics.inverse_mass = 1.0/10.0;
+    physics.scale = 0.4;
     ctx.ecs.set_physics(id, physics);
 
 

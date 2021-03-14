@@ -13,7 +13,6 @@ struct Vertex {
     clr: data::u2_u10_u10_u10_rev_float,
     #[location = 2]
     normal: data::f32_f32_f32,
-
 }
 
 

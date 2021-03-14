@@ -128,7 +128,7 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
     match ctx.ecs.get_physics(ctx.player_id) {
         Some(p) => {
             entities.push(*p);
-            collision_shapes.push(ConvexCollisionShape::rectangle(&p.pos, 1.0, 1.0, p.rotation_cos, p.rotation_sin));
+            collision_shapes.push(ConvexCollisionShape::rectangle(&p.pos, 1.0, 1.0, p));
             //println!("sing, cos {}, {}", p.rotation_cos, p.rotation_sin);
         },
         None => {},
@@ -139,7 +139,7 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
         match ctx.ecs.get_physics(*enemy_id) {
             Some(en) => {
                 entities.push(*en);
-                collision_shapes.push(ConvexCollisionShape::rectangle(&en.pos, 1.0, 1.0, en.rotation_cos, en.rotation_sin));
+                collision_shapes.push(ConvexCollisionShape::rectangle(&en.pos, 1.0, 1.0, en ));
             },
             None => continue
         };
@@ -156,7 +156,7 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
                 no_checks.insert((ctx.player_id, proj.entity_id));
 
                 entities.push(*proj);
-                collision_shapes.push(ConvexCollisionShape::rectangle(&proj.pos, 1.0, 1.0, proj.rotation_cos, proj.rotation_sin));
+                collision_shapes.push(ConvexCollisionShape::rectangle(&proj.pos, 1.0, 1.0, proj));
             },
             None => continue
         }

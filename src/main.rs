@@ -7,6 +7,7 @@ extern crate nalgebra_glm as glm;
 #[macro_use] extern crate render_gl_derive;
 #[macro_use] extern crate entity_component_derive;
 
+
 use std::io;
 use std::thread;
 
@@ -74,23 +75,13 @@ fn main() {
 fn run() -> Result<(), failure::Error> {
 
     let mut ctx = game::Context::new()?;
-    /*
-    let light_color = na::Vector3::new(1.0, 1.0, 1.0);
-    let light_cube = cube::Cube::new(light_color, &ctx.render_context.gl);
 
-    let light_model = entity::Model::new(light_cube);
 
-    let triangle_pos = na::Vector3::new(0.0, 0.0, 5.0);
 
-    let tri = triangle::Triangle::new(&ctx.render_context.res, pos, light_color, &ctx.render_context.gl)?;
 
-    let pos = na::Vector3::new(0.0, 0.0, 15.0);
 
-     */
     'main: loop{
-
         ctx.update_delta();
-
         ctx.handle_inputs();
 
         if ctx.controls.quit {

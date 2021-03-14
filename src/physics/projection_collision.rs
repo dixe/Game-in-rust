@@ -1,6 +1,8 @@
 use nalgebra as na;
 
 
+use crate::entity;
+
 
 #[derive(Debug, Clone)]
 pub struct ConvexCollisionShape {
@@ -15,21 +17,33 @@ pub struct ConvexCollisionShape {
 impl ConvexCollisionShape {
 
 
-    pub fn rectangle(center: &na::Vector3::<f32>, height: f32, width: f32, rotation_cos: f32, rotation_sin:f32 ) -> ConvexCollisionShape {
+    pub fn rectangle(center: &na::Vector3::<f32>, height: f32, width: f32, physcis: &entity::Physics ) -> ConvexCollisionShape {
 
         let rot = na::Matrix3::<f32>::new(
-            rotation_cos, -rotation_sin, 0.0,
-            rotation_sin, rotation_cos, 0.0,
+            physcis.rotation_cos, -physcis.rotation_sin, 0.0,
+            physcis.rotation_sin, physcis.rotation_cos, 0.0,
             0.0, 0.0, 1.0,
         );
+
+        let scale = na::Matrix3::<f32>::new(
+            physcis.scale, 0.0, 0.0,
+            0.0, physcis.scale, 0.0,
+            0.0, 0.0, 1.0,
+        );
+
+
+
 
         let half_width = width / 2.0;
         let half_height = height / 2.0;
 
-        let v00 = *center + (rot * na::Vector3::new(-half_width, -half_height, 0.0));
-        let v01 = *center + (rot * na::Vector3::new(-half_width, half_height, 0.0));
-        let v11 = *center + (rot * na::Vector3::new(half_width, half_height, 0.0));
-        let v10 = *center + (rot * na::Vector3::new(half_width, -half_height, 0.0));
+        let v00 = *center + (rot * scale * na::Vector3::new(-half_width, -half_height, 0.0));
+        let v01 = *center + (rot * scale * na::Vector3::new(-half_width, half_height, 0.0));
+        let v11 = *center + (rot * scale * na::Vector3::new(half_width, half_height, 0.0));
+        let v10 = *center + (rot * scale * na::Vector3::new(half_width, -half_height, 0.0));
+
+
+
 
         ConvexCollisionShape {
             v1: v00,
