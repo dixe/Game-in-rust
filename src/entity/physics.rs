@@ -8,7 +8,6 @@ pub struct Physics {
     pub pos: na::Vector3::<f32>,
     pub velocity: na::Vector3::<f32>,
     pub max_speed: f32,
-    pub acceleration: f32,
     pub rotation_sin: f32,
     pub rotation_cos: f32,
     //
@@ -29,7 +28,6 @@ impl Physics {
             pos: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             max_speed: 10.0,
-            acceleration: 3.0,
             //TODO remove from phyiscs
             model_id: model_id,
             inverse_mass: 1.0,

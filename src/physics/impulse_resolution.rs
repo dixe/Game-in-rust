@@ -6,6 +6,8 @@ use crate::game;
 
 use crate::physics::projection_collision::*;
 
+use crate::physics::physics::EntityCollision;
+
 
 #[derive(Copy, Clone, Debug)]
 pub struct Manifold {
@@ -16,30 +18,45 @@ pub struct Manifold {
 }
 
 
-pub fn do_impulse_correction(ctx: &mut game::Context) {
-    let (mut impulse_entities, collision_shapes) = create_impulse_entities(ctx);
 
-    let manifolds = do_impulse_collisions(&mut impulse_entities, &collision_shapes);
+pub fn do_impulse_correction(ctx: &mut game::Context) -> Vec<EntityCollision>{
+    let (mut impulse_entities, collision_shapes, no_checks) = create_impulse_entities(ctx);
 
-    impulse_collisions_resolution(ctx, manifolds, &mut impulse_entities);
+    let manifolds = do_impulse_collisions(&mut impulse_entities, &collision_shapes, no_checks);
 
-    for e in impulse_entities {
+    impulse_collisions_resolution(&manifolds, &mut impulse_entities);
+
+    for e in impulse_entities.iter() {
         if e.entity_id > 0 { // don't update walls ect
-            ctx.ecs.set_physics(e.entity_id, e);
+            ctx.ecs.set_physics(e.entity_id, *e);
         }
     }
+
+    manifolds.iter().filter_map(|m| {
+        let e1 = impulse_entities[m.entity_1_index];
+        let e2 = impulse_entities[m.entity_2_index];
+
+        if e1.entity_id == 0 || e2.entity_id == 0 {
+            return None;
+        }
+
+        Some(EntityCollision {
+            entity_1_id: e1.entity_id,
+            entity_2_id: e2.entity_id,
+        })
+    }).collect()
 
 }
 
 
-fn impulse_collisions_resolution(ctx: &mut game::Context, manifolds: Vec<Manifold>,  entities: &mut Vec<entity::Physics>) {
+fn impulse_collisions_resolution( manifolds: &Vec<Manifold>, entities: &mut Vec<entity::Physics>) {
     for manifold in manifolds {
         let mut e1 = entities[manifold.entity_1_index];
         let mut e2 = entities[manifold.entity_2_index];
-        //println!("E1 BEFORE {:#?}", e2);
+
         impulse_collision_resolution(&mut e1, &mut e2, &manifold);
         impulse_position_correction(&mut e1, &mut e2, &manifold);
-        //println!("E1 AFTER {:#?}", e2);
+
         let _ = std::mem::replace(&mut entities[manifold.entity_1_index], e1);
         let _ = std::mem::replace(&mut entities[manifold.entity_2_index], e2);
     }
@@ -101,12 +118,12 @@ fn impulse_position_correction(entity_1: &mut entity::Physics, entity_2: &mut en
 }
 
 
-
-
-fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<ConvexCollisionShape>) {
+fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<ConvexCollisionShape>, std::collections::HashSet<(usize,usize)>) {
 
     let mut entities = Vec::new();
     let mut collision_shapes = Vec::new();
+    let mut no_checks = std::collections::HashSet::new();
+
     // Get some data out of enitiy component system
     match ctx.ecs.get_physics(ctx.player_id) {
         Some(p) => {
@@ -124,10 +141,27 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
                 entities.push(*en);
                 collision_shapes.push(ConvexCollisionShape::rectangle(&en.pos, 1.0, 1.0, en.rotation_cos, en.rotation_sin));
             },
-
             None => continue
         };
     }
+
+
+
+    // TODO Maybe also add projeciles, if htey should push a little bit
+
+    for shot in &ctx.player_projectiles {
+        match ctx.ecs.get_physics(shot.entity_id) {
+            Some(proj) => {
+
+                no_checks.insert((ctx.player_id, proj.entity_id));
+
+                entities.push(*proj);
+                collision_shapes.push(ConvexCollisionShape::rectangle(&proj.pos, 1.0, 1.0, proj.rotation_cos, proj.rotation_sin));
+            },
+            None => continue
+        }
+    }
+
 
     for w in ctx.scene.border_sides() {
         // todo have these stored in the scene along side the collision shapes
@@ -137,19 +171,16 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
 
         entities.push(entity);
         collision_shapes.push(w.clone());
-
     }
 
 
-    //TODO also take the scene into account with inverse mass 0. This is the same as infinite mass
 
-    // TODO Maybe also add projeciles, if htey should push a little bit
 
-    (entities, collision_shapes)
+    (entities, collision_shapes, no_checks)
 
 }
 
-fn do_impulse_collisions(entities: &[entity::Physics], shapes: &[ConvexCollisionShape]) -> Vec<Manifold> {
+fn do_impulse_collisions(entities: &[entity::Physics], shapes: &[ConvexCollisionShape], no_checks: std::collections::HashSet<(usize,usize)> ) -> Vec<Manifold> {
 
     let mut res = Vec::new();
 
@@ -161,6 +192,12 @@ fn do_impulse_collisions(entities: &[entity::Physics], shapes: &[ConvexCollision
             if e1.entity_id == 0 && e2.entity_id == 0 {
                 continue;
             }
+            // if they can not collide,
+            // fx player and their own shows, enemies and their shots
+            if no_checks.contains(&(e1.entity_id, e2.entity_id)) {
+                continue;
+            }
+
             let (col, normal, penetration) = collision_sat_shapes_impulse(&shapes[index_1], &shapes[index_2]);
 
 

@@ -2,12 +2,12 @@ extern crate sdl2;
 extern crate gl;
 extern crate vec_2_10_10_10;
 extern crate nalgebra as na;
+extern crate nalgebra_glm as glm;
 #[macro_use] extern crate failure;
 #[macro_use] extern crate render_gl_derive;
 #[macro_use] extern crate entity_component_derive;
 
 use std::io;
-use std::sync::mpsc;
 use std::thread;
 
 pub mod render_gl;
@@ -37,7 +37,7 @@ enum Command {
 }
 
 
-static mut command: Command = Command::Nop;
+static mut CMD: Command = Command::Nop;
 
 fn main() {
     // set up commands channel and thread
@@ -53,8 +53,10 @@ fn main() {
         unsafe {
             // parse input
             let msg = match input {
-                _ => command = Command::SwitchRenderMode,
+                _ => Command::SwitchRenderMode,
             };
+
+            CMD = msg;
 
         }
     });
@@ -123,10 +125,10 @@ fn run() -> Result<(), failure::Error> {
         ctx.render_context.gl_swap_window();
 
         unsafe {
-            match command {
+            match CMD {
                 Command::Nop => {},
                 Command::SwitchRenderMode => {
-                    command = Command::Nop;
+                    CMD = Command::Nop;
                     ctx.render_context.switch_mode();
 
 

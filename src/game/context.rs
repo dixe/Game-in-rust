@@ -10,7 +10,6 @@ use crate::controls;
 use crate::deltatime;
 use crate::shot;
 
-
 pub struct Context {
 
     //GAME STATE SHOULD MOVE INTO STRUCT/MODULE
@@ -39,8 +38,6 @@ pub struct Context {
 }
 
 impl Context {
-
-
 
     pub fn new() -> Result<Context, failure::Error> {
 
@@ -91,7 +88,7 @@ impl Context {
 
 
         let mut physics = entity::Physics::new(player_id, player_model_id);
-        physics.pos =  na::Vector3::new(3.0, 3.0, 0.5);
+        physics.pos =  na::Vector3::new(0.0, 3.0, 0.5);
 
 
         self.ecs.set_physics(player_id, physics);
@@ -131,7 +128,7 @@ impl Context {
 
 
         let mut physics = entity::Physics::new(enemy_id, self.enemy_model_id);
-        physics.pos = na::Vector3::new(-3.0, -3.0, 0.5);
+        physics.pos = na::Vector3::new(0.0, -3.0, 0.5);
 
         self.ecs.set_physics(enemy_id, physics);
 

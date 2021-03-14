@@ -5,7 +5,7 @@ use crate::entity;
 
 
 
-pub fn update_game_state(ctx: &mut game::Context, collisions: &physics::Collisions) {
+pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::EntityCollision>) {
 
     let delta = ctx.get_delta_millis();
 
@@ -29,24 +29,26 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &physics::Collisio
     ctx.ecs.set_physics(ctx.player_id, player);
 
 
-
+    /*
     for c in &collisions.enemies_hit {
-        let mut enemy_hp = match ctx.ecs.get_health(c.entity_id) {
-            Some(e) => *e,
-            _ => continue
-        };
+    let mut enemy_hp = match ctx.ecs.get_health(c.entity_id) {
+    Some(e) => *e,
+    _ => continue
+};
 
-        let dead = enemy_hp.damage(1.0);
+    let dead = enemy_hp.damage(1.0);
 
-        if dead {
-            ctx.ecs.remove_entity(c.entity_id);
-        }
-        else {
-            ctx.ecs.set_health(c.entity_id, enemy_hp);
-        }
+    if dead {
+    ctx.ecs.remove_entity(c.entity_id);
+}
+    else {
+    ctx.ecs.set_health(c.entity_id, enemy_hp);
+}
 
-        ctx.ecs.remove_entity(c.projectile_id);
-    }
+    ctx.ecs.remove_entity(c.projectile_id);
+}
+
+     */
 }
 
 
@@ -121,9 +123,7 @@ fn add_projectile(ctx: &mut game::Context, shoot_dir: na::Vector3::<f32>, entity
     physics.max_speed = shooter.speed;
     physics.rotation_sin = rotation.sin;
     physics.rotation_cos = rotation.cos;
-    physics.acceleration = shooter.speed;
-
-
+    physics.inverse_mass = 1.0/10.0;
     ctx.ecs.set_physics(id, physics);
 
 

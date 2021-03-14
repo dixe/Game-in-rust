@@ -2,19 +2,26 @@ use nalgebra as na;
 
 use crate::entity;
 
-pub fn update_velocity_and_rotation(entity: &mut entity::Physics, new_dir: na::Vector3::<f32>,)  {
+pub fn update_velocity_and_rotation(entity: &mut entity::Physics, velocity_change: na::Vector3::<f32>,)  {
 
-    if new_dir.x == 0.0 && new_dir.y == 0.0 && new_dir.z == 0.0 {
+    if velocity_change.x == 0.0 && velocity_change.y == 0.0 && velocity_change.z == 0.0 {
         entity.velocity = na::Vector3::new(0.0, 0.0, 0.0);
         return;
     }
 
-    let mut new_vel = new_dir.normalize() * entity.acceleration + entity.velocity;
 
-    let speed = new_vel.magnitude();
+
+    entity.velocity = velocity_change + entity.velocity;
+
+    let speed = entity.velocity.magnitude();
+
+    // avoid jittering
+    if speed < 0.1 {
+        entity.velocity *= 0.0;
+    }
 
     if speed > entity.max_speed {
-        new_vel *= entity.max_speed / speed;
+        entity.velocity *= entity.max_speed / speed;
     }
 
 
@@ -23,13 +30,13 @@ pub fn update_velocity_and_rotation(entity: &mut entity::Physics, new_dir: na::V
 
 
     /* TODO kinda broken with physics, maybe the normals are getting wrong, or we rotate wrong direction? right vs left hand coordinate system ect.
-    let rotation = get_rotation(&new_vel);
+    let rotation = get_rotation(&entity.velocity);
 
     entity.rotation_sin = rotation.sin;
     entity.rotation_cos = rotation.cos;
 
      */
-    entity.velocity = new_vel;
+
 }
 
 

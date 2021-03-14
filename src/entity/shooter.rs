@@ -14,7 +14,7 @@ impl Shooter {
     pub fn default() -> Shooter {
 
         Shooter {
-            cool_down_time: 700,  // time in ms
+            cool_down_time: 400,  // time in ms
             cool_down_remaining: 0,
             speed: 20.0,
             distance: 20.0

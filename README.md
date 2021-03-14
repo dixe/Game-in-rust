@@ -13,3 +13,8 @@ A game in rust to learn rust and some opengl
 - [ ] Be able to load models
 - [x] Take console input while running.
 - [ ] Change shaders on the fly, required console input
+- [ ] Load .obj models
+
+
+# Cool stuff
+distortion shader fx https://lindenreid.wordpress.com/2018/03/05/heat-distortion-shader-tutorial/#:~:text=The%20basic%20premise%20of%20the,uses%20to%20sample%20that%20texture.
