@@ -59,7 +59,7 @@ impl Context {
 
         let enemy_cube = cube::Cube::new(enemy_color, &self.render_context.gl);
 
-        let e_model = entity::Model::new(enemy_cube);
+        let e_model = entity::Model::cube(enemy_cube);
 
         self.enemy_model_id = self.ecs.add_model(e_model);
 
@@ -71,13 +71,19 @@ impl Context {
     fn setup_player(&mut self) -> Result<(), failure::Error>  {
         let player_id = self.ecs.add_entity();
 
-        let loaded_model = render_gl::Model::load_from_path(&self.render_context.gl, "models/sphere.obj", &self.render_context.res);
-
-
         // MODEL
         let player_color = na::Vector3::new(0.0, 1.0, 1.0);
         let player_cube = cube::Cube::new(player_color, &self.render_context.gl);
-        let player_model = entity::Model::new(player_cube);
+
+
+        // Use loaded model
+        //let player_model = entity::Model::cube(player_cube);
+
+        let loaded_model = render_gl::Model::load_from_path(&self.render_context.gl, player_color, "models/sphere.obj", &self.render_context.res)?;
+
+        let player_model = entity::Model::wave_model(loaded_model);
+
+
         let player_model_id = self.ecs.add_model(player_model);
 
 
@@ -107,7 +113,7 @@ impl Context {
 
         let player_projectile_cube = cube::Cube::new(player_projectile_color, &self.render_context.gl);
 
-        let mut proj_model = entity::Model::new(player_projectile_cube);
+        let mut proj_model = entity::Model::cube(player_projectile_cube);
 
         let player_projectile_model_id = self.ecs.add_model(proj_model);
 

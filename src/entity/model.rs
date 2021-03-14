@@ -4,18 +4,30 @@ use crate::render_gl;
 use nalgebra as na;
 
 
-pub struct Model {
-    model: cube::Cube,
+enum ModelType {
 
+    Cube(cube::Cube),
+    WaveModel(render_gl::Model)
+}
+
+pub struct Model {
+    model: ModelType
 }
 
 
 impl Model {
 
-    pub fn new(model: cube::Cube) -> Self {
+    pub fn cube(cube: cube::Cube) -> Self {
+        let model = ModelType::Cube(cube);
         Model {
-            model,
+            model
+        }
+    }
 
+    pub fn wave_model(wave: render_gl::Model) -> Self {
+        let model = ModelType::WaveModel(wave);
+        Model {
+            model
         }
     }
 
@@ -37,7 +49,15 @@ impl Model {
 
 
         let trans_mat = na::Matrix4::new_translation(&pos);
-        self.model.render(gl, shader, trans_mat * rot_mat * scale_mat);
+
+        match &self.model {
+            ModelType::Cube(c) => {
+                c.render(gl, shader, trans_mat * rot_mat * scale_mat);
+            },
+            ModelType::WaveModel(wm) => {
+                wm.render(gl, shader, trans_mat * rot_mat * scale_mat)
+            }
+        }
     }
 
 }
