@@ -40,7 +40,7 @@ fn generate_impl(ast: &syn::DeriveInput) -> quote::Tokens {
     };
 
     // panic!("{:#?}", ast.body);
-    //panic!("\n\n\n BUT WHAT IS RES\n\n\n{:#?}\n\n\n", res);
+    // panic!("\n\n\n BUT WHAT IS RES\n\n\n{:#?}\n\n\n", res);
     res
 }
 

@@ -16,6 +16,10 @@ impl Health {
     }
 
 
+    pub fn health(&self) -> f32 {
+        self.health
+    }
+
     pub fn damage(&mut self, dmg: f32) -> bool {
 
         self.health -= dmg;

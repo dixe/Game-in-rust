@@ -24,7 +24,6 @@ mod debug;
 
 mod game;
 mod deltatime;
-mod shot;
 mod entity;
 mod camera;
 mod scene;
@@ -75,9 +74,6 @@ fn main() {
 fn run() -> Result<(), failure::Error> {
 
     let mut ctx = game::Context::new()?;
-
-
-
 
 
     'main: loop{

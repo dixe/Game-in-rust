@@ -11,10 +11,19 @@ pub struct Shooter {
 
 impl Shooter {
 
-    pub fn default() -> Shooter {
+    pub fn default_player() -> Shooter {
 
         Shooter {
             cool_down_time: 400,  // time in ms
+            cool_down_remaining: 0,
+            speed: 20.0,
+            distance: 20.0
+        }
+    }
+
+    pub fn default_enemy() -> Shooter {
+        Shooter {
+            cool_down_time: 800,  // time in ms
             cool_down_remaining: 0,
             speed: 20.0,
             distance: 20.0

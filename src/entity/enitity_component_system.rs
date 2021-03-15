@@ -15,6 +15,8 @@ pub struct EntityComponentSystem {
     health: std::collections::HashMap<usize, Health>,
     #[component = "Shooter"]
     pub shooter: std::collections::HashMap<usize, Shooter>,
+    #[component = "Shot"]
+    pub shot: std::collections::HashMap<usize, Shot>,
 
     model_reference: std::collections::HashMap<usize, usize>,
 
@@ -30,6 +32,7 @@ impl EntityComponentSystem {
             physics: std::collections::HashMap::new(),
             health: std::collections::HashMap::new(),
             shooter: std::collections::HashMap::new(),
+            shot: std::collections::HashMap::new(),
             models: Vec::<Model>::new(),
             model_reference: std::collections::HashMap::new(),
         }

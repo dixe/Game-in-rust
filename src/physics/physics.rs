@@ -3,6 +3,8 @@ use nalgebra as na;
 use crate::game;
 use crate::physics::impulse_resolution::*;
 
+
+#[derive(Copy, Clone, Debug)]
 pub struct EntityCollision {
     pub entity_1_id: usize,
     pub entity_2_id: usize

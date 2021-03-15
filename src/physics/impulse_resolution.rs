@@ -135,7 +135,7 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
     };
 
 
-    for enemy_id in &ctx.enemies {
+    for enemy_id in &ctx.state.enemies {
         match ctx.ecs.get_physics(*enemy_id) {
             Some(en) => {
                 entities.push(*en);
@@ -147,10 +147,9 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
 
 
 
-    // TODO Maybe also add projeciles, if htey should push a little bit
-
-    for shot in &ctx.player_projectiles {
-        match ctx.ecs.get_physics(shot.entity_id) {
+    // ADD PLAYER PROJECTILES AS IMPULSE ENTITIES
+    for shot in &ctx.state.player_shots {
+        match ctx.ecs.get_physics(*shot) {
             Some(proj) => {
 
                 no_checks.insert((ctx.player_id, proj.entity_id));

@@ -13,7 +13,7 @@ A game in rust to learn rust and some opengl
 - [ ] Be able to load models
 - [x] Take console input while running.
 - [ ] Change shaders on the fly, required console input
-- [ ] Load .obj models
+- [x] Load .obj models
 
 
 # Cool stuff

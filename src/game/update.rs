@@ -1,6 +1,5 @@
 use crate::game;
 use crate::physics;
-use crate::shot;
 use crate::entity;
 
 
@@ -12,9 +11,10 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
     // Update shooters, projectiles and othertime based stuff
     update_projectiles(ctx, delta);
     update_shooters(ctx, delta);
+    update_enemies_death(ctx);
 
+    update_player_shooting(ctx);
 
-    update_player_shoot(ctx);
 
 
     // PLAYER MOVEMENT
@@ -28,27 +28,57 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 
     ctx.ecs.set_physics(ctx.player_id, player);
 
+    for c in collisions {
+        // VALIDATE! entity_1 is always lower than entity_2 and enemies will spawn before projectiles always??
 
-    /*
-    for c in &collisions.enemies_hit {
-    let mut enemy_hp = match ctx.ecs.get_health(c.entity_id) {
-    Some(e) => *e,
-    _ => continue
-};
 
-    let dead = enemy_hp.damage(1.0);
+        if ctx.state.enemies.contains(&c.entity_1_id) && ctx.state.player_shots.contains(&c.entity_2_id) {
+            match (ctx.ecs.get_health(c.entity_1_id), ctx.ecs.get_shot(c.entity_2_id )) {
+                (Some(e_hp), Some(s)) => {
+                    let mut shot = *s;
+                    let mut enemy_hp = *e_hp;
 
-    if dead {
-    ctx.ecs.remove_entity(c.entity_id);
+                    if ! shot.used {
+                        enemy_hp.damage(shot.damage);
+                        shot.used = true;
+                        ctx.ecs.set_shot(shot.entity_id, shot);
+                        ctx.ecs.set_health(c.entity_1_id, enemy_hp);
+
+                    }
+
+                },
+                _ => {}
+
+            };
+
+        };
+    }
+
+
+
+
+
+
 }
-    else {
-    ctx.ecs.set_health(c.entity_id, enemy_hp);
-}
 
-    ctx.ecs.remove_entity(c.projectile_id);
-}
 
-     */
+
+fn update_enemies_death(ctx: &mut game::Context) {
+    let mut deaths = Vec::new();
+    for e in &ctx.state.enemies {
+        let mut enemy_hp = match ctx.ecs.get_health(*e) {
+            Some(e_hp) => *e_hp,
+            None => continue,
+        };
+
+        if enemy_hp.health() <= 0.0 {
+            deaths.push(e);
+        }
+    }
+
+    for dead in deaths {
+        ctx.ecs.remove_entity(*dead);
+    }
 }
 
 
@@ -59,79 +89,43 @@ fn update_shooters(ctx: &mut game::Context, delta: i32) {
     }
 }
 
-fn update_projectiles(ctx: &mut game::Context, delta: i32) {
-    for p in &mut ctx.player_projectiles {
-        p.update(delta);
 
-        if p.expired {
-            ctx.ecs.remove_entity(p.entity_id);
+
+fn update_projectiles(ctx: &mut game::Context, delta: i32) {
+    let mut remove_shots = Vec::new();
+    for shot in &mut ctx.ecs.shot.values_mut() {
+
+        shot.update(delta);
+
+
+
+        if shot.expired {
+            remove_shots.push(shot.entity_id);
         }
     }
+
+    for remove_shot_id in &remove_shots {
+        ctx.state.player_shots.remove(remove_shot_id);
+    }
+
 
     // enemies shot when needed
 }
 
 
-fn update_player_shoot(ctx: &mut game::Context) {
+fn update_player_shooting(ctx: &mut game::Context) {
 
     let player_id = ctx.player_id;
-    ctx.player_projectiles.retain(|p| !p.expired);
-
     let shoot_dir = ctx.controls.shoot_dir;
-
-    match shoot_dir {
-        Some(dir) =>
+    let shooter_op = ctx.ecs.get_shooter(ctx.player_id);
+    match (shoot_dir, shooter_op) {
+        (Some(dir), Some(s)) =>
         {
-            add_projectile(ctx,  dir, player_id);
+            let shooter = *s;
+            game::add_projectile(&mut ctx.state.player_shots, &mut ctx.ecs, &shooter, dir, player_id, ctx.player_projectile_model_id);
 
         },
         _ => {}
     };
-
-}
-
-
-fn add_projectile(ctx: &mut game::Context, shoot_dir: na::Vector3::<f32>, entity_id: usize) {
-
-    let mut shooter = match ctx.ecs.get_shooter(entity_id) {
-        Some(s) => *s,
-        None => return,
-    };
-
-    if !shooter.can_shoot() {
-        return;
-    }
-
-    let mut entity_pos = match ctx.ecs.get_physics(entity_id) {
-        Some(s) => s.pos,
-        None => return,
-    };
-
-    entity_pos.z += 0.3; // get shoot heght from shooter
-
-    let rotation = game::get_rotation(&shoot_dir);
-
-    let id = ctx.ecs.add_entity();
-    let vel = shoot_dir.normalize() * shooter.speed;
-
-    let mut physics = entity::Physics::new(id,  ctx.player_projectile_model_id);
-    physics.pos = entity_pos;
-    physics.velocity = vel;
-    physics.max_speed = shooter.speed;
-    physics.rotation_sin = rotation.sin;
-    physics.rotation_cos = rotation.cos;
-    physics.inverse_mass = 1.0/10.0;
-    physics.scale = 0.4;
-    ctx.ecs.set_physics(id, physics);
-
-
-    let shot = shot::Shot::new(id, (shooter.speed * shooter.distance) as i32);
-
-    ctx.player_projectiles.push(shot);
-
-    // update shooter component
-    shooter.shoot();
-    ctx.ecs.set_shooter(entity_id, shooter);
-
 
 }

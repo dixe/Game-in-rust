@@ -1,7 +1,10 @@
+#[derive(Debug,Clone,Copy)]
 pub struct Shot {
     pub entity_id: usize,
     pub time_remaining: i32,
     pub expired: bool,
+    pub used: bool,
+    pub damage: f32
 }
 
 
@@ -11,7 +14,9 @@ impl Shot {
         Shot {
             entity_id,
             time_remaining: life_time,
-            expired: false
+            expired: false,
+            used: false,
+            damage: 10.0
         }
     }
 

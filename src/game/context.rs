@@ -1,5 +1,7 @@
 use nalgebra as na;
 
+
+use crate::game;
 use crate::entity;
 use crate::render_gl;
 use crate::cube;
@@ -8,14 +10,12 @@ use crate::scene;
 use crate::level;
 use crate::controls;
 use crate::deltatime;
-use crate::shot;
 
 pub struct Context {
 
+    // should be in ecs
     //GAME STATE SHOULD MOVE INTO STRUCT/MODULE
-    pub player_projectiles: Vec::<shot::Shot>,
-
-    pub enemies: Vec<usize>,
+    pub state: game::State,
     pub player_id: usize,
 
     // STUFF WE NEED
@@ -88,7 +88,7 @@ impl Context {
 
 
         // SHOOTER
-        let player_shooter = entity::Shooter::default();
+        let player_shooter = entity::Shooter::default_player();
         self.ecs.set_shooter(player_id, player_shooter);
 
 
@@ -127,13 +127,18 @@ impl Context {
         // ENEMY
         let enemy_id = self.ecs.add_entity();
 
-        self.enemies.push(enemy_id);
+        self.state.enemies.insert(enemy_id);
 
         let health = entity::Health::new(100.0);
 
-
         let mut physics = entity::Physics::new(enemy_id, self.enemy_model_id);
         physics.pos = na::Vector3::new(0.0, -3.0, 0.5);
+
+
+        // SHOOTER
+        let shooter = entity::Shooter::default_enemy();
+
+        self.ecs.set_shooter(enemy_id, shooter);
 
         self.ecs.set_physics(enemy_id, physics);
 
@@ -187,19 +192,14 @@ impl Context {
         self.scene.render(&self.render_context.gl, &self.cube_shader);
 
 
+
+
         // player
         self.ecs.render(self.player_id, &self.render_context.gl, &self.cube_shader);
 
 
-        // enemies
-        for id in &self.enemies {
-            self.ecs.render(*id, &self.render_context.gl, &self.cube_shader);
-        }
-
-
-        for p in &self.player_projectiles {
-            self.ecs.render(p.entity_id, &self.render_context.gl, &self.cube_shader);
-        }
+        // all in state
+        self.state.render(&self.ecs, &self.render_context.gl, &self.cube_shader);
 
 
     }
@@ -239,11 +239,8 @@ fn empty() -> Result<Context, failure::Error> {
 
     let delta_time = deltatime::Deltatime::new();
 
-    let enemies = Vec::new();
-
 
     Ok(Context {
-        player_projectiles: Vec::<shot::Shot>::new(),
         player_id: 9999,
         scene,
         controls,
@@ -252,10 +249,10 @@ fn empty() -> Result<Context, failure::Error> {
         camera,
         delta_time,
         ecs,
-        enemies,
         player_projectile_model_id: 9999,
         enemy_model_id: 9999,
         cube_shader,
-        light_shader
+        light_shader,
+        state: game::State::new(),
     })
 }
