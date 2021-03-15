@@ -12,7 +12,8 @@ use obj;
 pub struct Model {
     vao: buffer::VertexArray,
     _vbo: buffer::ArrayBuffer,
-    vertices_count: i32,
+    _ebo: buffer::ElementArrayBuffer,
+    indices_count: i32,
 }
 
 
@@ -35,6 +36,11 @@ impl Model {
 
         let mut vertices = Vec::<f32>::new();
 
+        let ebo_data: Vec<u16> = model.indices.clone();
+
+        let ebo = buffer::ElementArrayBuffer::new(gl);
+
+
         for v in &model.vertices {
             let pos = v.position;
             // position
@@ -55,8 +61,8 @@ impl Model {
 
         }
 
-        let vertices_count = model.vertices.len() as i32;
-        println!("{}", vertices_count);
+        let indices_count = model.indices.len() as i32;
+
 
         let stride = 9;
         unsafe {
@@ -66,6 +72,14 @@ impl Model {
             // 2.
             vbo.bind();
             vbo.static_draw_data(&vertices);
+
+            //3
+            ebo.bind();
+            gl.BufferData(
+                gl::ELEMENT_ARRAY_BUFFER,
+                (ebo_data.len() * std::mem::size_of::<u16>()) as gl::types::GLsizeiptr,
+                ebo_data.as_ptr() as *const gl::types::GLvoid,
+                gl::STATIC_DRAW);
 
             // 4.
             // vertecies
@@ -109,7 +123,8 @@ impl Model {
         Ok(Model {
             vao,
             _vbo: vbo,
-            vertices_count,
+            _ebo: ebo,
+            indices_count,
         })
     }
 
@@ -120,11 +135,11 @@ impl Model {
 
         self.vao.bind();
         unsafe {
-
-            gl.DrawArrays(
+            gl.DrawElements(
                 gl::TRIANGLES,
-                0,
-                self.vertices_count,
+                self.indices_count,
+                gl::UNSIGNED_SHORT,
+                0 as *const gl::types::GLvoid
             );
         }
     }
