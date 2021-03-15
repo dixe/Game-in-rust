@@ -152,8 +152,19 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
         match ctx.ecs.get_physics(*shot) {
             Some(proj) => {
 
-                no_checks.insert((ctx.player_id, proj.entity_id));
+                //no_checks.insert((ctx.player_id, proj.entity_id));
 
+                entities.push(*proj);
+                collision_shapes.push(ConvexCollisionShape::rectangle(&proj.pos, 1.0, 1.0, proj));
+            },
+            None => continue
+        }
+    }
+
+    // ADD PLAYER PROJECTILES AS IMPULSE ENTITIES
+    for shot in &ctx.state.enemy_shots {
+        match ctx.ecs.get_physics(*shot) {
+            Some(proj) => {
                 entities.push(*proj);
                 collision_shapes.push(ConvexCollisionShape::rectangle(&proj.pos, 1.0, 1.0, proj));
             },

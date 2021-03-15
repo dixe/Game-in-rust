@@ -19,6 +19,14 @@ impl State {
     }
 
 
+    pub fn remove_shot(&mut self, shot_id: &usize) {
+        self.player_shots.remove(shot_id);
+        self.enemy_shots.remove(shot_id);
+    }
+
+
+
+
     pub fn render(&self, ecs: &entity::EntityComponentSystem,  gl: &gl::Gl, shader: &render_gl::Shader) {
 
 
@@ -33,8 +41,5 @@ impl State {
         for id in &self.enemy_shots {
             ecs.render(*id, gl,shader);
         }
-
-
     }
-
 }

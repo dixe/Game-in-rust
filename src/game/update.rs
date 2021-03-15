@@ -97,15 +97,14 @@ fn update_projectiles(ctx: &mut game::Context, delta: i32) {
 
         shot.update(delta);
 
-
-
         if shot.expired {
             remove_shots.push(shot.entity_id);
         }
     }
 
+
     for remove_shot_id in &remove_shots {
-        ctx.state.player_shots.remove(remove_shot_id);
+        ctx.state.remove_shot(remove_shot_id);
     }
 
 
