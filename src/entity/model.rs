@@ -60,4 +60,14 @@ impl Model {
         }
     }
 
+    pub fn render_from_model_mat(&self, gl: &gl::Gl, shader: &render_gl::Shader, model_mat: na::Matrix4::<f32>) {
+        match &self.model {
+            ModelType::Cube(c) => {
+                c.render(gl, shader,  model_mat);
+            },
+            ModelType::WaveModel(wm) => {
+                wm.render(gl, shader, model_mat);
+            }
+        }
+    }
 }

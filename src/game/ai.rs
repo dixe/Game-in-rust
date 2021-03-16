@@ -18,7 +18,7 @@ pub fn run_ai(ctx: &mut game::Context) {
         };
 
 
-        if e_id % 2 == 0 {
+        if e_id % 2 == 0 || true{
             distance_ai(&mut enemy, player);
             let shooter = match ctx.ecs.get_shooter(enemy.entity_id) {
                 Some(s) => Some(*s),
@@ -60,7 +60,7 @@ fn shot_ai(entity: &entity::Physics,
     let dist = to_player_vec.magnitude();
 
     //TODO check if we can see, take that as ai input
-    if dist < 5.0 {
+    if dist < 7.0 {
         game::add_projectile(projectiles, ecs, &shooter, to_player_vec, entity.entity_id, 1);
     }
 }
@@ -72,10 +72,11 @@ fn distance_ai(entity: &mut entity::Physics, player_physics: entity::Physics)  {
     let to_player_vec = player_physics.pos - entity.pos;
     let move_dir = (to_player_vec).normalize();
 
-    let target_dist = 3.0;
+    let target_dist = 5.0;
     let target_point = move_dir * (-target_dist) + player_physics.pos;
 
-    move_to_point(entity, target_point);
+    //move_to_point(entity, target_point);
+    move_to_point(entity, entity.pos);
 
 }
 

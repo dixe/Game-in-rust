@@ -36,7 +36,7 @@ pub fn add_projectile(projectilies: &mut std::collections::HashSet<usize>,
     physics.rotation_sin = rotation.sin;
     physics.rotation_cos = rotation.cos;
     physics.inverse_mass = 1.0/10.0;
-    physics.scale = 0.4;
+    physics.scale = 0.5;
     ecs.set_physics(id, physics);
 
 

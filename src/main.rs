@@ -28,7 +28,7 @@ mod entity;
 mod camera;
 mod scene;
 mod physics;
-
+mod animation_system;
 
 #[derive(Copy, Clone, Debug)]
 enum Command {
@@ -96,6 +96,13 @@ fn run() -> Result<(), failure::Error> {
 
         // SPAWN PROJECTILES, HANDLE COLLISION THAT WAS NOT WITH ENVIROMENT
         game::update_game_state(&mut ctx, &collisions);
+
+
+        //UPDATE ANIMAITONS
+        let delta = ctx.get_delta_millis();
+
+        animation_system::update_animations(&mut ctx.ecs.animation, &ctx.ecs.physics, delta);
+
 
 
         // RENDERING

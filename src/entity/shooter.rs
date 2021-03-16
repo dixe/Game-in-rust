@@ -14,7 +14,7 @@ impl Shooter {
     pub fn default_player() -> Shooter {
 
         Shooter {
-            cool_down_time: 400,  // time in ms
+            cool_down_time: 500,  // time in ms
             cool_down_remaining: 0,
             speed: 20.0,
             distance: 20.0
@@ -25,8 +25,8 @@ impl Shooter {
         Shooter {
             cool_down_time: 800,  // time in ms
             cool_down_remaining: 0,
-            speed: 20.0,
-            distance: 20.0
+            speed: 8.0,
+            distance: 400.0
         }
     }
     pub fn shoot(&mut self) {

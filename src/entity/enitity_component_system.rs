@@ -17,6 +17,8 @@ pub struct EntityComponentSystem {
     pub shooter: std::collections::HashMap<usize, Shooter>,
     #[component = "Shot"]
     pub shot: std::collections::HashMap<usize, Shot>,
+    #[component = "Animation"]
+    pub animation: std::collections::HashMap<usize, Animation>,
 
     model_reference: std::collections::HashMap<usize, usize>,
 
@@ -33,6 +35,7 @@ impl EntityComponentSystem {
             health: std::collections::HashMap::new(),
             shooter: std::collections::HashMap::new(),
             shot: std::collections::HashMap::new(),
+            animation: std::collections::HashMap::new(),
             models: Vec::<Model>::new(),
             model_reference: std::collections::HashMap::new(),
         }
@@ -59,10 +62,16 @@ impl EntityComponentSystem {
 
     pub fn render(&self, entity_id:usize, gl: &gl::Gl, shader: &render_gl::Shader) {
         match self.get_physics(entity_id) {
-            Some(e) => match self.models.get(e.model_id as usize) {
-                Some(m) => m.render(gl, shader, e.pos, e.rotation_sin, e.rotation_cos, e.scale),
-                None => {}
-            },
+            Some(e) =>
+                match (self.models.get(e.model_id), self.get_animation(e.entity_id)) {
+                    (Some(m), Some(ani)) => {
+
+                        let model_mat = ani.calculate_model_mat(e.pos, e.rotation_sin, e.rotation_cos, e.scale);
+                        m.render_from_model_mat(gl, shader, model_mat);
+                    },
+                    (Some(m),None) => m.render(gl, shader, e.pos, e.rotation_sin, e.rotation_cos, e.scale),
+                    _ => {}
+                },
             None => {}
         };
 

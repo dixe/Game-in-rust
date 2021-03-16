@@ -21,3 +21,7 @@ pub use self::shooter::Shooter;
 
 mod shot;
 pub use self::shot::Shot;
+
+
+mod animation;
+pub use self::animation::Animation;

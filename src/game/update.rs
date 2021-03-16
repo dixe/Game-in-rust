@@ -24,6 +24,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
         None => return, // Dead player, don't care about ai update
     };
 
+
     game::update_velocity_and_rotation(&mut player, ctx.controls.movement_dir);
 
     ctx.ecs.set_physics(ctx.player_id, player);

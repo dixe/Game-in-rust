@@ -119,6 +119,13 @@ impl Context {
 
         self.player_projectile_model_id = player_projectile_model_id;
 
+
+        // ANIMATION
+        let animation = entity::Animation::new(player_id);
+
+        self.ecs.set_animation(player_id, animation);
+        println!("Plyaer id = {}", player_id);
+
         Ok(())
     }
 
@@ -146,9 +153,9 @@ impl Context {
 
         match self.ecs.get_physics(enemy_id) {
             Some(e) => {
-                let mut phy = *e;
-                phy.max_speed = 8.0;
-                self.ecs.set_physics(enemy_id, phy);
+                let mut enemy_physics = *e;
+                enemy_physics.max_speed = 8.0;
+                self.ecs.set_physics(enemy_id, enemy_physics);
             },
             None => {}
         };
