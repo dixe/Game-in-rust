@@ -32,8 +32,6 @@ impl Model {
         let vao = buffer::VertexArray::new(gl);
 
         let stride = 9;
-
-
         let mut vertices = Vec::<f32>::new();
 
         let ebo_data: Vec<u16> = model.indices.clone();

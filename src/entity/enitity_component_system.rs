@@ -66,10 +66,10 @@ impl EntityComponentSystem {
                 match (self.models.get(e.model_id), self.get_animation(e.entity_id)) {
                     (Some(m), Some(ani)) => {
 
-                        let model_mat = ani.calculate_model_mat(e.pos, e.rotation_sin, e.rotation_cos, e.scale);
+                        let model_mat = ani.calculate_model_mat(e);
                         m.render_from_model_mat(gl, shader, model_mat);
                     },
-                    (Some(m),None) => m.render(gl, shader, e.pos, e.rotation_sin, e.rotation_cos, e.scale),
+                    (Some(m),None) => m.render(gl, shader, *e),
                     _ => {}
                 },
             None => {}

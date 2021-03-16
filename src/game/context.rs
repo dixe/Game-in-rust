@@ -1,6 +1,5 @@
 use nalgebra as na;
 
-
 use crate::game;
 use crate::entity;
 use crate::render_gl;
@@ -11,12 +10,18 @@ use crate::level;
 use crate::controls;
 use crate::deltatime;
 
+struct NewModel {
+    entity_id: usize,
+    model_id: usize,
+}
+
 pub struct Context {
 
     // should be in ecs
     //GAME STATE SHOULD MOVE INTO STRUCT/MODULE
     pub state: game::State,
     pub player_id: usize,
+    pub player_sword_id: usize,
 
     // STUFF WE NEED
     pub controls: controls::Controls,
@@ -27,7 +32,9 @@ pub struct Context {
 
     pub ecs: entity::EntityComponentSystem,
 
-    pub player_projectile_model_id: usize,
+    pub projectile_model_id: usize,
+    pub sword_model_id: usize,
+
     pub enemy_model_id: usize,
 
     pub cube_shader: render_gl::Shader,
@@ -83,20 +90,16 @@ impl Context {
 
         let player_model = entity::Model::wave_model(loaded_model);
 
-
         let player_model_id = self.ecs.add_model(player_model);
 
 
         // SHOOTER
         let player_shooter = entity::Shooter::default_player();
         self.ecs.set_shooter(player_id, player_shooter);
-
-
         self.ecs.set_model(player_id, player_model_id);
 
-
         let mut physics = entity::Physics::new(player_id, player_model_id);
-        physics.pos =  na::Vector3::new(0.0, 3.0, 0.5);
+        physics.pos = na::Vector3::new(0.0, 3.0, 0.5);
 
 
         self.ecs.set_physics(player_id, physics);
@@ -107,17 +110,25 @@ impl Context {
         self.ecs.set_health(player_id, health);
 
 
-        // PLAYER PROJECTILE
+        //PLAYER SWORD
 
+        let sword_model = self.add_model_with_physics(na::Vector3::new(0.2, 0.2, 0.2), 3.0, "models/sword_01.obj")?;
+        self.sword_model_id = sword_model.model_id;
+        self.player_sword_id = sword_model.entity_id;
+
+
+
+
+        // PLAYER PROJECTILE
         let player_projectile_color = na::Vector3::new(0.2,  1.0, 0.2);
 
         let player_projectile_cube = cube::Cube::new(player_projectile_color, &self.render_context.gl);
 
         let mut proj_model = entity::Model::cube(player_projectile_cube);
 
-        let player_projectile_model_id = self.ecs.add_model(proj_model);
+        let projectile_model_id = self.ecs.add_model(proj_model);
 
-        self.player_projectile_model_id = player_projectile_model_id;
+        self.projectile_model_id = projectile_model_id;
 
 
         // ANIMATION
@@ -129,8 +140,30 @@ impl Context {
         Ok(())
     }
 
-    fn add_enemy(&mut self) {
 
+    fn add_model_with_physics(&mut self, clr: na::Vector3::<f32>, scale: f32, model_path: &str) -> Result<NewModel, failure::Error>  {
+
+        let model = render_gl::Model::load_from_path(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
+        let model_entity = entity::Model::wave_model(model);
+        let model_id = self.ecs.add_model(model_entity);
+        let entity_id = self.ecs.add_entity();
+
+        let mut physics = entity::Physics::new(entity_id, model_id);
+        physics.scale = scale;
+
+        self.ecs.set_physics(entity_id, physics);
+
+
+
+        Ok(NewModel {
+            model_id,
+            entity_id,
+        })
+
+
+    }
+
+    fn add_enemy(&mut self) {
         // ENEMY
         let enemy_id = self.ecs.add_entity();
 
@@ -203,6 +236,8 @@ impl Context {
 
         // player
         self.ecs.render(self.player_id, &self.render_context.gl, &self.cube_shader);
+        // player sword
+        self.ecs.render(self.player_sword_id, &self.render_context.gl, &self.cube_shader);
 
 
         // all in state
@@ -256,10 +291,12 @@ fn empty() -> Result<Context, failure::Error> {
         camera,
         delta_time,
         ecs,
-        player_projectile_model_id: 9999,
+        projectile_model_id: 9999,
+        sword_model_id: 9999,
         enemy_model_id: 9999,
         cube_shader,
         light_shader,
         state: game::State::new(),
+        player_sword_id: 9999
     })
 }

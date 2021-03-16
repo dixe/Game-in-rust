@@ -122,7 +122,7 @@ fn update_player_shooting(ctx: &mut game::Context) {
         (Some(dir), Some(s)) =>
         {
             let shooter = *s;
-            game::add_projectile(&mut ctx.state.player_shots, &mut ctx.ecs, &shooter, dir, player_id, ctx.player_projectile_model_id);
+            game::add_projectile(&mut ctx.state.player_shots, &mut ctx.ecs, &shooter, dir, player_id, ctx.projectile_model_id);
 
         },
         _ => {}

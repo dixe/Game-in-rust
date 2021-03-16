@@ -30,11 +30,11 @@ pub fn add_projectile(projectilies: &mut std::collections::HashSet<usize>,
 
 
     let mut physics = entity::Physics::new(id,  model_id);
+
     physics.pos = entity_pos;
     physics.velocity = vel;
     physics.max_speed = shooter.speed;
-    physics.rotation_sin = rotation.sin;
-    physics.rotation_cos = rotation.cos;
+    physics.rotation.z = f32::atan2(rotation.sin, rotation.cos);
     physics.inverse_mass = 1.0/10.0;
     physics.scale = 0.5;
     ecs.set_physics(id, physics);

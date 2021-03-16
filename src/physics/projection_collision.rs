@@ -17,17 +17,13 @@ pub struct ConvexCollisionShape {
 impl ConvexCollisionShape {
 
 
-    pub fn rectangle(center: &na::Vector3::<f32>, height: f32, width: f32, physcis: &entity::Physics ) -> ConvexCollisionShape {
+    pub fn rectangle(center: &na::Vector3::<f32>, height: f32, width: f32, physics: &entity::Physics ) -> ConvexCollisionShape {
 
-        let rot = na::Matrix3::<f32>::new(
-            physcis.rotation_cos, -physcis.rotation_sin, 0.0,
-            physcis.rotation_sin, physcis.rotation_cos, 0.0,
-            0.0, 0.0, 1.0,
-        );
+        let rot = na::Matrix3::<f32>::new_rotation(physics.rotation.z);
 
         let scale = na::Matrix3::<f32>::new(
-            physcis.scale, 0.0, 0.0,
-            0.0, physcis.scale, 0.0,
+            physics.scale, 0.0, 0.0,
+            0.0, physics.scale, 0.0,
             0.0, 0.0, 1.0,
         );
 

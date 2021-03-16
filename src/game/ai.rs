@@ -26,7 +26,7 @@ pub fn run_ai(ctx: &mut game::Context) {
             };
             match shooter {
                 Some(shooter) =>{
-                    shot_ai(&enemy, &shooter, &player, &mut ctx.state.enemy_shots, &mut ctx.ecs);
+                    shot_ai(&enemy, &shooter, &player, &mut ctx.state.enemy_shots, &mut ctx.ecs, ctx.projectile_model_id);
                 },
                 _ => {}
             }
@@ -48,7 +48,8 @@ fn shot_ai(entity: &entity::Physics,
            shooter: &entity::Shooter,
            player_physics: &entity::Physics,
            projectiles: &mut std::collections::HashSet<usize>,
-           ecs: &mut entity::EntityComponentSystem) {
+           ecs: &mut entity::EntityComponentSystem,
+           shot_model_id: usize) {
 
     if ! shooter.can_shoot() {
         return;
@@ -61,7 +62,7 @@ fn shot_ai(entity: &entity::Physics,
 
     //TODO check if we can see, take that as ai input
     if dist < 7.0 {
-        game::add_projectile(projectiles, ecs, &shooter, to_player_vec, entity.entity_id, 1);
+        game::add_projectile(projectiles, ecs, &shooter, to_player_vec, entity.entity_id, shot_model_id);
     }
 }
 

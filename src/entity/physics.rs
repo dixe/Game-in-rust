@@ -8,8 +8,7 @@ pub struct Physics {
     pub pos: na::Vector3::<f32>,
     pub velocity: na::Vector3::<f32>,
     pub max_speed: f32,
-    pub rotation_sin: f32,
-    pub rotation_cos: f32,
+    pub rotation: na::Vector3::<f32>,
     pub scale: f32,
     //
     pub model_id: usize,
@@ -24,8 +23,7 @@ impl Physics {
     pub fn new(entity_id: usize, model_id: usize) -> Physics {
         Physics {
             entity_id: entity_id,
-            rotation_sin: 0.0,
-            rotation_cos: 1.0,
+            rotation: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             pos: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             max_speed: 10.0,

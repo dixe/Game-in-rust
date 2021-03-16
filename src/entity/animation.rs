@@ -20,21 +20,18 @@ impl Animation {
         }
     }
 
-    pub fn calculate_model_mat(&self, mut pos: na::Vector3::<f32>, rotation_sin: f32, rotation_cos: f32, scale: f32) -> na::Matrix4::<f32> {
+    pub fn calculate_model_mat(&self, physics: &entity::Physics) -> na::Matrix4::<f32> {
 
         let scale_mat = na::Matrix4::<f32>::new(
-            scale, 0.0, 0.0, 0.0,
-            0.0,scale, 0.0, 0.0,
-            0.0, 0.0, scale, 0.0,
+            physics.scale, 0.0, 0.0, 0.0,
+            0.0, physics.scale, 0.0, 0.0,
+            0.0, 0.0, physics.scale, 0.0,
             0.0, 0.0, 0.0, 1.0,
         );
 
-        let rot_mat = na::Matrix4::<f32>::new(
-            rotation_cos, -rotation_sin, 0.0, 0.0,
-            rotation_sin, rotation_cos, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0,
-        );
+        let mut pos = physics.pos;
+
+        let rot_mat = na::Matrix4::<f32>::new_rotation(physics.rotation);
 
         pos.z += 0.5 * (self.time_passed as f32 / 300.0).sin();
 

@@ -8,12 +8,16 @@ A game in rust to learn rust and some opengl
 # Tasks
 - [x] Shots collision should also rotate
 - [x] Cool down on shots
-- [ ] Enemy Shooting at player
+- [x] Enemy Shooting at player
 - [x] Enemies collide with each other
-- [ ] Be able to load models
+- [x] Be able to load models
 - [x] Take console input while running.
 - [ ] Change shaders on the fly, required console input
 - [x] Load .obj models
+- [ ] Sword follow player
+- [ ] Sword rotation is correct
+- [ ] Sword Swing animation
+- [ ] Sword collision, based on its location
 
 
 # Cool stuff

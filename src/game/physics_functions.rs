@@ -40,7 +40,7 @@ pub fn update_velocity_and_rotation(entity: &mut entity::Physics, velocity_chang
 }
 
 
-
+#[derive(Debug)]
 pub struct Rotation {
 
     pub sin: f32,
