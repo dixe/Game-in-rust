@@ -18,7 +18,10 @@ A game in rust to learn rust and some opengl
 - [ ] Sword rotation is correct
 - [ ] Sword Swing animation
 - [ ] Sword collision, based on its location
+- [ ] Complex model
 
+# complex model
+based on multiple models, fx sword follow player, or hat or weapon, legs that are fixed to fx a player and when player move sword moves to. If we swing a sword we take into account the player physics too.
 
 # Cool stuff
 distortion shader fx https://lindenreid.wordpress.com/2018/03/05/heat-distortion-shader-tutorial/#:~:text=The%20basic%20premise%20of%20the,uses%20to%20sample%20that%20texture.
