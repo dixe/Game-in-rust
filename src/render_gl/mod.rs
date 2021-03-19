@@ -23,3 +23,6 @@ pub use self::shader::{Shader};
 
 mod model;
 pub use self::model::{Model};
+
+mod render_functions;
+pub use self::render_functions::{calculate_model_mat};

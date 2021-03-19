@@ -1,5 +1,6 @@
 use nalgebra as na;
 
+use crate::render_gl;
 use crate::entity;
 
 
@@ -20,24 +21,29 @@ impl Animation {
         }
     }
 
-    pub fn calculate_model_mat(&self, physics: &entity::Physics) -> na::Matrix4::<f32> {
-
-        let scale_mat = na::Matrix4::<f32>::new(
-            physics.scale, 0.0, 0.0, 0.0,
-            0.0, physics.scale, 0.0, 0.0,
-            0.0, 0.0, physics.scale, 0.0,
-            0.0, 0.0, 0.0, 1.0,
-        );
+    pub fn calculate_model_mat(&self, physics: &entity::Physics, anchor_physics: Option<&entity::Physics>) -> na::Matrix4::<f32> {
 
         let mut pos = physics.pos;
 
-        let rot_mat = na::Matrix4::<f32>::new_rotation(physics.rotation);
-
         pos.z += 0.5 * (self.time_passed as f32 / 300.0).sin();
 
-        let trans_mat = na::Matrix4::new_translation(&pos);
+        let mut model_mat = render_gl::calculate_model_mat(physics, anchor_physics);
 
-        trans_mat * rot_mat * scale_mat
+
+        match anchor_physics {
+            Some(_) => println!("Has Anchor"),
+            _ => {}
+        }
+
+        match anchor_physics {
+            Some(anchor) => {
+                let anchor_trans = na::Matrix4::new_translation(&anchor.pos) ;
+                model_mat = anchor_trans * model_mat;
+                println!("With anchor");
+            },
+            _ => {}
+        }
+        model_mat
     }
 
 

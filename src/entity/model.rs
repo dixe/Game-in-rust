@@ -5,8 +5,6 @@ use crate::render_gl;
 use crate::entity;
 
 
-
-
 enum ModelType {
 
     Cube(cube::Cube),
@@ -31,29 +29,6 @@ impl Model {
         let model = ModelType::WaveModel(wave);
         Model {
             model
-        }
-    }
-
-    pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader, physics: entity::Physics) {
-        let scale_mat = na::Matrix4::<f32>::new(
-            physics.scale, 0.0, 0.0, 0.0,
-            0.0, physics.scale, 0.0, 0.0,
-            0.0, 0.0, physics.scale, 0.0,
-            0.0, 0.0, 0.0, 1.0,
-        );
-
-        let rot_mat = na::Matrix4::<f32>::new_rotation(physics.rotation);
-
-
-        let trans_mat = na::Matrix4::new_translation(&physics.pos);
-
-        match &self.model {
-            ModelType::Cube(c) => {
-                c.render(gl, shader, trans_mat * rot_mat * scale_mat);
-            },
-            ModelType::WaveModel(wm) => {
-                wm.render(gl, shader, trans_mat * rot_mat * scale_mat)
-            }
         }
     }
 

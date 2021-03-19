@@ -21,7 +21,6 @@ pub struct Context {
     //GAME STATE SHOULD MOVE INTO STRUCT/MODULE
     pub state: game::State,
     pub player_id: usize,
-    pub player_sword_id: usize,
 
     // STUFF WE NEED
     pub controls: controls::Controls,
@@ -54,7 +53,7 @@ impl Context {
 
         ctx.setup_enemy_models()?;
 
-        ctx.add_enemy();
+        //ctx.add_enemy();
 
         Ok(ctx)
     }
@@ -112,10 +111,16 @@ impl Context {
 
         //PLAYER SWORD
 
-        let sword_model = self.add_model_with_physics(na::Vector3::new(0.2, 0.2, 0.2), 3.0, "models/sword_01.obj")?;
-        self.sword_model_id = sword_model.model_id;
-        self.player_sword_id = sword_model.entity_id;
+        let sword = self.add_model_with_physics(na::Vector3::new(0.2, 0.2, 0.2), 3.0, "models/sword_01.obj")?;
+        self.sword_model_id = sword.model_id;
 
+
+        let complex = entity::ComplexEntity {
+            id: player_id,
+            sub_entities: vec![sword.entity_id],
+        };
+
+        self.ecs.set_entity_type(player_id, entity::EntityType::Complex(complex));
 
 
 
@@ -150,6 +155,11 @@ impl Context {
 
         let mut physics = entity::Physics::new(entity_id, model_id);
         physics.scale = scale;
+        physics.pos.y -= 1.5;
+
+
+        physics.rotation.x += 1.57;
+
 
         self.ecs.set_physics(entity_id, physics);
 
@@ -236,8 +246,6 @@ impl Context {
 
         // player
         self.ecs.render(self.player_id, &self.render_context.gl, &self.cube_shader);
-        // player sword
-        self.ecs.render(self.player_sword_id, &self.render_context.gl, &self.cube_shader);
 
 
         // all in state
@@ -297,6 +305,5 @@ fn empty() -> Result<Context, failure::Error> {
         cube_shader,
         light_shader,
         state: game::State::new(),
-        player_sword_id: 9999
     })
 }
