@@ -1,7 +1,7 @@
 use crate::game;
 use crate::physics;
 use crate::entity;
-
+use crate::animation_system;
 
 
 pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::EntityCollision>) {
@@ -12,8 +12,11 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
     update_projectiles(ctx, delta);
     update_shooters(ctx, delta);
     update_enemies_death(ctx);
-
     update_player_shooting(ctx);
+
+    // also "animation" system update fx sword arc ect
+
+    animation_system::update_animations(&mut ctx.ecs.animation, &mut ctx.ecs.physics, delta);
 
 
 
@@ -31,7 +34,6 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 
     for c in collisions {
         // VALIDATE! entity_1 is always lower than entity_2 and enemies will spawn before projectiles always??
-
 
         if ctx.state.enemies.contains(&c.entity_1_id) && ctx.state.player_shots.contains(&c.entity_2_id) {
             match (ctx.ecs.get_health(c.entity_1_id), ctx.ecs.get_shot(c.entity_2_id )) {
@@ -54,12 +56,6 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 
         };
     }
-
-
-
-
-
-
 }
 
 

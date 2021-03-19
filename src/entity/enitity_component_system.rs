@@ -17,9 +17,8 @@ pub struct EntityComponentSystem {
     pub shooter: std::collections::HashMap<usize, Shooter>,
     #[component = "Shot"]
     pub shot: std::collections::HashMap<usize, Shot>,
-    #[component = "Animation"]
-    pub animation: std::collections::HashMap<usize, Animation>,
-
+    #[component = "AnimationData"]
+    pub animation: std::collections::HashMap<usize, AnimationData>,
     #[component = "EntityType"]
     pub entity_type: std::collections::HashMap<usize, EntityType>,
 
@@ -110,7 +109,7 @@ impl EntityComponentSystem {
 
         match (self.models.get(physics.model_id), self.get_animation(physics.entity_id)) {
             (Some(m), Some(ani)) => {
-                let model_mat = ani.calculate_model_mat(physics, anchor_physics);
+                let model_mat = ani.calculate_model_mat(*physics, anchor_physics);
                 m.render_from_model_mat(gl, shader, model_mat);
             },
             (Some(m),None) => {

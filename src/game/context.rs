@@ -9,7 +9,7 @@ use crate::scene;
 use crate::level;
 use crate::controls;
 use crate::deltatime;
-
+use crate::animation_system as anim_sys;
 struct NewModel {
     entity_id: usize,
     model_id: usize,
@@ -122,8 +122,11 @@ impl Context {
 
         self.ecs.set_entity_type(player_id, entity::EntityType::Complex(complex));
 
+        // SWORD ANIMATION
+        let sword_animation = entity::AnimationData::new(sword.entity_id, anim_sys::idle_bob_z);
 
 
+        self.ecs.set_animation(sword.entity_id, sword_animation);
         // PLAYER PROJECTILE
         let player_projectile_color = na::Vector3::new(0.2,  1.0, 0.2);
 
@@ -136,10 +139,7 @@ impl Context {
         self.projectile_model_id = projectile_model_id;
 
 
-        // ANIMATION
-        let animation = entity::Animation::new(player_id);
 
-        self.ecs.set_animation(player_id, animation);
         println!("Plyaer id = {}", player_id);
 
         Ok(())

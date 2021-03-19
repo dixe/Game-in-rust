@@ -101,9 +101,6 @@ fn run() -> Result<(), failure::Error> {
         //UPDATE ANIMAITONS
         let delta = ctx.get_delta_millis();
 
-        animation_system::update_animations(&mut ctx.ecs.animation, &ctx.ecs.physics, delta);
-
-
 
         // RENDERING
         ctx.render();
