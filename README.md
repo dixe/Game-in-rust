@@ -14,11 +14,11 @@ A game in rust to learn rust and some opengl
 - [x] Take console input while running.
 - [ ] Change shaders on the fly, required console input
 - [x] Load .obj models
-- [ ] Sword follow player
-- [ ] Sword rotation is correct
+- [x] Sword follow player
+- [x] Sword rotation is correct
 - [ ] Sword Swing animation
 - [ ] Sword collision, based on its location
-- [ ] Complex model
+- [x] Complex model
 
 # complex model
 based on multiple models, fx sword follow player, or hat or weapon, legs that are fixed to fx a player and when player move sword moves to. If we swing a sword we take into account the player physics too.
