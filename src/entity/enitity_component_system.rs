@@ -17,8 +17,8 @@ pub struct EntityComponentSystem {
     pub shooter: std::collections::HashMap<usize, Shooter>,
     #[component = "Shot"]
     pub shot: std::collections::HashMap<usize, Shot>,
-    #[component = "AnimationData"]
-    pub animation: std::collections::HashMap<usize, AnimationData>,
+    #[component = "AnimationsInfo"]
+    pub animations_info: std::collections::HashMap<usize, AnimationsInfo>,
     #[component = "EntityType"]
     pub entity_type: std::collections::HashMap<usize, EntityType>,
 
@@ -37,7 +37,7 @@ impl EntityComponentSystem {
             health: std::collections::HashMap::new(),
             shooter: std::collections::HashMap::new(),
             shot: std::collections::HashMap::new(),
-            animation: std::collections::HashMap::new(),
+            animations_info: std::collections::HashMap::new(),
             entity_type: std::collections::HashMap::new(),
             models: Vec::<Model>::new(),
             model_reference: std::collections::HashMap::new(),
@@ -107,14 +107,11 @@ impl EntityComponentSystem {
         };
 
 
-        match (self.models.get(physics.model_id), self.get_animation(physics.entity_id)) {
-            (Some(m), Some(ani)) => {
-                let model_mat = ani.calculate_model_mat(*physics, anchor_physics);
+        match self.models.get(physics.model_id) {
+            Some(m) => {
+                let model_mat = render_gl::calculate_model_mat(physics, anchor_physics);
                 m.render_from_model_mat(gl, shader, model_mat);
             },
-            (Some(m),None) => {
-                let model_mat = render_gl::calculate_model_mat(physics, anchor_physics);
-                m.render_from_model_mat(gl, shader, model_mat);},
             _ => {}
         };
     }

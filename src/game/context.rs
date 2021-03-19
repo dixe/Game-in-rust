@@ -32,7 +32,6 @@ pub struct Context {
     pub ecs: entity::EntityComponentSystem,
 
     pub projectile_model_id: usize,
-    pub sword_model_id: usize,
 
     pub enemy_model_id: usize,
 
@@ -112,7 +111,6 @@ impl Context {
         //PLAYER SWORD
 
         let sword = self.add_model_with_physics(na::Vector3::new(0.2, 0.2, 0.2), 3.0, "models/sword_01.obj")?;
-        self.sword_model_id = sword.model_id;
 
 
         let complex = entity::ComplexEntity {
@@ -123,10 +121,17 @@ impl Context {
         self.ecs.set_entity_type(player_id, entity::EntityType::Complex(complex));
 
         // SWORD ANIMATION
-        let sword_animation = entity::AnimationData::new(sword.entity_id, anim_sys::idle_bob_z);
+        let sword_idle = entity::AnimationData::new(anim_sys::idle_bob_z);
+        let mut sword_spin = entity::AnimationData::new(anim_sys::spin_around);
+
+        sword_spin.total_time;
+        let mut animations_info = entity::AnimationsInfo::new(sword.entity_id, Some(sword_idle));
+
+        animations_info.queue.push_back(sword_spin);
 
 
-        self.ecs.set_animation(sword.entity_id, sword_animation);
+        self.ecs.set_animations_info(sword.entity_id, animations_info);
+
         // PLAYER PROJECTILE
         let player_projectile_color = na::Vector3::new(0.2,  1.0, 0.2);
 
@@ -137,8 +142,6 @@ impl Context {
         let projectile_model_id = self.ecs.add_model(proj_model);
 
         self.projectile_model_id = projectile_model_id;
-
-
 
         println!("Plyaer id = {}", player_id);
 
@@ -208,10 +211,6 @@ impl Context {
     // Call once pr update step
     pub fn update_delta(&mut self) {
         self.delta_time.update();
-    }
-
-    pub fn get_delta_millis(&self) -> i32 {
-        self.delta_time.millis()
     }
 
     pub fn get_delta_time(&self) -> f32 {
@@ -300,7 +299,6 @@ fn empty() -> Result<Context, failure::Error> {
         delta_time,
         ecs,
         projectile_model_id: 9999,
-        sword_model_id: 9999,
         enemy_model_id: 9999,
         cube_shader,
         light_shader,

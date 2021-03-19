@@ -16,9 +16,6 @@ impl Deltatime {
         }
     }
 
-    pub fn millis(&self) -> i32 {
-        self.value.as_millis() as i32
-    }
 
     pub fn time(&self) -> f32 {
         (self.value.as_millis() as f32 )/ 1000.0

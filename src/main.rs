@@ -98,10 +98,6 @@ fn run() -> Result<(), failure::Error> {
         game::update_game_state(&mut ctx, &collisions);
 
 
-        //UPDATE ANIMAITONS
-        let delta = ctx.get_delta_millis();
-
-
         // RENDERING
         ctx.render();
 
@@ -114,6 +110,8 @@ fn run() -> Result<(), failure::Error> {
         //tri.render(&ctx.render_context.gl);
 
         ctx.render_context.gl_swap_window();
+
+        //println!("{}, {}", ctx.get_delta_millis(), ctx.get_delta_time());
 
         unsafe {
             match CMD {

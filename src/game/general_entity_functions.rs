@@ -40,7 +40,7 @@ pub fn add_projectile(projectilies: &mut std::collections::HashSet<usize>,
     ecs.set_physics(id, physics);
 
 
-    let shot = entity::Shot::new(id, (shooter.speed * shooter.distance) as i32);
+    let shot = entity::Shot::new(id, shooter.speed * shooter.distance);
 
     ecs.set_shot(id, shot);
     projectilies.insert(id);

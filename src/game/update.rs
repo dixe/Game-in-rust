@@ -6,7 +6,8 @@ use crate::animation_system;
 
 pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::EntityCollision>) {
 
-    let delta = ctx.get_delta_millis();
+    let delta = ctx.get_delta_time();
+
 
     // Update shooters, projectiles and othertime based stuff
     update_projectiles(ctx, delta);
@@ -15,9 +16,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
     update_player_shooting(ctx);
 
     // also "animation" system update fx sword arc ect
-
-    animation_system::update_animations(&mut ctx.ecs.animation, &mut ctx.ecs.physics, delta);
-
+    animation_system::update_animations(&mut ctx.ecs.animations_info, &mut ctx.ecs.physics, delta as f32);
 
 
     // PLAYER MOVEMENT
@@ -79,7 +78,7 @@ fn update_enemies_death(ctx: &mut game::Context) {
 }
 
 
-fn update_shooters(ctx: &mut game::Context, delta: i32) {
+fn update_shooters(ctx: &mut game::Context, delta: f32) {
 
     for shooter in ctx.ecs.shooter.values_mut() {
         shooter.update(delta);
@@ -88,7 +87,7 @@ fn update_shooters(ctx: &mut game::Context, delta: i32) {
 
 
 
-fn update_projectiles(ctx: &mut game::Context, delta: i32) {
+fn update_projectiles(ctx: &mut game::Context, delta: f32) {
     let mut remove_shots = Vec::new();
     for shot in &mut ctx.ecs.shot.values_mut() {
 

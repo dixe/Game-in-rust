@@ -1,7 +1,7 @@
 #[derive(Debug,Clone,Copy)]
 pub struct Shot {
     pub entity_id: usize,
-    pub time_remaining: i32,
+    pub time_remaining: f32,
     pub expired: bool,
     pub used: bool,
     pub damage: f32
@@ -10,7 +10,7 @@ pub struct Shot {
 
 impl Shot {
 
-    pub fn new(entity_id: usize, life_time: i32) -> Self {
+    pub fn new(entity_id: usize, life_time: f32) -> Self {
         Shot {
             entity_id,
             time_remaining: life_time,
@@ -21,9 +21,9 @@ impl Shot {
     }
 
 
-    pub fn update(&mut self, delta: i32) {
+    pub fn update(&mut self, delta: f32) {
 
         self.time_remaining -= delta;
-        self.expired = self.time_remaining <= 0;
+        self.expired = self.time_remaining <= 0.0;
     }
 }
