@@ -42,6 +42,34 @@ pub fn update_velocity_and_rotation(entity: &mut entity::Physics, velocity_chang
 }
 
 
+pub fn get_absoulte_physics(entity_id: usize, ecs: &entity::EntityComponentSystem) -> Option<entity::Physics> {
+
+    let mut physics = match ecs.get_physics(entity_id) {
+        Some(physics) => *physics,
+        None => return None,
+    };
+
+
+    let anchor_physics = match physics.anchor_id {
+        Some(anchor_id) => {
+            match get_absoulte_physics(anchor_id, ecs) {
+                Some(p) => p,
+                None => return None
+            }
+        },
+        None => {
+            return Some(physics);
+        }
+    };
+
+
+    physics.pos += anchor_physics.pos;
+
+    Some(physics)
+}
+
+
+
 #[derive(Debug)]
 pub struct Rotation {
 

@@ -1,8 +1,14 @@
+use gl;
+
+
 use crate::entity;
+use crate::render_gl;
+use crate::game;
+
 
 use nalgebra as na;
 
-pub fn calculate_model_mat(physics: &entity::Physics, anchor_physics: Option<&entity::Physics>) -> na::Matrix4::<f32> {
+fn calculate_model_mat(physics: &entity::Physics) -> na::Matrix4::<f32> {
 
     let scale_mat = na::Matrix4::<f32>::new(
         physics.scale, 0.0, 0.0, 0.0,
@@ -19,14 +25,24 @@ pub fn calculate_model_mat(physics: &entity::Physics, anchor_physics: Option<&en
 
     let mut model_mat = trans_mat * rot_mat * scale_mat;
 
-    match anchor_physics {
-        Some(anchor) => {
-            let anchor_trans = na::Matrix4::new_translation(&anchor.pos) ;
-            let anchor_rot = na::Matrix4::<f32>::new_rotation(anchor.rotation);
-            model_mat = anchor_trans * anchor_rot * model_mat;
+    model_mat
+}
 
+
+
+pub fn render(ecs: &entity::EntityComponentSystem, entity_id: usize, gl: &gl::Gl, shader: &render_gl::Shader) {
+
+    let physics = match game::get_absoulte_physics(entity_id, ecs) {
+        Some(physics) => physics,
+        _ => return,
+    };
+
+
+    match ecs.models.get(physics.model_id) {
+        Some(m) => {
+            let model_mat = calculate_model_mat(&physics);
+            m.render_from_model_mat(gl, shader, model_mat);
         },
         _ => {}
-    }
-    model_mat
+    };
 }

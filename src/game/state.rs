@@ -31,15 +31,15 @@ impl State {
 
 
         for id in &self.enemies {
-            ecs.render(*id, gl, shader)
+            render_gl::render(ecs, *id, gl, shader)
         }
 
         for id in &self.player_shots {
-            ecs.render(*id, gl,shader);
+            render_gl::render(ecs, *id, gl,shader);
         }
 
         for id in &self.enemy_shots {
-            ecs.render(*id, gl,shader);
+            render_gl::render(ecs, *id, gl,shader);
         }
     }
 }

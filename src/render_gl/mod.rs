@@ -25,4 +25,4 @@ mod model;
 pub use self::model::{Model};
 
 mod render_functions;
-pub use self::render_functions::{calculate_model_mat};
+pub use self::render_functions::{render};

@@ -87,12 +87,12 @@ impl Context {
         let player_model = entity::Model::wave_model(loaded_model);
 
         let player_model_id = self.ecs.add_model(player_model);
-
+        self.ecs.set_model(player_id, player_model_id);
 
         // SHOOTER
         let player_shooter = entity::Shooter::default_player();
         self.ecs.set_shooter(player_id, player_shooter);
-        self.ecs.set_model(player_id, player_model_id);
+
 
         let mut physics = entity::Physics::new(player_id, player_model_id);
         physics.pos = na::Vector3::new(0.0, 3.0, 0.5);
@@ -108,16 +108,7 @@ impl Context {
 
         //PLAYER SWORD
 
-        let sword = self.add_model_with_physics(na::Vector3::new(0.2, 0.2, 0.2), 3.0, "models/sword_01.obj")?;
-
-
-        let complex = entity::ComplexEntity {
-            id: player_id,
-            sub_entities: vec![sword.entity_id],
-        };
-
-        self.ecs.set_entity_type(player_id, entity::EntityType::Complex(complex));
-
+        let sword = self.add_model_with_physics(na::Vector3::new(0.2, 0.2, 0.2), 3.0, Some(player_id), "models/sword_01.obj")?;
         self.player_weapon_id = sword.entity_id;
 
         // SWORD ANIMATION
@@ -138,18 +129,21 @@ impl Context {
 
         self.projectile_model_id = projectile_model_id;
 
-        println!("Plyaer id = {}", player_id);
+        println!("Player id = {}", player_id);
+        println!("Player_weapon id = {}", self.player_weapon_id);
 
         Ok(())
     }
 
 
-    fn add_model_with_physics(&mut self, clr: na::Vector3::<f32>, scale: f32, model_path: &str) -> Result<NewModel, failure::Error>  {
+    fn add_model_with_physics(&mut self, clr: na::Vector3::<f32>, scale: f32, anchor_id: Option<usize>, model_path: &str) -> Result<NewModel, failure::Error>  {
 
         let model = render_gl::Model::load_from_path(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
         let model_entity = entity::Model::wave_model(model);
         let model_id = self.ecs.add_model(model_entity);
         let entity_id = self.ecs.add_entity();
+
+        self.ecs.set_model(entity_id, model_id);
 
         let mut physics = entity::Physics::new(entity_id, model_id);
         physics.scale = scale;
@@ -157,11 +151,10 @@ impl Context {
         physics.inverse_mass = 0.0;
 
         physics.rotation.x += 1.57;
+        physics.anchor_id = anchor_id;
 
 
         self.ecs.set_physics(entity_id, physics);
-
-
 
         Ok(NewModel {
             entity_id,
@@ -227,6 +220,7 @@ impl Context {
     pub fn render(&self){
         // RENDER SCENE WITH CUBE SHADER
         self.cube_shader.set_used();
+
         // CAN BE MOVED OUTSIDE THE LOOP
         self.cube_shader.set_vec3(&self.render_context.gl, "lightPos", na::Vector3::new(0.0, 0.0, 5.0)); //
         self.cube_shader.set_vec3(&self.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
@@ -236,10 +230,9 @@ impl Context {
         self.scene.render(&self.render_context.gl, &self.cube_shader);
 
 
-
-
         // player
-        self.ecs.render(self.player_id, &self.render_context.gl, &self.cube_shader);
+        render_gl::render(&self.ecs, self.player_id, &self.render_context.gl, &self.cube_shader);
+        render_gl::render(&self.ecs, self.player_weapon_id, &self.render_context.gl, &self.cube_shader);
 
 
         // all in state
@@ -247,9 +240,8 @@ impl Context {
 
 
     }
+
 }
-
-
 
 
 

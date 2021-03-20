@@ -11,6 +11,7 @@ pub struct Physics {
     //
     pub model_id: usize,
     pub inverse_mass: f32,
+    pub anchor_id: Option<usize>,
 }
 
 impl Physics {
@@ -25,6 +26,7 @@ impl Physics {
             model_id: model_id,
             inverse_mass: 1.0,
             scale: 1.0,
+            anchor_id: None
         }
     }
 }
