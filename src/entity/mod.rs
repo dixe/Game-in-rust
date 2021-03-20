@@ -24,7 +24,7 @@ pub use self::shot::Shot;
 
 
 mod action;
-pub use self::action::{AnimationData, AnimationsInfo};
+pub use self::action::{ActionData, ActionsInfo};
 
 mod entity;
 pub use self::entity::{EntityType, ComplexEntity};

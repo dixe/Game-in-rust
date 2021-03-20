@@ -121,8 +121,8 @@ impl Context {
         self.player_weapon_id = sword.entity_id;
 
         // SWORD ANIMATION
-        let sword_idle = entity::AnimationData::new(anim_sys::idle_bob_z, sword.init_physics);
-        let actions_info = entity::AnimationsInfo::new(sword.entity_id, Some(sword_idle));
+        let sword_idle = entity::ActionData::new(anim_sys::idle_bob_z, sword.init_physics);
+        let actions_info = entity::ActionsInfo::new(sword.entity_id, Some(sword_idle));
 
         self.ecs.set_actions_info(sword.entity_id, actions_info);
 
@@ -154,7 +154,7 @@ impl Context {
         let mut physics = entity::Physics::new(entity_id, model_id);
         physics.scale = scale;
         physics.pos.x = 1.0;
-
+        physics.inverse_mass = 0.0;
 
         physics.rotation.x += 1.57;
 

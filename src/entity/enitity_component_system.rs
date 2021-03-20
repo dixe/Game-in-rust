@@ -17,8 +17,8 @@ pub struct EntityComponentSystem {
     pub shooter: std::collections::HashMap<usize, Shooter>,
     #[component = "Shot"]
     pub shot: std::collections::HashMap<usize, Shot>,
-    #[component = "AnimationsInfo"]
-    pub actions_info: std::collections::HashMap<usize, AnimationsInfo>,
+    #[component = "ActionsInfo"]
+    pub actions_info: std::collections::HashMap<usize, ActionsInfo>,
     #[component = "EntityType"]
     pub entity_type: std::collections::HashMap<usize, EntityType>,
 

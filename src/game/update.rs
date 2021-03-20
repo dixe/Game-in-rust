@@ -131,9 +131,7 @@ fn update_player_swing(ctx: &mut game::Context) {
         };
 
 
-
-    println!("{:#?}", init_physics.pos);
-    let swing_action = entity::AnimationData::new(action_system::spin_around, init_physics);
+    let swing_action = entity::ActionData::new(action_system::spin_around, init_physics);
 
     // TODO look at the current state and maybe add to queue instead of as current
 

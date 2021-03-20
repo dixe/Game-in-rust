@@ -5,20 +5,18 @@ use crate::entity;
 
 
 #[derive(Debug, Clone)]
-pub struct AnimationsInfo {
+pub struct ActionsInfo {
     pub entity_id: usize,
-    pub default: Option<AnimationData>,
-    pub queue: std::collections::VecDeque<AnimationData>,
-    pub active: Option<AnimationData>
+    pub default: Option<ActionData>,
+    pub queue: std::collections::VecDeque<ActionData>,
+    pub active: Option<ActionData>
 }
 
 
+impl ActionsInfo {
 
-
-impl AnimationsInfo {
-
-    pub fn new(entity_id: usize, default: Option<AnimationData>) -> AnimationsInfo {
-        AnimationsInfo {
+    pub fn new(entity_id: usize, default: Option<ActionData>) -> ActionsInfo {
+        ActionsInfo {
             entity_id,
             default,
             queue: std::collections::VecDeque::new(),
@@ -33,7 +31,6 @@ impl AnimationsInfo {
                 if data.time_passed < data.total_time {
                     return
                 }
-
             },
             _ => {}
         };
@@ -57,8 +54,6 @@ impl AnimationsInfo {
             _ => {},
         }
 
-
-
         self.next();
     }
 
@@ -66,7 +61,7 @@ impl AnimationsInfo {
 }
 
 #[derive(Copy, Clone)]
-pub struct AnimationData {
+pub struct ActionData {
     pub time_passed: f32,
     pub total_time: f32,
     init: entity::Physics,
@@ -74,17 +69,17 @@ pub struct AnimationData {
 }
 
 
-impl Debug for AnimationData {
+impl Debug for ActionData {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "time_passed: {}\ntotal_time: {}", self.time_passed, self.total_time)
     }
 }
 
-impl AnimationData {
+impl ActionData {
 
-    pub fn new(update_fn: fn(time_passed: f32, physics: &mut entity::Physics,init: &entity::Physics), init: entity::Physics) -> AnimationData {
+    pub fn new(update_fn: fn(time_passed: f32, physics: &mut entity::Physics,init: &entity::Physics), init: entity::Physics) -> ActionData {
 
-        AnimationData {
+        ActionData {
             time_passed: 0.0,
             total_time: 1.0,
             init,
@@ -106,7 +101,7 @@ impl AnimationData {
 
 
 /*
-impl Animation for AnimationData {
+impl Action for ActionData {
 
 fn update(&mut self, mut physics: entity::Physics, delta: i32) {
 
@@ -121,7 +116,7 @@ physics.pos.z += 0.5 * (self.time_passed as f32 / 300.0).sin();
 
 }
 
-    pub trait Animation {
+    pub trait Action {
 
     fn update(&mut self, physics: entity::Physics, delta: i32);
 

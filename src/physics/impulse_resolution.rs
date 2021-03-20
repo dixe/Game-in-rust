@@ -118,6 +118,7 @@ fn impulse_position_correction(entity_1: &mut entity::Physics, entity_2: &mut en
 }
 
 
+
 fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<ConvexCollisionShape>, std::collections::HashSet<(usize,usize)>) {
 
     let mut entities = Vec::new();
@@ -135,7 +136,6 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
     };
 
 
-
     for enemy_id in &ctx.state.enemies {
         match ctx.ecs.get_physics(*enemy_id) {
             Some(en) => {
@@ -145,10 +145,6 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
             None => continue
         };
     }
-
-
-
-
 
     // ADD PLAYER PROJECTILES AS IMPULSE ENTITIES
     for shot in &ctx.state.player_shots {
