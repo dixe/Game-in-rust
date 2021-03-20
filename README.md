@@ -16,9 +16,12 @@ A game in rust to learn rust and some opengl
 - [x] Load .obj models
 - [x] Sword follow player
 - [x] Sword rotation is correct
-- [ ] Sword Swing animation
+- [x] Sword Swing animation
+- [x] Trigger animation/action on controllerInput
 - [ ] Sword collision, based on its location
 - [x] Complex model
+
+
 
 # complex model
 based on multiple models, fx sword follow player, or hat or weapon, legs that are fixed to fx a player and when player move sword moves to. If we swing a sword we take into account the player physics too.
