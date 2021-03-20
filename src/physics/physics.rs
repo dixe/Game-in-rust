@@ -1,5 +1,3 @@
-use nalgebra as na;
-
 use crate::game;
 use crate::physics::impulse_resolution::*;
 

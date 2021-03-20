@@ -1,6 +1,3 @@
-use nalgebra as na;
-
-
 #[derive(Debug, Clone)]
 pub enum EntityType {
     Simple(usize),

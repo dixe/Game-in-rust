@@ -1,12 +1,10 @@
-use nalgebra as na;
+use core::fmt::Debug;
 
-use crate::render_gl;
 use crate::entity;
 
 
 
-
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct AnimationsInfo {
     pub entity_id: usize,
     pub default: Option<AnimationData>,
@@ -71,17 +69,25 @@ impl AnimationsInfo {
 pub struct AnimationData {
     pub time_passed: f32,
     pub total_time: f32,
-    update_fn: fn(time_passed: f32, physics: &mut entity::Physics),
+    init: entity::Physics,
+    update_fn: fn(time_passed: f32, physics: &mut entity::Physics, init: &entity::Physics),
 }
 
 
+impl Debug for AnimationData {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "time_passed: {}\ntotal_time: {}", self.time_passed, self.total_time)
+    }
+}
+
 impl AnimationData {
 
-    pub fn new(update_fn: fn(time_passed: f32, physics: &mut entity::Physics)) -> AnimationData {
+    pub fn new(update_fn: fn(time_passed: f32, physics: &mut entity::Physics,init: &entity::Physics), init: entity::Physics) -> AnimationData {
 
         AnimationData {
             time_passed: 0.0,
             total_time: 1.0,
+            init,
             update_fn
         }
     }
@@ -91,7 +97,7 @@ impl AnimationData {
 
         let t = self.time_passed.clamp(0.0, self.total_time);
 
-        (self.update_fn)(t, physics);
+        (self.update_fn)(t, physics, &self.init);
 
     }
 }

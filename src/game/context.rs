@@ -9,10 +9,10 @@ use crate::scene;
 use crate::level;
 use crate::controls;
 use crate::deltatime;
-use crate::animation_system as anim_sys;
+use crate::action_system as anim_sys;
 struct NewModel {
     entity_id: usize,
-    model_id: usize,
+    init_physics: entity::Physics,
 }
 
 pub struct Context {
@@ -21,7 +21,7 @@ pub struct Context {
     //GAME STATE SHOULD MOVE INTO STRUCT/MODULE
     pub state: game::State,
     pub player_id: usize,
-
+    pub player_weapon_id: usize,
     // STUFF WE NEED
     pub controls: controls::Controls,
     pub scene: scene::Scene,
@@ -78,8 +78,6 @@ impl Context {
 
         // MODEL
         let player_color = na::Vector3::new(0.0, 1.0, 1.0);
-        let player_cube = cube::Cube::new(player_color, &self.render_context.gl);
-
 
         // Use loaded model
         //let player_model = entity::Model::cube(player_cube);
@@ -120,24 +118,21 @@ impl Context {
 
         self.ecs.set_entity_type(player_id, entity::EntityType::Complex(complex));
 
+        self.player_weapon_id = sword.entity_id;
+
         // SWORD ANIMATION
-        let sword_idle = entity::AnimationData::new(anim_sys::idle_bob_z);
-        let mut sword_spin = entity::AnimationData::new(anim_sys::spin_around);
+        let sword_idle = entity::AnimationData::new(anim_sys::idle_bob_z, sword.init_physics);
+        let actions_info = entity::AnimationsInfo::new(sword.entity_id, Some(sword_idle));
 
-        sword_spin.total_time;
-        let mut animations_info = entity::AnimationsInfo::new(sword.entity_id, Some(sword_idle));
+        self.ecs.set_actions_info(sword.entity_id, actions_info);
 
-        animations_info.queue.push_back(sword_spin);
-
-
-        self.ecs.set_animations_info(sword.entity_id, animations_info);
 
         // PLAYER PROJECTILE
         let player_projectile_color = na::Vector3::new(0.2,  1.0, 0.2);
 
         let player_projectile_cube = cube::Cube::new(player_projectile_color, &self.render_context.gl);
 
-        let mut proj_model = entity::Model::cube(player_projectile_cube);
+        let proj_model = entity::Model::cube(player_projectile_cube);
 
         let projectile_model_id = self.ecs.add_model(proj_model);
 
@@ -158,7 +153,7 @@ impl Context {
 
         let mut physics = entity::Physics::new(entity_id, model_id);
         physics.scale = scale;
-        physics.pos.y -= 1.5;
+        physics.pos.x = 1.0;
 
 
         physics.rotation.x += 1.57;
@@ -169,8 +164,8 @@ impl Context {
 
 
         Ok(NewModel {
-            model_id,
             entity_id,
+            init_physics: physics,
         })
 
 
@@ -303,5 +298,6 @@ fn empty() -> Result<Context, failure::Error> {
         cube_shader,
         light_shader,
         state: game::State::new(),
+        player_weapon_id: 9999
     })
 }

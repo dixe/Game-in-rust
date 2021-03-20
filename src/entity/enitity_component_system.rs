@@ -18,7 +18,7 @@ pub struct EntityComponentSystem {
     #[component = "Shot"]
     pub shot: std::collections::HashMap<usize, Shot>,
     #[component = "AnimationsInfo"]
-    pub animations_info: std::collections::HashMap<usize, AnimationsInfo>,
+    pub actions_info: std::collections::HashMap<usize, AnimationsInfo>,
     #[component = "EntityType"]
     pub entity_type: std::collections::HashMap<usize, EntityType>,
 
@@ -37,7 +37,7 @@ impl EntityComponentSystem {
             health: std::collections::HashMap::new(),
             shooter: std::collections::HashMap::new(),
             shot: std::collections::HashMap::new(),
-            animations_info: std::collections::HashMap::new(),
+            actions_info: std::collections::HashMap::new(),
             entity_type: std::collections::HashMap::new(),
             models: Vec::<Model>::new(),
             model_reference: std::collections::HashMap::new(),
@@ -74,13 +74,13 @@ impl EntityComponentSystem {
 
         match e_type {
             EntityType::Simple(id) => self.render_simple(*id, None, gl, shader),
-            EntityType::Complex(complex) => self.render_complex(complex, None, gl, shader)
+            EntityType::Complex(complex) => self.render_complex(complex, gl, shader)
         }
 
     }
 
 
-    fn render_complex(&self, complex: &ComplexEntity, anchor_physics: Option<&Physics>, gl: &gl::Gl, shader: &render_gl::Shader) {
+    fn render_complex(&self, complex: &ComplexEntity,gl: &gl::Gl, shader: &render_gl::Shader) {
 
         self.render_simple(complex.id, None, gl, shader);
 
@@ -90,7 +90,6 @@ impl EntityComponentSystem {
         };
 
         for extra_id in &complex.sub_entities {
-
 
             // maybe self.render and also maybe self.render should take a base option anchor_physics
             // to make the signatures m

@@ -56,8 +56,6 @@ fn shot_ai(entity: &entity::Physics,
     }
 
     let to_player_vec = player_physics.pos - entity.pos;
-    let move_dir = (to_player_vec).normalize();
-
     let dist = to_player_vec.magnitude();
 
     //TODO check if we can see, take that as ai input
@@ -76,9 +74,7 @@ fn distance_ai(entity: &mut entity::Physics, player_physics: entity::Physics)  {
     let target_dist = 5.0;
     let target_point = move_dir * (-target_dist) + player_physics.pos;
 
-    //move_to_point(entity, target_point);
-    move_to_point(entity, entity.pos);
-
+    move_to_point(entity, target_point);
 }
 
 

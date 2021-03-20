@@ -1,5 +1,5 @@
 use gl;
-use crate::render_gl::{self, data, buffer};
+use crate::render_gl::{self, buffer};
 use nalgebra as na;
 use std::io::BufReader;
 use stringreader::StringReader;
@@ -23,7 +23,7 @@ impl Model {
 
 
         let model_content = res.load_string(path).unwrap();
-        let mut str_reader = StringReader::new(&model_content);
+        let str_reader = StringReader::new(&model_content);
         let buf= BufReader::new(str_reader);
 
         let model: obj::Obj = obj::load_obj(buf).unwrap();
@@ -31,7 +31,6 @@ impl Model {
         let vbo = buffer::ArrayBuffer::new(gl);
         let vao = buffer::VertexArray::new(gl);
 
-        let stride = 9;
         let mut vertices = Vec::<f32>::new();
 
         let ebo_data: Vec<u16> = model.indices.clone();

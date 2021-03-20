@@ -11,7 +11,7 @@ pub fn calculate_model_mat(physics: &entity::Physics, anchor_physics: Option<&en
         0.0, 0.0, 0.0, 1.0,
     );
 
-    let mut pos = physics.pos;
+    let pos = physics.pos;
 
     let rot_mat = na::Matrix4::<f32>::new_rotation(physics.rotation);
 

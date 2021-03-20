@@ -12,6 +12,7 @@ pub struct Controls {
     s: bool,
     pub movement_dir: na::Vector3::<f32>,
     pub shoot_dir: Option<na::Vector3::<f32>>,
+    pub right_shoulder: bool,
 
 }
 
@@ -36,6 +37,7 @@ impl Controls {
             w: false,
             s: false,
             d: false,
+            right_shoulder: false,
         }
     }
 
@@ -53,6 +55,8 @@ impl Controls {
             self.movement_dir.y = 0.0;
             self.movement_dir.z = 0.0;
         }
+
+        self.right_shoulder = false;
 
         for event in self.event_pump.poll_iter() {
             use sdl2::event::Event;
@@ -138,27 +142,27 @@ impl Controls {
                     }
                 },
 
+
+
                 // TRIGGER BUTTON
-                Event::JoyAxisMotion {..} => {
-                    //println!("axis");
+                Event::ControllerButtonDown {button,..} => {
+                    //println!("Pressed button : {:#?} ", button);
+                    match button {
+                        sdl2::controller::Button::RightShoulder => self.right_shoulder = true,
+                        _ => {}
+
+                    }
                 },
 
                 Event::ControllerDeviceAdded {which,..} => {
                     ctx.set_controller(which);
                 },
-                Event::MouseWheel {y, ..} => {
-                    println!("Mouse wheel - y: {} ", y);
-                },
-
                 _ => {
-
-
+                    //println!("Pressed : {:#?} ", a);
                 }
             }
 
         }
-
-
 
         if self.a {
             self.movement_dir.x -= 1.0;

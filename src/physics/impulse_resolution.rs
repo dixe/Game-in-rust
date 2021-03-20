@@ -149,7 +149,6 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
 
 
 
-    let mut shots = Vec::new();
 
     // ADD PLAYER PROJECTILES AS IMPULSE ENTITIES
     for shot in &ctx.state.player_shots {
@@ -179,14 +178,6 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
             None => continue
         }
     }
-
-    for idx_1 in 0..shots.len() {
-        for idx_2 in idx_1+1..shots.len() {
-            no_checks.insert((shots[idx_1], shots[idx_2]));
-        }
-
-    }
-
 
     for w in ctx.scene.border_sides() {
         // todo have these stored in the scene along side the collision shapes

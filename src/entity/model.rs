@@ -2,7 +2,6 @@ use nalgebra as na;
 
 use crate::cube;
 use crate::render_gl;
-use crate::entity;
 
 
 enum ModelType {

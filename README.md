@@ -20,7 +20,7 @@ A game in rust to learn rust and some opengl
 - [x] Trigger animation/action on controllerInput
 - [ ] Sword collision, based on its location
 - [x] Complex model
-
+- [ ] Player/entity/action state. Some actions has to finishe before new input is valid
 
 
 # complex model

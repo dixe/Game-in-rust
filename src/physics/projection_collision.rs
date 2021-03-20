@@ -111,13 +111,13 @@ pub fn collision_sat_shapes_impulse(shape_1: &ConvexCollisionShape, shape_2: &Co
     (col, dir, mag)
 }
 
-pub fn collision_sat_shapes(shape_1: &ConvexCollisionShape, shape_2: &ConvexCollisionShape) -> (bool, na::Vector3::<f32>) {
+/*pub fn collision_sat_shapes(shape_1: &ConvexCollisionShape, shape_2: &ConvexCollisionShape) -> (bool, na::Vector3::<f32>) {
 
-    let (col, dir, mag) = collision_sat_shapes_impulse(shape_1, shape_2);
+let (col, dir, mag) = collision_sat_shapes_impulse(shape_1, shape_2);
 
-    (col, dir * mag)
+(col, dir * mag)
 }
-
+*/
 
 pub fn collision_sat(vertices: Vec::<na::Vector3::<f32>>, sides: &[Side]) -> (bool,  na::Vector3<f32>, f32) {
 

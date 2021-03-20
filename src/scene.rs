@@ -101,7 +101,7 @@ impl Scene {
 
     pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader) {
 
-        //self.floor.render(gl, shader);
+        self.floor.render(gl, shader);
 
         for pos in &self.border_positions {
 

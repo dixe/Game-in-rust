@@ -23,8 +23,8 @@ mod shot;
 pub use self::shot::Shot;
 
 
-mod animation;
-pub use self::animation::{AnimationData, AnimationsInfo};
+mod action;
+pub use self::action::{AnimationData, AnimationsInfo};
 
 mod entity;
 pub use self::entity::{EntityType, ComplexEntity};

@@ -32,9 +32,9 @@ pub fn update_velocity_and_rotation(entity: &mut entity::Physics, velocity_chang
     // TODO kinda broken with physics, maybe the normals are getting wrong, or we rotate wrong direction? right vs left hand coordinate system ect.
 
     let rotation = get_rotation(&entity.velocity);
-    let mut z_angle = f32::atan2(rotation.sin, rotation.cos);
+    let z_angle = f32::atan2(rotation.sin, rotation.cos);
 
-    let mut z_angle_diff = z_angle - entity.rotation.z;
+    let z_angle_diff = z_angle - entity.rotation.z;
 
     // z_angle
     entity.rotation.z += z_angle_diff;

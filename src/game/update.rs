@@ -1,7 +1,7 @@
 use crate::game;
 use crate::physics;
 use crate::entity;
-use crate::animation_system;
+use crate::action_system;
 
 
 pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::EntityCollision>) {
@@ -14,9 +14,10 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
     update_shooters(ctx, delta);
     update_enemies_death(ctx);
     update_player_shooting(ctx);
+    update_player_swing(ctx);
 
-    // also "animation" system update fx sword arc ect
-    animation_system::update_animations(&mut ctx.ecs.animations_info, &mut ctx.ecs.physics, delta as f32);
+    // also "action" system update fx sword arc ect
+    action_system::update_actions(&mut ctx.ecs.actions_info, &mut ctx.ecs.physics, delta as f32);
 
 
     // PLAYER MOVEMENT
@@ -62,7 +63,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 fn update_enemies_death(ctx: &mut game::Context) {
     let mut deaths = Vec::new();
     for e in &ctx.state.enemies {
-        let mut enemy_hp = match ctx.ecs.get_health(*e) {
+        let enemy_hp = match ctx.ecs.get_health(*e) {
             Some(e_hp) => *e_hp,
             None => continue,
         };
@@ -107,6 +108,41 @@ fn update_projectiles(ctx: &mut game::Context, delta: f32) {
     // enemies shot when needed
 }
 
+
+fn update_player_swing(ctx: &mut game::Context) {
+
+
+    if ! ctx.controls.right_shoulder {
+        return;
+    }
+
+    // start swing action/animaiton and set somekind of state to swinging, so we cannot start new action
+
+    let init_physics = match ctx.ecs.get_physics(ctx.player_weapon_id) {
+        Some(p) => *p,
+        _=> return
+    };
+
+    let mut action_info =
+    //match ctx.ecs.get_actions_info(ctx.player_weapon_id) {
+        match ctx.ecs.actions_info.get_mut(&ctx.player_weapon_id) {
+            Some(info) => info,
+            _ => return
+        };
+
+
+
+    println!("{:#?}", init_physics.pos);
+    let swing_action = entity::AnimationData::new(action_system::spin_around, init_physics);
+
+    // TODO look at the current state and maybe add to queue instead of as current
+
+    action_info.active = Some(swing_action);
+
+
+
+
+}
 
 fn update_player_shooting(ctx: &mut game::Context) {
 

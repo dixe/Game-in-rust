@@ -28,7 +28,7 @@ mod entity;
 mod camera;
 mod scene;
 mod physics;
-mod animation_system;
+mod action_system;
 
 #[derive(Copy, Clone, Debug)]
 enum Command {
