@@ -1,6 +1,4 @@
 use gl;
-
-
 use crate::entity;
 use crate::render_gl;
 use crate::game;

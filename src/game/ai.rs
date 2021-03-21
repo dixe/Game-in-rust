@@ -10,6 +10,7 @@ pub fn run_ai(ctx: &mut game::Context) {
         None => return, // Dead player, don't care about ai update
     };
 
+    return;
 
     for e_id in &ctx.state.enemies {
         let mut enemy = match ctx.ecs.get_physics(*e_id) {

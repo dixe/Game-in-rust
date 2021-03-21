@@ -76,21 +76,7 @@ fn impulse_collision_resolution(entity_1: &mut entity::Physics, entity_2: &mut e
     }
 
 
-    /*
-    if vel_along_normal != 0.0 {
-    println!("\n\n\nNEW ONE STARTS HERE");
-    println!("NORMAL: {:#?}", manifold.normal);
-    println!("RELATIVE VEL: {:#?}", relative_vel);
-    println!("VEL_ALONG_NORMAL: {}", vel_along_normal);
-
-    println!("E1 VEL: {}", entity_1.velocity);
-    println!("E2 VEL: {}", entity_2.velocity);
-
-}
-
-     */
-
-    // resittution, how much energy is transferend back, should be between 0 and 1
+    // restitution, how much energy is transferend back, should be between 0 and 1
     // 1 is no energy absorbed and everything goes to new velocity
     // with 1 object in motion does not lose energy when hitting fx a wall
     //

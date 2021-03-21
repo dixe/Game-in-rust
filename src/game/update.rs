@@ -95,11 +95,11 @@ fn update_shooters(ctx: &mut game::Context, delta: f32) {
 
 
 fn update_projectiles(ctx: &mut game::Context, delta: f32) {
+
     let mut remove_shots = Vec::new();
     for shot in &mut ctx.ecs.shot.values_mut() {
 
         shot.update(delta);
-
         if shot.expired {
             remove_shots.push(shot.entity_id);
         }

@@ -26,7 +26,7 @@ impl Shooter {
             cool_down_time: 0.800,  // time in sec
             cool_down_remaining: 0.0,
             speed: 8.0,
-            distance: 400.0
+            distance: 100.0
         }
     }
     pub fn shoot(&mut self) {

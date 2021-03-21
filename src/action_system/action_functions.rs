@@ -25,7 +25,6 @@ pub fn swing_1(time_passed: f32, physics: &mut entity::Physics, init: &entity::P
 
     //println!("BZ: {:#?}", bz);
 
-
     physics.pos = init.pos + bz;
 
 
