@@ -13,7 +13,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
     update_projectiles(ctx, delta);
     update_shooters(ctx, delta);
     update_enemies_death(ctx);
-    update_player_shooting(ctx);
+    //update_player_shooting(ctx);
     update_player_swing(ctx);
 
     // also "action" system update fx sword arc ect
@@ -28,7 +28,13 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
     };
 
 
-    game::update_velocity_and_rotation(&mut player, ctx.controls.movement_dir);
+    game::update_velocity(&mut player, ctx.controls.movement_dir);
+    match ctx.controls.shoot_dir {
+        Some(dir) => game::update_rotation(&mut player, dir),
+        None => {}
+    };
+
+
 
     ctx.ecs.set_physics(ctx.player_id, player);
 
@@ -131,7 +137,7 @@ fn update_player_swing(ctx: &mut game::Context) {
         };
 
 
-    let swing_action = entity::ActionData::new(action_system::spin_around, init_physics);
+    let swing_action = entity::ActionData::new(action_system::swing_1, init_physics);
 
     // TODO look at the current state and maybe add to queue instead of as current
 

@@ -147,7 +147,7 @@ impl Context {
 
         let mut physics = entity::Physics::new(entity_id, model_id);
         physics.scale = scale;
-        physics.pos.x = 1.0;
+        physics.pos.y = -1.0;
         physics.inverse_mass = 0.0;
 
         physics.rotation.x += 1.57;
