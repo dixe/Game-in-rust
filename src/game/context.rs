@@ -10,10 +10,14 @@ use crate::level;
 use crate::controls;
 use crate::deltatime;
 use crate::action_system as anim_sys;
+
 struct NewModel {
     entity_id: usize,
     init_physics: entity::Physics,
 }
+
+
+
 
 pub struct Context {
 
@@ -218,6 +222,8 @@ impl Context {
 
 
     pub fn render(&self){
+
+
         // RENDER SCENE WITH CUBE SHADER
         self.cube_shader.set_used();
 
@@ -257,7 +263,8 @@ fn empty() -> Result<Context, failure::Error> {
 
     background_color_buffer.set_used(&render_context.gl);
 
-    let camera = camera::Camera::new();
+    let mut camera = camera::Camera::new();
+    camera.change_follow_dir(na::Vector3::new(0.0, 0.0, 0.0));
 
     let event_pump = render_context.sdl.event_pump().unwrap();
 

@@ -29,7 +29,7 @@ pub fn update_velocity(entity: &mut entity::Physics, velocity_change: na::Vector
 
 pub fn update_rotation(entity: &mut entity::Physics, look_dir: na::Vector3::<f32>,)  {
 
-    //TODO maybe have a cap on rotation. so entities cannot turn around in 1 frame, but need like X frame for 1 full rotation
+    // TODO maybe have a cap on rotation. so entities cannot turn around in 1 frame, but need like X frame for 1 full rotation
     // Just define a rotation_speed on entity
 
 
@@ -88,6 +88,8 @@ pub struct Rotation {
     pub cos: f32
 }
 
+
+//TODO maybe just use atan2 instead
 pub fn get_rotation(dir: &na::Vector3<f32>) -> Rotation {
     let mut cos =  1.0;
     let mut sin = 0.0;

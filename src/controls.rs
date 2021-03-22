@@ -11,10 +11,17 @@ pub struct Controls {
     w: bool,
     s: bool,
     pub movement_dir: na::Vector3::<f32>,
-    pub shoot_dir: Option<na::Vector3::<f32>>,
+    pub right_stick: Option<na::Vector3::<f32>>,
     pub right_shoulder: bool,
-
+    pub cam_mode: CameraMode,
 }
+
+#[derive(PartialEq)]
+pub enum CameraMode {
+    Follow,
+    TopDown
+}
+
 
 #[derive(Debug)]
 pub enum Action {
@@ -32,19 +39,20 @@ impl Controls {
             quit: false,
             event_pump: event_pump,
             movement_dir,
-            shoot_dir: None,
+            right_stick: None,
             a: false,
             w: false,
             s: false,
             d: false,
             right_shoulder: false,
+            cam_mode: CameraMode::Follow
         }
     }
 
     pub fn handle_inputs(&mut self,  ctx: &mut render_gl::context::Context) -> Action  {
 
         let mut action = Action::NoAction;
-        let mut shoot_dir = match self.shoot_dir {
+        let mut right_stick = match self.right_stick {
             Some(dir) => dir,
             None => na::Vector3::<f32>::new(0.0, 0.0, 0.0)
         };
@@ -103,9 +111,19 @@ impl Controls {
                         Some(sdl2::keyboard::Keycode::Escape) =>  {
                             self.quit = true;
                         },
-                        Some(sdl2::keyboard::Keycode::M) =>  {
-                            println!("switch");
+                        Some(sdl2::keyboard::Keycode::R) =>  {
+                            println!("Switch Render Mode");
                             ctx.switch_mode();
+                        },
+                        Some(sdl2::keyboard::Keycode::C) =>  {
+                            println!("Switch Cam mdoe");
+                            match &self.cam_mode {
+                                CameraMode::TopDown => { self.cam_mode = CameraMode::Follow;
+                                },
+                                CameraMode::Follow => { self.cam_mode = CameraMode::TopDown;
+                                },
+                            }
+
                         },
 
                         // ACTION KEYS
@@ -129,12 +147,12 @@ impl Controls {
                         },
 
                         sdl2::controller::Axis::RightX => {
-                            shoot_dir.x = f_value;
+                            right_stick.x = f_value;
 
                         },
 
                         sdl2::controller::Axis::RightY => {
-                            shoot_dir.y = -f_value;
+                            right_stick.y = -f_value;
 
                         },
                         _ => {}
@@ -187,12 +205,12 @@ impl Controls {
             self.movement_dir.y = 0.0;
         }
 
-        if shoot_dir.magnitude() > 0.6 {
-            //println!("{} - {}", shoot_dir, shoot_dir.magnitude());
-            self.shoot_dir = Some(shoot_dir.normalize());
+        if right_stick.magnitude() > 0.6 {
+            //println!("{} - {}", right_stick, right_stick.magnitude());
+            self.right_stick = Some(right_stick.normalize());
         }
         else{
-            self.shoot_dir = None;
+            self.right_stick = None;
         }
 
         action

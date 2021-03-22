@@ -80,6 +80,7 @@ fn run() -> Result<(), failure::Error> {
         ctx.update_delta();
         ctx.handle_inputs();
 
+
         if ctx.controls.quit {
             break 'main;
         }
@@ -87,6 +88,9 @@ fn run() -> Result<(), failure::Error> {
         unsafe {
             ctx.render_context.gl.Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }
+
+
+
 
 
         game::run_ai(&mut ctx);
@@ -97,6 +101,20 @@ fn run() -> Result<(), failure::Error> {
         // SPAWN PROJECTILES, HANDLE COLLISION THAT WAS NOT WITH ENVIROMENT
         game::update_game_state(&mut ctx, &collisions);
 
+
+        //UPDATE CAMERA IF FOLLOW MODE
+
+        if ctx.controls.cam_mode == controls::CameraMode::Follow {
+            let default = entity::Physics::new(0,0);
+            let physics = ctx.ecs.get_physics(ctx.player_id).unwrap_or(&default);
+            ctx.camera.set_target(physics.pos);
+
+
+            let right_stick = ctx.controls.right_stick;
+
+            right_stick.map(|dir| ctx.camera.change_follow_dir(dir));
+
+        }
 
         // RENDERING
         ctx.render();

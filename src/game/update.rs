@@ -2,7 +2,7 @@ use crate::game;
 use crate::physics;
 use crate::entity;
 use crate::action_system;
-
+use crate::controls;
 
 pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::EntityCollision>) {
 
@@ -27,9 +27,11 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
         None => return, // Dead player, don't care about ai update
     };
 
+    update_player_movement(ctx, &mut player);
 
-    game::update_velocity(&mut player, ctx.controls.movement_dir);
-    match ctx.controls.shoot_dir {
+
+
+    match ctx.controls.right_stick {
         Some(dir) => game::update_rotation(&mut player, dir),
         None => {}
     };
@@ -65,6 +67,21 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 }
 
 
+fn update_player_movement(ctx: &mut game::Context, player: &mut entity::Physics) {
+
+    match ctx.controls.cam_mode {
+        controls::CameraMode::TopDown => {
+            game::update_velocity(player, ctx.controls.movement_dir);
+        },
+        controls::CameraMode::Follow => {
+            let z_rot = ctx.camera.z_rotation();
+            let rot_mat = na::Matrix3::new_rotation(z_rot);
+            game::update_velocity(player, rot_mat * na::Vector3::new(-ctx.controls.movement_dir.y, ctx.controls.movement_dir.x, 0.0));
+
+        }
+
+    }
+}
 
 fn update_enemies_death(ctx: &mut game::Context) {
     let mut deaths = Vec::new();
@@ -151,7 +168,7 @@ fn update_player_swing(ctx: &mut game::Context) {
 fn update_player_shooting(ctx: &mut game::Context) {
 
     let player_id = ctx.player_id;
-    let shoot_dir = ctx.controls.shoot_dir;
+    let shoot_dir = ctx.controls.right_stick;
     let shooter_op = ctx.ecs.get_shooter(ctx.player_id);
     match (shoot_dir, shooter_op) {
         (Some(dir), Some(s)) =>
