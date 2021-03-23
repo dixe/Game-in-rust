@@ -14,4 +14,4 @@ mod ai;
 pub use self::ai::{run_ai};
 
 mod state;
-pub use self::state::{State};
+pub use self::state::{State, PlayerState};

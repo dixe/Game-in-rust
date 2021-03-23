@@ -8,7 +8,6 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 
     let delta = ctx.get_delta_time();
 
-
     // Update shooters, projectiles and othertime based stuff
     update_projectiles(ctx, delta);
     update_shooters(ctx, delta);
@@ -17,7 +16,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
     update_player_swing(ctx);
 
     // also "action" system update fx sword arc ect
-    action_system::update_actions(&mut ctx.ecs.actions_info, &mut ctx.ecs.physics, delta as f32);
+    action_system::update_actions(&mut ctx.ecs.actions_info, &mut ctx.ecs.physics, &mut ctx.state, delta as f32, &ctx.actions);
 
 
     // PLAYER MOVEMENT
@@ -62,6 +61,10 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 
 
 fn update_player_movement(ctx: &mut game::Context, player: &mut entity::Physics) {
+    if ctx.state.player_state != game::PlayerState::Moving {
+        game::update_velocity(player, na::Vector3::new(0.0, 0.0, 0.0));
+        return;
+    }
 
     match ctx.controls.cam_mode {
         controls::CameraMode::TopDown => {
@@ -132,6 +135,9 @@ fn update_projectiles(ctx: &mut game::Context, delta: f32) {
 
 fn update_player_swing(ctx: &mut game::Context) {
 
+    if ctx.state.player_state != game::PlayerState::Moving {
+        return;
+    }
 
     if ! ctx.controls.right_shoulder {
         return;
@@ -152,13 +158,13 @@ fn update_player_swing(ctx: &mut game::Context) {
         };
 
 
-    let swing_action = entity::ActionData::new(action_system::swing_1, init_physics);
+    let mut swing_action = entity::ActionData::new(action_system::Actions::Swing, Some(action_system::set_player_moving), init_physics);
+    swing_action.total_time = 0.6;
 
     // TODO look at the current state and maybe add to queue instead of as current
 
     action_info.active = Some(swing_action);
-
-
+    ctx.state.player_state = game::PlayerState::Attacking;
 
 
 }

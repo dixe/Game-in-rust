@@ -1,10 +1,23 @@
 use crate::entity;
 use crate::render_gl;
 
+
+
+#[derive(PartialEq)]
+pub enum PlayerState {
+    Moving,
+    Attacking
+}
+
+
+
 pub struct State {
     pub player_shots: std::collections::HashSet::<usize>,
     pub enemy_shots: std::collections::HashSet::<usize>,
     pub enemies: std::collections::HashSet<usize>,
+    pub player_state: PlayerState,
+
+
 }
 
 
@@ -15,6 +28,7 @@ impl State {
             enemies: std::collections::HashSet::new(),
             player_shots: std::collections::HashSet::new(),
             enemy_shots: std::collections::HashSet::new(),
+            player_state: PlayerState::Moving
         }
     }
 

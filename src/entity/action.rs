@@ -1,8 +1,8 @@
 use core::fmt::Debug;
 
 use crate::entity;
-
-
+use crate::game;
+use crate::action_system;
 
 #[derive(Debug, Clone)]
 pub struct ActionsInfo {
@@ -21,22 +21,24 @@ impl ActionsInfo {
             default,
             queue: std::collections::VecDeque::new(),
             active: default
-
         }
     }
 
-    fn next(&mut self) {
+    fn next(&mut self, state: &mut game::State) {
         match self.active {
             Some(data) => {
                 if data.time_passed < data.total_time {
                     return
                 }
+                else {
+                    data.expired(state);
+                }
             },
-            _ => {}
+            None => {}
         };
 
-        // if we are here active was none, or it is expired
-        // set next in queue, or default
+        // set next action
+
 
         self.active = match self.queue.pop_front() {
             None => self.default,
@@ -44,19 +46,18 @@ impl ActionsInfo {
         };
     }
 
-    pub fn update(&mut self, physics: &mut entity::Physics, delta: f32) {
+    pub fn update(&mut self, physics: &mut entity::Physics, state: &mut game::State, delta: f32, impls: &action_system::ActionsImpl) {
 
         match self.active {
             Some(mut data) => {
-                data.update(physics, delta);
-                self.active = Some(data);
+                data.update(physics, delta, impls);
+                self.active = Some(data)
             },
             _ => {},
         }
 
-        self.next();
+        self.next(state);
     }
-
 
 }
 
@@ -65,8 +66,13 @@ pub struct ActionData {
     pub time_passed: f32,
     pub total_time: f32,
     init: entity::Physics,
-    update_fn: fn(time_passed: f32, physics: &mut entity::Physics, init: &entity::Physics),
+    action: action_system::Actions, //usizefn(time_passed: f32, physics: &mut entity::Physics, init: &entity::Physics),
+    done_fn: Option<fn(state: &mut game::State)>,
 }
+
+
+
+
 
 
 impl Debug for ActionData {
@@ -77,53 +83,35 @@ impl Debug for ActionData {
 
 impl ActionData {
 
-    pub fn new(update_fn: fn(time_passed: f32, physics: &mut entity::Physics,init: &entity::Physics), init: entity::Physics) -> ActionData {
+    pub fn new(action: action_system::Actions, done_fn: Option<fn( state: &mut game::State)>, init: entity::Physics) -> ActionData {
 
         ActionData {
             time_passed: 0.0,
             total_time: 1.0,
             init,
-            update_fn
+            action,
+            done_fn
         }
     }
 
-    pub fn update(&mut self, physics: &mut entity::Physics, delta: f32) {
+
+    pub fn update(&mut self, physics: &mut entity::Physics, delta: f32, impls: &action_system::ActionsImpl) {
         self.time_passed += delta;
 
-        let t = self.time_passed.clamp(0.0, self.total_time);
+        let t = self.time_passed / self.total_time;
 
-        (self.update_fn)(t, physics, &self.init);
+        impls.update(self.action, t, physics, &self.init);
+
+    }
+
+
+    pub fn expired(&self, state: &mut game::State) {
+        match self.done_fn {
+            Some(func) => {
+                (func)(state);
+            },
+            _ => {}
+        };
 
     }
 }
-
-
-
-
-/*
-impl Action for ActionData {
-
-fn update(&mut self, mut physics: entity::Physics, delta: i32) {
-
-self.time_passed += delta;
-
-physics.pos.z += 0.5 * (self.time_passed as f32 / 300.0).sin();
-}
-
-    fn entity_id(&self) -> usize {
-    self.entity_id
-}
-
-}
-
-    pub trait Action {
-
-    fn update(&mut self, physics: entity::Physics, delta: i32);
-
-    fn entity_id(&self) -> usize;
-
-    fn calculate_model_mat(&self, physics: entity::Physics, anchor_physics: Option<&entity::Physics>) -> na::Matrix4::<f32> {
-    render_gl::calculate_model_mat(&physics, anchor_physics)
-}
-}
-     */

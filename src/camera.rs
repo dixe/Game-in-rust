@@ -76,8 +76,8 @@ impl Camera {
     pub fn change_follow_dir(&mut self, change: na::Vector3::<f32>) {
 
         // TODO also tage Delta to make 0.1 depend on delta
-        self.follow_yaw -= change.x * 0.1;
-        self.follow_pitch += change.y * 0.1;
+        self.follow_yaw -= change.x * 0.05;
+        self.follow_pitch += change.y * 0.05;
         self.follow_pitch = f32::max(self.follow_pitch, 0.0);
         self.follow_pitch = f32::min(std::f32::consts::PI/2.0, self.follow_pitch);
 

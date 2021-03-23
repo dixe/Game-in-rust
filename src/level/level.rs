@@ -17,7 +17,6 @@ pub enum Error {
     ResourceLoad { name: String, inner: resources::Error },
     #[fail(display = "Can not parse the level: {}", name)]
     LevelParseFailed { name: String },
-
 }
 
 

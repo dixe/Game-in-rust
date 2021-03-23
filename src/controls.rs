@@ -16,6 +16,7 @@ pub struct Controls {
     pub cam_mode: CameraMode,
 }
 
+
 #[derive(PartialEq)]
 pub enum CameraMode {
     Follow,

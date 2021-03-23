@@ -9,7 +9,7 @@ use crate::scene;
 use crate::level;
 use crate::controls;
 use crate::deltatime;
-use crate::action_system as anim_sys;
+use crate::action_system;
 
 struct NewModel {
     entity_id: usize,
@@ -38,6 +38,11 @@ pub struct Context {
 
     pub cube_shader: render_gl::Shader,
     pub light_shader: render_gl::Shader,
+
+
+    pub actions: action_system::ActionsImpl,
+
+
 
     delta_time: deltatime::Deltatime,
 
@@ -113,7 +118,7 @@ impl Context {
         self.player_weapon_id = sword.entity_id;
 
         // SWORD ANIMATION
-        let sword_idle = entity::ActionData::new(anim_sys::idle_bob_z, sword.init_physics);
+        let sword_idle = entity::ActionData::new(action_system::Actions::Idle, None, sword.init_physics);
         let actions_info = entity::ActionsInfo::new(sword.entity_id, Some(sword_idle));
 
         self.ecs.set_actions_info(sword.entity_id, actions_info);
@@ -279,6 +284,7 @@ fn empty() -> Result<Context, failure::Error> {
 
     let delta_time = deltatime::Deltatime::new();
 
+    let actions = action_system::load_player_actions(&render_context.res)?;
 
     Ok(Context {
         player_id: 9999,
@@ -289,6 +295,7 @@ fn empty() -> Result<Context, failure::Error> {
         camera,
         delta_time,
         ecs,
+        actions,
         projectile_model_id: 9999,
         enemy_model_id: 9999,
         cube_shader,
