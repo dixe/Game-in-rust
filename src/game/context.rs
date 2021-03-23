@@ -16,9 +16,6 @@ struct NewModel {
     init_physics: entity::Physics,
 }
 
-
-
-
 pub struct Context {
 
     // should be in ecs
@@ -86,7 +83,7 @@ impl Context {
         // Use loaded model
         //let player_model = entity::Model::cube(player_cube);
 
-        let loaded_model = render_gl::Model::load_from_path(&self.render_context.gl, player_color, "models/sphere.obj", &self.render_context.res)?;
+        let loaded_model = render_gl::Model::load_from_path(&self.render_context.gl, player_color, "models/player_01.obj", &self.render_context.res)?;
 
         let player_model = entity::Model::wave_model(loaded_model);
 

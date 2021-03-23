@@ -31,12 +31,6 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 
 
 
-    match ctx.controls.right_stick {
-        Some(dir) => game::update_rotation(&mut player, dir),
-        None => {}
-    };
-
-
 
     ctx.ecs.set_physics(ctx.player_id, player);
 
@@ -77,10 +71,14 @@ fn update_player_movement(ctx: &mut game::Context, player: &mut entity::Physics)
             let z_rot = ctx.camera.z_rotation();
             let rot_mat = na::Matrix3::new_rotation(z_rot);
             game::update_velocity(player, rot_mat * na::Vector3::new(-ctx.controls.movement_dir.y, ctx.controls.movement_dir.x, 0.0));
-
         }
-
     }
+
+
+    if player.velocity.magnitude() > 0.0 {
+        game::update_rotation(player, player.velocity);
+    }
+
 }
 
 fn update_enemies_death(ctx: &mut game::Context) {
