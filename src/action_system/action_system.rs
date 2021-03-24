@@ -40,10 +40,8 @@ pub struct BezierAction {
 
 impl BezierAction {
     pub fn update(&self, t: f32, physics: &mut entity::Physics, init: &entity::Physics) {
-        // TODO each part should be done in the specified amount of time
         // println!("{}", t);
         for p in self.parts.iter() {
-
             if p.start <= t && t <= p.end {
 
                 let bz = match p.curve {
