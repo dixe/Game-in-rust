@@ -7,6 +7,11 @@ extern crate nalgebra_glm as glm;
 #[macro_use] extern crate render_gl_derive;
 #[macro_use] extern crate entity_component_derive;
 
+extern crate notify;
+
+use notify::{Watcher, RecursiveMode, watcher};
+use std::sync::mpsc::channel;
+use std::time::Duration;
 
 use std::io;
 use std::thread;
@@ -43,8 +48,9 @@ enum Command {
 
 static mut CMD: Command = Command::Nop;
 
-fn main() {
-    // set up commands channel and thread
+
+
+fn start_cmd_thread() {
     thread::spawn(move || {
 
         while true {
@@ -74,7 +80,45 @@ fn main() {
             }
         }
     });
+}
 
+fn start_notify_thread() {
+    thread::spawn(move || {
+        // Create a channel to receive the events.
+        let (tx, rx) = channel();
+
+        // Create a watcher object, delivering debounced events.
+        // The notification back-end is selected based on the platform.
+        let mut watcher = watcher(tx, Duration::from_secs(10)).unwrap();
+
+        // Add a path to be watched. All files and directories at that path and
+        // below will be monitored for changes.
+        watcher.watch("E:/repos/Game-in-rust/assets/", RecursiveMode::Recursive).unwrap();
+
+        loop {
+            match rx.recv() {
+                Ok(event) => {
+                    println!("Updated on disk copy assets");
+                    copy_assets();
+                    unsafe {
+                        CMD = Command::ReloadActions;
+                    }
+                },
+                Err(e) => println!("watch error: {:?}", e),
+            }
+        }
+    });
+}
+
+
+
+fn main() {
+    // set up commands channel and thread
+    start_cmd_thread();
+
+
+    // monitor assets on disk and reload them
+    start_notify_thread();
 
     // start game
     if let Err(e) = run() {
@@ -161,12 +205,7 @@ fn run() -> Result<(), failure::Error> {
 
         unsafe {
             match CMD {
-                Command::Nop => {},
-                a => println!("{:#?}", a)
-            };
-
-            match CMD {
-                Command::Nop => {},
+                Command::Nop => {continue},
                 Command::Quit => { break 'main},
                 Command::ReloadActions => { ctx.reload_actions()},
                 Command::SwitchRenderMode => {
