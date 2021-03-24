@@ -10,6 +10,8 @@ extern crate nalgebra_glm as glm;
 
 use std::io;
 use std::thread;
+use fs_extra::dir;
+
 
 pub mod render_gl;
 pub mod resources;
@@ -34,6 +36,8 @@ mod action_system;
 enum Command {
     Nop,
     SwitchRenderMode,
+    ReloadActions,
+    Quit
 }
 
 
@@ -43,21 +47,31 @@ fn main() {
     // set up commands channel and thread
     thread::spawn(move || {
 
-        let mut input = String::new();
+        while true {
 
-        io::stdin()
-            .read_line(&mut input)
-            .expect("Failed to read line");
+            let mut input = String::new();
+            io::stdin()
+                .read_line(&mut input)
+                .expect("Failed to read line");
 
 
-        unsafe {
-            // parse input
-            let msg = match input {
-                _ => Command::SwitchRenderMode,
-            };
+            unsafe {
+                // parse input
+                println!("Input is '{}'", input.trim());
+                let msg = match input.trim() {
+                    "r" =>{
+                        copy_assets();
+                        Command::ReloadActions
+                    }
+                    ,
+                    "m" => Command::SwitchRenderMode,
+                    "q" => Command::Quit,
+                    _ => Command::Nop,
+                };
 
-            CMD = msg;
+                CMD = msg;
 
+            }
         }
     });
 
@@ -68,6 +82,22 @@ fn main() {
     }
 }
 
+
+fn copy_assets() {
+
+    let mut options = fs_extra::dir::CopyOptions::new(); //Initialize default values for CopyOptions
+    options.overwrite = true;
+
+
+    // copy source/dir1 to target/dir1
+    let copy_res = fs_extra::dir::copy("E:/repos/Game-in-rust/assets", "E:/repos/Game-in-rust/target/debug/", &options);
+
+    match copy_res {
+        Err(err) => println!("{:#?}", err),
+        _ => {},
+    };
+
+}
 
 
 
@@ -88,8 +118,6 @@ fn run() -> Result<(), failure::Error> {
         unsafe {
             ctx.render_context.gl.Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }
-
-
 
 
 
@@ -134,15 +162,21 @@ fn run() -> Result<(), failure::Error> {
         unsafe {
             match CMD {
                 Command::Nop => {},
+                a => println!("{:#?}", a)
+            };
+
+            match CMD {
+                Command::Nop => {},
+                Command::Quit => { break 'main},
+                Command::ReloadActions => { ctx.reload_actions()},
                 Command::SwitchRenderMode => {
-                    CMD = Command::Nop;
                     ctx.render_context.switch_mode();
-
-
                 },
 
             }
+            CMD = Command::Nop;
         }
+
     }
     Ok(())
 }

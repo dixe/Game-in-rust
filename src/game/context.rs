@@ -202,6 +202,17 @@ impl Context {
     }
 
 
+    pub fn reload_actions (&mut self) {
+        let actions = action_system::load_player_actions(&self.render_context.res);
+        println!("{:#?}", actions);
+        match actions {
+            Ok(act) => self.actions = act,
+            Err(err) => println!("Reload actions error: {:#?}", err),
+        }
+    }
+
+
+
     // Call once pr update step
     pub fn update_delta(&mut self) {
         self.delta_time.update();

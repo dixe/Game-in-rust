@@ -27,6 +27,8 @@ pub fn load_player_actions(res: &Resources) -> Result<ActionsImpl, Error> {
             inner: e
         })?;
 
+    println!("{}", swing_data);
+
 
     let parts = parse(&swing_data)?;
 

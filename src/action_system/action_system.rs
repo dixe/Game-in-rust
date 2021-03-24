@@ -1,3 +1,5 @@
+use core::fmt::Debug;
+
 use crate::game;
 use crate::entity;
 use crate::action_system;
@@ -17,13 +19,13 @@ pub fn update_actions(actions: &mut std::collections::HashMap<usize, entity::Act
 
 
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Curve {
     Linear(na::Vector3<f32>, na::Vector3<f32>),
     Cubic(na::Vector3<f32>, na::Vector3<f32>, na::Vector3<f32>),
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Part {
     pub curve: Curve,
     pub start: f32,
@@ -31,7 +33,7 @@ pub struct Part {
 }
 
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct BezierAction {
     pub parts: Vec<Part>,
 }
@@ -48,7 +50,7 @@ impl BezierAction {
                     Curve::Linear(p0, p1) => action_system::bezier_linear(t, p0, p1),
                     Curve::Cubic(p0, p1, p2) => action_system::bezier_cubic(t, p0, p1, p2),
                 };
-                println!("{:#?}", physics.pos);
+                // println!("{:#?}", physics.pos);
                 physics.pos = init.pos + bz;
             }
         }
@@ -69,6 +71,13 @@ pub struct FuncAction {
 }
 
 
+impl Debug for FuncAction {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Func action")
+    }
+}
+
+
 impl Action for FuncAction {
     fn update(&self, time_passed: f32, physics: &mut entity::Physics, init: &entity::Physics) {
         (self.update_fn)(time_passed, physics, init);
@@ -86,7 +95,7 @@ pub enum Actions {
     Idle,
 }
 
-#[derive( Clone)]
+#[derive(Debug, Clone)]
 pub struct ActionsImpl {
     pub swing: BezierAction,
     pub idle: FuncAction,
