@@ -6,7 +6,7 @@ extern crate nalgebra_glm as glm;
 #[macro_use] extern crate failure;
 #[macro_use] extern crate render_gl_derive;
 #[macro_use] extern crate entity_component_derive;
-
+extern crate roxmltree;
 extern crate notify;
 
 use notify::{Watcher, RecursiveMode, watcher};

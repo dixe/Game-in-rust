@@ -1,0 +1,17 @@
+ <action version="1" >
+  <part start="0" end="0.2">
+    <cubic>
+      <p0 x="0" y = "0" z ="0"/>
+      <p1 x="-5" y = "0" z ="0"/>
+      <p2 x="0" y = "0" z ="0"/>
+    </cubic>
+  </part>
+
+    <part start="0.2" end="1">
+    <cubic>
+      <p0 x="0" y = "0" z ="0"/>
+      <p1 x="5" y = "0" z ="0"/>
+      <p2 x="0" y = "0" z ="0"/>
+    </cubic>
+  </part>
+</action>

@@ -1,43 +1,50 @@
 use nalgebra as na;
 
-use std::iter::Peekable;
-use std::str::Chars;
-
 
 use crate::resources::{self, Resources} ;
 use crate::entity;
 use crate::action_system::*;
 
+
 #[derive(Debug, Fail)]
 pub enum Error {
     #[fail(display = "Failed to load resource {}", name)]
     ResourceLoad { name: String, inner: resources::Error },
-
     #[fail(display = "Can not parse the point: {}, because {}", input, reason)]
     ParsePointFailed { input: String, reason: String },
-
     #[fail(display = "Can not parse cubic: {}, because {}", input, reason)]
     ParseCubicFailed { input: String, reason: String },
-
-    #[fail(display = "Version Error got: {}", input)]
-    VersionError { input: String },
-
-    #[fail(display = "Expected a '{}' got: '{}'", input, got)]
-    ExpectedError { input: char, got: char },
-
+    #[fail(display = "Version Error")]
+    VersionError,
+    #[fail(display = "Xml error")]
+    Xml(roxmltree::Error),
+    #[fail(display = "Missing attribute {}", attrib)]
+    MissingAttrib { attrib: String },
+    #[fail(display = "No curve found")]
+    NoCurve,
+    #[fail(display = "MIssing control point {}", p)]
+    MissingControlPoint { p : String}
 }
+
+
+
+
+impl From<roxmltree::Error> for Error {
+    fn from(other: roxmltree::Error) -> Self {
+        Error::Xml(other)
+    }
+}
+
 
 
 pub fn load_player_actions(res: &Resources) -> Result<ActionsImpl, Error> {
 
-    let swing_name = "actions/swing.act";
+    let swing_name = "actions/swing.xml";
     let swing_data = res.load_string(swing_name)
         .map_err(|e| Error::ResourceLoad {
             name: swing_name.into(),
             inner: e
         })?;
-
-    println!("{}", swing_data);
 
 
     let parts = parse(&swing_data)?;
@@ -49,168 +56,109 @@ pub fn load_player_actions(res: &Resources) -> Result<ActionsImpl, Error> {
         swing,
         idle
     })
-
-
-
-
-}
-
-
-pub struct ActionParser<'a> {
-    chars: Peekable<Chars<'a>>,
-    parts_q: Vec<String>
-}
-
-impl<'a> ActionParser<'a> {
-
-    pub fn new(data: &str) -> ActionParser {
-        ActionParser {
-            chars: data.chars().peekable(),
-            parts_q: Vec::new(),
-        }
-    }
-
-    pub fn parse(&mut self) -> Result<Vec<Part>, Error> {
-        let mut parts = Vec::new();
-
-        while self.chars.peek().is_some() {
-            self.consume_while(char::is_whitespace);
-            self.expect_string("version: 1")?;
-            self.consume_while(char::is_whitespace);
-            self.expect_string("part")?;
-
-            self.parse_part()?;
-
-            self.consume_while(char::is_whitespace);
-            return Ok(parts);
-
-        }
-
-        Ok(parts)
-    }
-
-    fn parse_part(&mut self) -> Result<Part, Error> {
-
-
-        while self.chars.peek().is_some() {
-            // parse curve:
-            // either
-            // if starts with c: then parse cubic
-            // if starts with l: then parse linear
-
-            // parse start and end
-
-        }
-
-
-        let curve =  Curve::Linear(na::Vector3::identity(),na::Vector3::identity());
-
-        let part = Part {
-            curve,
-            start: 0.0,
-            end: 1.0
-        };
-
-        Ok(part)
-    }
-
-
-    fn one_of<F, T> (&mut self, func: Vec<F>) -> Result<T, Error>
-    where F: Fn(ActionParser) -> Result<T,Error> {
-
-
-
-    }
-
-    fn try_parse<F, T> (&mut self, func: F) -> Result<T, Error>
-    where F: Fn(ActionParser) -> Result<T,Error> {
-
-
-
-
-
-    }
-
-
-    fn expect_string(&mut self, expected: &str) -> Result<String,Error> {
-
-        let mut parsed = String::new();
-        let peek = self.chars.peek();
-
-        for next in expected.chars() {
-            if !self.chars.next().map_or(false, |c| c == next) {
-                return Err(Error::ExpectedError { input: self.chars.next().unwrap(), got: next });
-            }
-
-            parsed.push(next);
-        }
-
-        Ok(parsed)
-    }
-
-
-
-
-    fn consume_while<F>(&mut self, condition: F) -> String
-    where
-        F: Fn(char) -> bool,
-    {
-        let mut result = String::new();
-        while self.chars.peek().map_or(false, |c| condition(*c)) {
-            result.push(self.chars.next().unwrap());
-        }
-
-        result
-    }
-
-    fn rest_of_input(&mut self) -> String {
-        let mut result = String::new();
-        while self.chars.peek().is_some() {
-            result.push(self.chars.next().unwrap());
-        }
-
-        result
-
-    }
-
-
-
 }
 
 fn parse(input: &str) -> Result<Vec<Part>, Error> {
-    let lines = input.lines();
+    parse_xml(input)
+}
 
-    let mut vec_lines:Vec<&str> = input.lines().collect();
+fn parse_xml(input: &str) -> Result<Vec<Part>, Error> {
 
-    match vec_lines[0].trim() {
-        "version: 1" => parse_v1(lines.skip(1).collect()),
-        _ =>  Err(Error::VersionError { input: vec_lines[0].to_string() })
+    let doc = roxmltree::Document::parse(input)?;
+    let root = &doc.root_element();
+
+    let version = get_attrib::<i32>(root, "version")?;
+
+
+    match version {
+        1 => parse_xml_v1(&doc.root_element()),
+        _ => Err(Error::VersionError)
     }
 
 }
 
 
-fn parse_v1(lines: Vec<&str>) -> Result<Vec<Part>, Error> {
-
-    let mut parts = Vec::<Part>::new();
 
 
-    let mut height: i32 = 0;
-    let mut width: i32 = 0;
-    for line in lines.iter() {
-        let curve = parse_cubic(line)?;
+fn get_attrib<T>(node: &roxmltree::Node, name: &str) -> Result<T, Error>
+where T: std::str::FromStr {
+    node.attribute(name).ok_or(Error::MissingAttrib {attrib: name.to_string() } ).map(|s| s.to_string())
+        .and_then(|v: String| v.parse::<T>().map_err(|e| Error::VersionError))
+}
 
-        let part = Part {
-            curve,
-            start: 0.0,
-            end: 1.0
-        };
+fn parse_xml_v1(node: &roxmltree::Node) -> Result<Vec<Part>, Error> {
+    parse_xml_parts(node)
+}
+
+
+
+
+
+fn parse_xml_parts(node: &roxmltree::Node) -> Result<Vec<Part>, Error> {
+    let mut parts = Vec::new();
+
+    let mut next = node.descendants().find(|n| n.has_tag_name("part")) ;
+
+    for next in node.descendants().filter(|n| n.has_tag_name("part")) {
+        let part = parse_xml_part(&next)?;
         parts.push(part);
     }
 
-
     Ok(parts)
 }
+
+fn parse_xml_part(node: &roxmltree::Node) -> Result<Part, Error> {
+
+    // parse a curve
+
+    let cubic = node.descendants().find(|n| n.has_tag_name("cubic"));
+
+    let mut parsed_curve: Option<action_system::Curve> = None;
+
+    parsed_curve = cubic.and_then(|c| {
+        match parse_xml_cubic(&c) {
+            Ok(cub) => Some(cub),
+            _ => None
+        }
+
+    });
+
+
+    if parsed_curve.is_none() {
+        return Err(Error::NoCurve);
+    }
+
+
+    let start = get_attrib::<f32>(node, "start")?;
+    let end = get_attrib::<f32>(node, "end")?;
+
+    let curve: action_system::Curve = parsed_curve.unwrap();
+    Ok(Part{
+        curve,
+        start,
+        end})
+}
+
+
+
+fn parse_xml_cubic(node: &roxmltree::Node) -> Result<Curve, Error> {
+    let p0 = node.descendants().find(|n| n.has_tag_name("p0")).ok_or(Error::MissingControlPoint {p: "p0".to_string()}).and_then(|p| parse_xml_point(&p))?;
+    let p1 = node.descendants().find(|n| n.has_tag_name("p1")).ok_or(Error::MissingControlPoint {p: "p1".to_string()}).and_then(|p| parse_xml_point(&p))?;
+    let p2 = node.descendants().find(|n| n.has_tag_name("p2")).ok_or(Error::MissingControlPoint {p: "p2".to_string()}).and_then(|p| parse_xml_point(&p))?;
+
+    Ok(Curve::Cubic(p0, p1, p2))
+}
+
+fn parse_xml_point(node: &roxmltree::Node) -> Result<na::Vector3::<f32>, Error> {
+
+    let x = get_attrib::<f32>(node, "x")?;
+    let y = get_attrib::<f32>(node, "y")?;
+    let z = get_attrib::<f32>(node, "z")?;
+
+    Ok(na::Vector3::new(x,y,z))
+
+}
+
 
 fn parse_cubic(string_data: &str) -> Result<Curve, Error> {
     let data = string_data.split('|').collect::<Vec<_>>();
@@ -223,8 +171,6 @@ fn parse_cubic(string_data: &str) -> Result<Curve, Error> {
     let p2 = parse_point(data[2])?;
 
     Ok(Curve::Cubic(p0, p1, p2))
-
-
 }
 
 fn parse_point(string_data: &str) -> Result<na::Vector3::<f32>, Error> {
@@ -252,24 +198,28 @@ mod tests {
 
 
     #[test]
-    fn parser_test_01() {
+    fn parser_test_v1() {
 
-        let input = "version: 1
-part
-c: 0,0,0 | 3,0,0 | 0,0,0
-";
+        let input = "<action>
+  <part start=\"0\" end=\"1\">
+    <cubic>
+      <p0 x=\"0\" y = \"0\" z =\"0\"/>
+      <p1 x=\"0\" y = \"0\" z =\"0\"/>
+      <p2 x=\"0\" y = \"0\" z =\"0\"/>
+            </cubic>
+            </part>
+            </action>
+            ";
 
+        let res = parse(input);
 
-        let mut parser = ActionParser::new(input);
-
-        let res = parser.parse();
+        println!("{:#?}", res);
 
         match res {
             Ok(r) => {
                 assert!(r.len() == 1);
             },
             Err(err) => {
-                println!("{:#?}", err);
                 assert!(false);
             }
         };
