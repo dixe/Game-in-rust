@@ -95,6 +95,10 @@ impl ActionData {
     }
 
 
+    pub fn percent_done(&self) -> f32 {
+        self.time_passed / self.total_time
+    }
+
     pub fn update(&mut self, physics: &mut entity::Physics, delta: f32, impls: &action_system::ActionsImpl) {
         self.time_passed += delta;
 

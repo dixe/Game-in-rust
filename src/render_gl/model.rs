@@ -21,7 +21,6 @@ impl Model {
 
     pub fn load_from_path(gl: &gl::Gl, clr: na::Vector3::<f32>, path: &str, res: &Resources) -> Result<Model, failure::Error> {
 
-
         let model_content = res.load_string(path).unwrap();
         let str_reader = StringReader::new(&model_content);
         let buf= BufReader::new(str_reader);

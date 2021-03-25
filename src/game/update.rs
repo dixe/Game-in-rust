@@ -163,7 +163,7 @@ fn update_player_swing(ctx: &mut game::Context) {
 
     // TODO look at the current state and maybe add to queue instead of as current
 
-    action_info.active = Some(swing_action);
+    action_info.queue.push_back(swing_action);
     ctx.state.player_state = game::PlayerState::Attacking;
 
 

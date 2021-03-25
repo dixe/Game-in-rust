@@ -8,6 +8,8 @@ extern crate nalgebra_glm as glm;
 #[macro_use] extern crate entity_component_derive;
 extern crate roxmltree;
 extern crate notify;
+extern crate walkdir;
+
 
 use notify::{Watcher, RecursiveMode, watcher};
 use std::sync::mpsc::channel;

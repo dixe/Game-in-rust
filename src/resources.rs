@@ -3,15 +3,31 @@ use std::fs;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 
+
+
+use walkdir::WalkDir;
+
 #[derive(Debug, Fail)]
 pub enum Error {
     #[fail(display = "I/O error")]
     Io(io::Error),
+    #[fail(display = "WalkDir error")]
+    Walkdir(walkdir::Error),
     #[fail(display = "Failed to read CString from file that contains 0")]
     FailedToGetExePath,
     #[fail(display = "Failed to get executable path")]
     FileContainsNil,
+    #[fail(display = "Was None")]
+    NoneE,
+
 }
+
+impl From<walkdir::Error> for Error {
+    fn from(other: walkdir::Error) -> Self {
+        Error::Walkdir(other)
+    }
+}
+
 
 impl From<io::Error> for Error {
     fn from(other: io::Error) -> Self {
@@ -36,6 +52,27 @@ impl Resources {
             root_path: exe_path.join(rel_path)
         })
     }
+
+    pub fn list_files(&self, path: &str) -> Result<Vec<String>, Error> {
+        let root_path = &self.root_path.to_str().ok_or(Error::NoneE)?;
+
+        let f_p = resource_name_to_path(&self.root_path, path);
+        let full_path: &str = f_p.to_str().ok_or(Error::NoneE)?;
+
+        let mut res = Vec::new();
+
+        for entry in WalkDir::new(full_path) {
+            let full_p = format!("{}", entry?.path().display());
+
+            let split = full_p.replace(root_path, "")[1..].to_string();
+            res.push(split);
+
+        }
+
+        Ok(res)
+
+    }
+
 
     pub fn load_string(&self, resource_name: &str) -> Result<String, Error> {
 

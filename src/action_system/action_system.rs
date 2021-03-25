@@ -39,22 +39,34 @@ pub struct BezierAction {
 }
 
 impl BezierAction {
-    pub fn update(&self, t: f32, physics: &mut entity::Physics, init: &entity::Physics) {
+    pub fn update(&self, time_passed: f32, physics: &mut entity::Physics, init: &entity::Physics) {
         // println!("{}", t);
         for p in self.parts.iter() {
-            if p.start <= t && t <= p.end {
+            if p.start <= time_passed && time_passed <= p.end {
+
+                // make to clamp to 0 and 1, with p.start and p.end as max and min
+                let t = clamp01(time_passed, p.start, p.end);
+                //println!("{:#?}\n{:#?}\n\n", time_passed, t);
 
                 let bz = match p.curve {
                     Curve::Linear(p0, p1) => action_system::bezier_linear(t, p0, p1),
                     Curve::Cubic(p0, p1, p2) => action_system::bezier_cubic(t, p0, p1, p2),
                 };
-                // println!("{:#?}", physics.pos);
+
                 physics.pos = init.pos + bz;
             }
         }
     }
 }
 
+fn clamp01(t: f32, min: f32, max: f32) -> f32{
+
+    f32::max(f32::min(1.0, (t - min) / (max - min)), 0.0)
+
+
+
+
+}
 
 impl Action for BezierAction {
     fn update(&self, time_passed: f32, physics: &mut entity::Physics, init: &entity::Physics) {

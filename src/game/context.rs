@@ -40,6 +40,8 @@ pub struct Context {
     pub light_shader: render_gl::Shader,
 
 
+    pub swing_animation: render_gl::Animation,
+
     pub actions: action_system::ActionsImpl,
 
 
@@ -119,7 +121,7 @@ impl Context {
 
         // SWORD ANIMATION
         let sword_idle = entity::ActionData::new(action_system::Actions::Idle, None, sword.init_physics);
-        let actions_info = entity::ActionsInfo::new(sword.entity_id, Some(sword_idle));
+        let actions_info = entity::ActionsInfo::new(sword.entity_id, None);
 
         self.ecs.set_actions_info(sword.entity_id, actions_info);
 
@@ -248,9 +250,30 @@ impl Context {
         self.scene.render(&self.render_context.gl, &self.cube_shader);
 
 
+
+
+
+
+
         // player
-        render_gl::render(&self.ecs, self.player_id, &self.render_context.gl, &self.cube_shader);
-        render_gl::render(&self.ecs, self.player_weapon_id, &self.render_context.gl, &self.cube_shader);
+        match self.state.player_state {
+            game::PlayerState::Attacking => {
+                // get player action and how far we are in it
+
+                let info = self.ecs.get_actions_info(self.player_weapon_id);
+
+                println!("{:#?}", info);
+                let percent = self.ecs.get_actions_info(self.player_weapon_id).and_then(|info| info.active.map(|a| a.percent_done())).unwrap_or_default();
+
+                render_gl::render(&self.ecs, self.player_id, &self.render_context.gl, &self.cube_shader, Some((&self.swing_animation, percent)));
+            },
+            _ => {
+                render_gl::render(&self.ecs, self.player_id, &self.render_context.gl, &self.cube_shader, None);
+            }
+        };
+
+
+        render_gl::render(&self.ecs, self.player_weapon_id, &self.render_context.gl, &self.cube_shader, None);
 
 
         // all in state
@@ -296,6 +319,10 @@ fn empty() -> Result<Context, failure::Error> {
 
     let actions = action_system::load_player_actions(&render_context.res)?;
 
+    let player_color = na::Vector3::new(0.0, 1.0, 1.0);
+    let swing_animation = render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?;
+
+
     Ok(Context {
         player_id: 9999,
         scene,
@@ -311,6 +338,7 @@ fn empty() -> Result<Context, failure::Error> {
         cube_shader,
         light_shader,
         state: game::State::new(),
-        player_weapon_id: 9999
+        player_weapon_id: 9999,
+        swing_animation
     })
 }
