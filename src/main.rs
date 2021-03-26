@@ -181,8 +181,40 @@ fn run() -> Result<(), failure::Error> {
         if ctx.controls.cam_mode == controls::CameraMode::Follow {
             let default = entity::Physics::new(0,0);
             let physics = ctx.ecs.get_physics(ctx.player_id).unwrap_or(&default);
+
+
             ctx.camera.set_target(physics.pos);
 
+
+            if ctx.controls.movement_dir.magnitude() > 0.0 && ctx.controls.right_stick.is_none(){
+
+                let z_rot =  physics.rotation.z;
+
+                /*println!("\n\n\n");
+                println!("BEHIND VEC: {:#?}", player_behind_vec);//ctx.camera.follow_dir);
+                println!("FOLLOW VEC: {:#?}", behind_xy);
+                println!("DIFF: {:#?}", diff);
+
+                 */
+
+                let mut rot_diff = ctx.camera.follow_yaw - (z_rot + 180.0_f32.to_radians());
+
+                if rot_diff < -std::f32::consts::PI {
+                    rot_diff += 2.0 * std::f32::consts::PI;
+                }
+
+                if rot_diff > std::f32::consts::PI {
+                    rot_diff -= 2.0 * std::f32::consts::PI;
+                }
+
+                let smooth = 1.0;
+
+                rot_diff = f32::min(smooth, f32::max(-smooth, rot_diff));
+                let change_vec = na::Vector3::new(rot_diff, 0.0, 0.0) ;
+
+                ctx.camera.change_follow_dir(change_vec);
+
+            }
 
             let right_stick = ctx.controls.right_stick;
 

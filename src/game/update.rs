@@ -71,9 +71,13 @@ fn update_player_movement(ctx: &mut game::Context, player: &mut entity::Physics)
             game::update_velocity(player, ctx.controls.movement_dir);
         },
         controls::CameraMode::Follow => {
+
             let z_rot = ctx.camera.z_rotation();
+
             let rot_mat = na::Matrix3::new_rotation(z_rot);
-            game::update_velocity(player, rot_mat * na::Vector3::new(-ctx.controls.movement_dir.y, ctx.controls.movement_dir.x, 0.0));
+            let player_move_dir = rot_mat * na::Vector3::new(-ctx.controls.movement_dir.y, ctx.controls.movement_dir.x, 0.0);
+
+            game::update_velocity(player, player_move_dir);
         }
     }
 

@@ -40,7 +40,7 @@ pub struct Context {
     pub light_shader: render_gl::Shader,
 
 
-    pub swing_animation: render_gl::Animation,
+    pub swing_animation: Option<render_gl::Animation>,
 
     pub actions: action_system::ActionsImpl,
 
@@ -250,22 +250,16 @@ impl Context {
         self.scene.render(&self.render_context.gl, &self.cube_shader);
 
 
-
-
-
-
-
         // player
-        match self.state.player_state {
-            game::PlayerState::Attacking => {
+        match (&self.state.player_state, &self.swing_animation) {
+            (game::PlayerState::Attacking, Some(ref swing)) => {
                 // get player action and how far we are in it
 
                 let info = self.ecs.get_actions_info(self.player_weapon_id);
 
-                println!("{:#?}", info);
                 let percent = self.ecs.get_actions_info(self.player_weapon_id).and_then(|info| info.active.map(|a| a.percent_done())).unwrap_or_default();
 
-                render_gl::render(&self.ecs, self.player_id, &self.render_context.gl, &self.cube_shader, Some((&self.swing_animation, percent)));
+                render_gl::render(&self.ecs, self.player_id, &self.render_context.gl, &self.cube_shader, Some((&swing, percent)));
             },
             _ => {
                 render_gl::render(&self.ecs, self.player_id, &self.render_context.gl, &self.cube_shader, None);
@@ -299,6 +293,7 @@ fn empty() -> Result<Context, failure::Error> {
     background_color_buffer.set_used(&render_context.gl);
 
     let mut camera = camera::Camera::new();
+
     camera.change_follow_dir(na::Vector3::new(0.0, 0.0, 0.0));
 
     let event_pump = render_context.sdl.event_pump().unwrap();
@@ -320,7 +315,8 @@ fn empty() -> Result<Context, failure::Error> {
     let actions = action_system::load_player_actions(&render_context.res)?;
 
     let player_color = na::Vector3::new(0.0, 1.0, 1.0);
-    let swing_animation = render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?;
+    let swing_animation = Some(render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?);
+    //let swing_animation = None;
 
 
     Ok(Context {

@@ -2,16 +2,16 @@ use nalgebra as na;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Camera {
-    cam_pos: na::Vector3::<f32>,
-    cam_target: na::Vector3::<f32>,
-    up: na::Vector3::<f32>,
-    projection: na::Matrix4::<f32>,
+    pub cam_pos: na::Vector3::<f32>,
+    pub cam_target: na::Vector3::<f32>,
+    pub up: na::Vector3::<f32>,
+    pub projection: na::Matrix4::<f32>,
 
 
-    follow_distance: f32,
-    follow_dir: na::Vector3::<f32>,
-    follow_yaw: f32,
-    follow_pitch: f32
+    pub follow_distance: f32,
+    pub follow_dir: na::Vector3::<f32>,
+    pub follow_yaw: f32,
+    pub follow_pitch: f32
 }
 
 
@@ -51,8 +51,8 @@ impl Camera {
             up,
             projection,
             follow_distance : 12.0,
-            follow_pitch: -2.2,
-            follow_yaw: -1.5,
+            follow_pitch: 0.4,
+            follow_yaw: std::f32::consts::PI,
             follow_dir: na::Vector3::new(0.0, 0.0, 1.0)
         }
     }
@@ -73,14 +73,26 @@ impl Camera {
         f32::atan2(self.follow_dir.y, self.follow_dir.x)
     }
 
+    pub fn y_rotation(&self) -> f32 {
+
+        f32::atan2(self.follow_dir.y, self.follow_dir.z)
+    }
+
     pub fn change_follow_dir(&mut self, change: na::Vector3::<f32>) {
 
-        // TODO also tage Delta to make 0.1 depend on delta
+        // TODO also take Delta to make 0.1 depend on delta
         self.follow_yaw -= change.x * 0.05;
         self.follow_pitch += change.y * 0.05;
         self.follow_pitch = f32::max(self.follow_pitch, 0.0);
         self.follow_pitch = f32::min(std::f32::consts::PI/2.0, self.follow_pitch);
 
+        if self.follow_yaw > std::f32::consts::PI * 2.0 {
+            self.follow_yaw -= std::f32::consts::PI * 2.0;
+        }
+
+        if self.follow_yaw < 0.0 {
+            self.follow_yaw += std::f32::consts::PI * 2.0;
+        }
 
 
         self.follow_dir.x = self.follow_yaw.cos() * f32::max(self.follow_pitch.cos(), 0.01);

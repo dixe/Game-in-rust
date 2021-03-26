@@ -29,17 +29,32 @@ impl Scene {
 
         let floor_clr = na::Vector3::new(0.50, 0.33, 0.6);
 
-
         let floor = floor::Floor::new(floor_clr, &ctx.gl)?;
 
 
         // create border sides, by only exposing the sides that a entity can reach
         // this is to not do collision with all 4 sides, when only 1 is needed
-        let mut border_sides = Vec::<physics::ConvexCollisionShape>::new();
+        let border_sides = Vec::<physics::ConvexCollisionShape>::new();
+
+        let mut scene = Scene {
+            border_positions,
+            border,
+            floor,
+            border_sides,
+        };
+
+        // Set level borders
+        //scene.set_borders(level);
+
+        Ok(scene)
+
+    }
+
+    fn set_borders(&mut self, level: &level::Level, ) {
 
 
         // right
-        border_sides.push(create_wall_collision_shape(
+        self.border_sides.push(create_wall_collision_shape(
             na::Vector3::new(9.0, -10.0, 0.0),
             na::Vector3::new(9.0, 9.0, 0.0))
         );
@@ -47,7 +62,7 @@ impl Scene {
 
 
         // left
-        border_sides.push(create_wall_collision_shape(
+        self.border_sides.push(create_wall_collision_shape(
             na::Vector3::new(-9.0, 9.0,0.0),
             na::Vector3::new(-9.0, -10.0,0.0),
         ));
@@ -55,14 +70,14 @@ impl Scene {
 
 
         //top
-        border_sides.push(create_wall_collision_shape(
+        self.border_sides.push(create_wall_collision_shape(
             na::Vector3::new(-9.0, 9.0,0.0),
             na::Vector3::new(9.0, 9.0,0.0),
         ));
 
 
         // bottom
-        border_sides.push(create_wall_collision_shape(
+        self.border_sides.push(create_wall_collision_shape(
             na::Vector3::new(9.0, -9.0,0.0),
             na::Vector3::new(-9.0, -9.0,0.0),
         ));
@@ -82,16 +97,10 @@ impl Scene {
 
             //println!("{}, {}", x,y);
 
-            border_positions.push(border_pos);
+            self.border_positions.push(border_pos);
         }
-
-        Ok(Scene {
-            border_positions,
-            border,
-            floor,
-            border_sides,
-        })
     }
+
 
     pub fn border_sides(&self) -> &Vec::<physics::ConvexCollisionShape> {
         &self.border_sides
@@ -101,7 +110,7 @@ impl Scene {
 
     pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader) {
 
-        //self.floor.render(gl, shader);
+        self.floor.render(gl, shader);
 
         for pos in &self.border_positions {
 
