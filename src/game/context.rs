@@ -90,8 +90,14 @@ impl Context {
         // Use loaded model
         //let player_model = entity::Model::cube(player_cube);
 
-        let loaded_model = render_gl::Model::load_from_path(&self.render_context.gl, player_color, "models/player_01.obj", &self.render_context.res)?;
+        println!("L!");
+        let loaded_model = render_gl::Model::load_from_path_obj_rs(&self.render_context.gl, player_color, "models/player_02.obj", &self.render_context.res)?;
+        println!("L3 - {}", loaded_model.indices_count);
+        println!("L2");
+        let loaded_model = render_gl::Model::load_from_path_tobj(&self.render_context.gl, player_color, "models/player_02", &self.render_context.res)?;
 
+
+        println!("L3 - {}", loaded_model.indices_count);
         let player_model = entity::Model::wave_model(loaded_model);
 
         let player_model_id = self.ecs.add_model(player_model);
@@ -146,7 +152,7 @@ impl Context {
 
     fn add_model_with_physics(&mut self, clr: na::Vector3::<f32>, scale: f32, anchor_id: Option<usize>, model_path: &str) -> Result<NewModel, failure::Error>  {
 
-        let model = render_gl::Model::load_from_path(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
+        let model = render_gl::Model::load_from_path_obj_rs(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
         let model_entity = entity::Model::wave_model(model);
         let model_id = self.ecs.add_model(model_entity);
         let entity_id = self.ecs.add_entity();
@@ -315,8 +321,9 @@ fn empty() -> Result<Context, failure::Error> {
     let actions = action_system::load_player_actions(&render_context.res)?;
 
     let player_color = na::Vector3::new(0.0, 1.0, 1.0);
-    let swing_animation = Some(render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?);
-    //let swing_animation = None;
+    let mut swing_animation = None;
+    //swing_animation = Some(render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?);
+
 
 
     Ok(Context {

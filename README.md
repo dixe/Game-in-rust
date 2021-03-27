@@ -25,7 +25,7 @@ A game in rust to learn rust and some opengl
 - [ ] Sword animation only when attacking state
 - [ ] render of collision boxes
 - [x] 3. person follow cam
-
+- [ ] camer rotate around player, ie. if distance less then follow_len don't update camera pos.
 
 # complex model
 based on multiple models, fx sword follow player, or hat or weapon, legs that are fixed to fx a player and when player move sword moves to. If we swing a sword we take into account the player physics too.

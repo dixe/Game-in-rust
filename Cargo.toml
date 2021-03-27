@@ -21,6 +21,7 @@ fs_extra = "1.2.0"
 roxmltree = "0.14.0"
 notify = "4.0.15"
 walkdir = "2.1"
+tobj = "2.0.4"
 
 
 [dependencies.sdl2]

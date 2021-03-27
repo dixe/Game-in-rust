@@ -22,7 +22,7 @@ impl Animation {
         let mut frames = 0;
         for obj_path in obj_files {
             println!("Loading from : '{}'", obj_path);
-            let model = Model::load_from_path(gl, clr, obj_path, res)?;
+            let model = Model::load_from_path_obj_rs(gl, clr, obj_path, res)?;
             frame_models.push(model);
             frames +=1;
         }
