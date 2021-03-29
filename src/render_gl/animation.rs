@@ -1,10 +1,11 @@
 use crate::resources::Resources;
-
+use crate::entity;
 use crate::render_gl::{self, Model};
 
 pub struct Animation {
     pub frames: usize,
     pub frame_models: Vec<Model>,
+    pub frame_anchors: Vec<entity::AnchorPoint>
 
 }
 
@@ -19,17 +20,21 @@ impl Animation {
         let obj_files = files.iter().filter(|f| f.ends_with(".obj"));
 
         let mut frame_models = Vec::new();
+        let mut frame_anchors = Vec::new();
         let mut frames = 0;
         for obj_path in obj_files {
             println!("Loading from : '{}'", obj_path);
-            let (model, anchors) = Model::load_from_path_tobj(gl, clr, obj_path, res)?;
+            let (model, anchor) = Model::load_from_path_tobj(gl, clr, obj_path, res)?;
             frame_models.push(model);
+            anchor.map(|a| {frame_anchors.push(a);});
+
             frames +=1;
         }
 
         Ok(Animation {
             frames,
             frame_models,
+            frame_anchors,
         })
     }
 

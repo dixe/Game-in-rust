@@ -9,7 +9,7 @@ pub struct ActionsInfo {
     pub entity_id: usize,
     pub default: Option<ActionData>,
     pub queue: std::collections::VecDeque<ActionData>,
-    pub active: Option<ActionData>
+    pub active: Option<ActionData>,
 }
 
 
@@ -20,17 +20,19 @@ impl ActionsInfo {
             entity_id,
             default,
             queue: std::collections::VecDeque::new(),
-            active: default
+            active: default,
         }
     }
 
-    fn next(&mut self, state: &mut game::State) {
+    fn next(&mut self,  state: &mut game::State, physics: &mut entity::Physics,) {
         match self.active {
             Some(data) => {
-                if data.time_passed < data.total_time {
+                if data.time_passed <= data.total_time {
                     return
                 }
                 else {
+                    // reset to init physics
+                    data.reset(physics);
                     data.expired(state);
                 }
             },
@@ -38,7 +40,6 @@ impl ActionsInfo {
         };
 
         // set next action
-
 
         self.active = match self.queue.pop_front() {
             None => self.default,
@@ -56,7 +57,7 @@ impl ActionsInfo {
             _ => {},
         }
 
-        self.next(state);
+        self.next(state, physics);
     }
 
 }
@@ -98,6 +99,15 @@ impl ActionData {
     pub fn percent_done(&self) -> f32 {
         self.time_passed / self.total_time
     }
+
+
+    pub fn reset(&self, physics: &mut entity::Physics) {
+        physics.pos = self.init.pos;
+        physics.rotation = self.init.rotation;
+        physics.scale = self.init.scale;
+
+    }
+
 
     pub fn update(&mut self, physics: &mut entity::Physics, delta: f32, impls: &action_system::ActionsImpl) {
         self.time_passed += delta;

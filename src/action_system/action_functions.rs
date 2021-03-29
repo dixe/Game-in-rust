@@ -4,7 +4,9 @@ use crate::entity;
 pub fn idle_bob_z(time_passed: f32, physics: &mut entity::Physics, _ : &entity::Physics) {
 
     physics.pos.z = (time_passed * std::f32::consts::PI).sin();
+}
 
+pub fn empty(time_passed: f32, physics: &mut entity::Physics, _ : &entity::Physics) {
 }
 
 

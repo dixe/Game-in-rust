@@ -20,6 +20,8 @@ pub struct EntityComponentSystem {
     pub shot: std::collections::HashMap<usize, Shot>,
     #[component = "ActionsInfo"]
     pub actions_info: std::collections::HashMap<usize, ActionsInfo>,
+    #[component = "AnchorPoint"]
+    pub anchor_point: std::collections::HashMap<usize, AnchorPoint>,
 
     model_reference: std::collections::HashMap<usize, usize>,
 
@@ -39,6 +41,7 @@ impl EntityComponentSystem {
             actions_info: std::collections::HashMap::new(),
             models: Vec::<Model>::new(),
             model_reference: std::collections::HashMap::new(),
+            anchor_point: std::collections::HashMap::new(),
         }
     }
 

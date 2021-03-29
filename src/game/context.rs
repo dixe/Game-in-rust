@@ -23,6 +23,8 @@ pub struct Context {
     pub state: game::State,
     pub player_id: usize,
     pub player_weapon_id: usize,
+
+
     // STUFF WE NEED
     pub controls: controls::Controls,
     pub scene: scene::Scene,
@@ -38,7 +40,6 @@ pub struct Context {
 
     pub cube_shader: render_gl::Shader,
     pub light_shader: render_gl::Shader,
-
 
     pub swing_animation: Option<render_gl::Animation>,
 
@@ -91,11 +92,10 @@ impl Context {
         //let player_model = entity::Model::cube(player_cube);
 
 
-        println!("L2");
-        let (loaded_model, player_anchors) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, player_color, "models/player.obj", &self.render_context.res)?;
+        let (loaded_model, weapon_anchor) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, player_color, "models/player.obj", &self.render_context.res)?;
 
 
-        println!("L3 - {}", loaded_model.indices_count);
+
         let player_model = entity::Model::wave_model(loaded_model);
 
         let player_model_id = self.ecs.add_model(player_model);
@@ -121,9 +121,28 @@ impl Context {
         //PLAYER SWORD
 
         let sword = self.add_model_with_physics(na::Vector3::new(0.2, 0.2, 0.2), 1.0, Some(player_id), "models/sword.obj")?;
+
+
+
+
+        weapon_anchor.map(|anchor| {
+            self.ecs.set_anchor_point(sword.entity_id, anchor);
+            match self.swing_animation  {
+                Some(ref ani) => {
+                    self.actions.swing = action_system::from_anchor_points(&ani.frame_anchors, anchor );
+                }, _ => {}
+            };
+        });
+
+
+
+
+
+
+
         self.player_weapon_id = sword.entity_id;
 
-        // SWORD ANIMATION
+        // SWORD ACTION
         let sword_idle = entity::ActionData::new(action_system::Actions::Idle, None, sword.init_physics);
         let actions_info = entity::ActionsInfo::new(sword.entity_id, None);
 
@@ -159,7 +178,6 @@ impl Context {
 
         let mut physics = entity::Physics::new(entity_id, model_id);
         physics.scale = scale;
-        physics.pos.y = -1.0;
         physics.inverse_mass = 0.0;
 
         physics.anchor_id = anchor_id;
@@ -286,8 +304,8 @@ impl Context {
 
 fn empty() -> Result<Context, failure::Error> {
 
-    let width = 1920;
-    let height = 1080;
+    let width = 900;
+    let height = 700;
 
     let render_context = render_gl::context::setup(width, height)?;
 
@@ -318,12 +336,11 @@ fn empty() -> Result<Context, failure::Error> {
 
     let delta_time = deltatime::Deltatime::new();
 
-    let actions = action_system::load_player_actions(&render_context.res)?;
+    let mut actions = action_system::load_player_actions(&render_context.res)?;
 
     let player_color = na::Vector3::new(0.0, 1.0, 1.0);
     let mut swing_animation = None;
-    //swing_animation = Some(render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?);
-
+    swing_animation = Some(render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?);
 
 
     Ok(Context {

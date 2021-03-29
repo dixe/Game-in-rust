@@ -29,8 +29,6 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
     update_player_movement(ctx, &mut player);
 
 
-
-
     ctx.ecs.set_physics(ctx.player_id, player);
 
     for c in collisions {
@@ -155,7 +153,6 @@ fn update_player_swing(ctx: &mut game::Context) {
     };
 
     let mut action_info =
-    //match ctx.ecs.get_actions_info(ctx.player_weapon_id) {
         match ctx.ecs.actions_info.get_mut(&ctx.player_weapon_id) {
             Some(info) => info,
             _ => return

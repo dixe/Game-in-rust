@@ -72,10 +72,19 @@ pub fn get_absoulte_physics(entity_id: usize, ecs: &entity::EntityComponentSyste
         }
     };
 
+    let anchor_point = match ecs.get_anchor_point(entity_id) {
+        Some(anchor) => *anchor,
+        None => entity::AnchorPoint::default()
+    };
+
+
     let rot_mat = na::Matrix3::<f32>::new_rotation(anchor_physics.rotation.z);
+
     let rotated_pos = rot_mat * physics.pos;
 
-    physics.pos = rotated_pos + anchor_physics.pos;
+    physics.rotation += anchor_physics.rotation;
+
+    physics.pos = rotated_pos + anchor_physics.pos + anchor_point.pos;
     Some(physics)
 }
 

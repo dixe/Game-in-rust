@@ -38,6 +38,7 @@ pub struct BezierAction {
     pub parts: Vec<Part>,
 }
 
+
 impl BezierAction {
     pub fn update(&self, time_passed: f32, physics: &mut entity::Physics, init: &entity::Physics) {
         // println!("{}", t);
@@ -53,6 +54,7 @@ impl BezierAction {
                     Curve::Cubic(p0, p1, p2) => action_system::bezier_cubic(t, p0, p1, p2),
                 };
 
+                println!("T={}\nBZ =  {:#?}", time_passed, bz);
                 physics.pos = init.pos + bz;
             }
         }
@@ -60,12 +62,7 @@ impl BezierAction {
 }
 
 fn clamp01(t: f32, min: f32, max: f32) -> f32{
-
     f32::max(f32::min(1.0, (t - min) / (max - min)), 0.0)
-
-
-
-
 }
 
 impl Action for BezierAction {
@@ -121,5 +118,56 @@ impl ActionsImpl {
                 self.idle.update(t, physics, init);},
         }
 
+    }
+}
+
+
+
+
+
+
+pub fn from_anchor_points(in_an: &Vec<entity::AnchorPoint>, base_anchor: entity::AnchorPoint) -> BezierAction {
+
+
+    let mut parts = Vec::new();
+
+    // for every pair create a linear bezier part
+
+    let mut anchors = in_an.clone();
+
+    anchors.push(base_anchor);
+
+    let len = (anchors.len() - 1) as f32;
+    let step = 1.0 / len;
+
+
+    let mut i = 1;
+
+    while i < anchors.len() {
+
+        println!("{}", i);
+        let prev = anchors[i - 1];
+        let this = anchors[i];
+
+        let curve = Curve::Linear(prev.pos - base_anchor.pos, this.pos - base_anchor.pos);
+
+        let start = ((i-1) as f32) * step;
+        let end = (i as f32) * step;
+
+        let part =  Part {
+	    curve,
+            start,
+            end
+        };
+
+        println!("start={}, end={}", start, end);
+        parts.push(part);
+
+        i += 1;
+        println!("{:#?}", curve);
+    }
+
+    BezierAction {
+        parts
     }
 }

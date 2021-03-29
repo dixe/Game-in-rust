@@ -23,5 +23,9 @@ mod shot;
 pub use self::shot::Shot;
 
 
+mod anchor_point;
+pub use self::anchor_point::AnchorPoint;
+
+
 mod action;
 pub use self::action::{ActionData, ActionsInfo};

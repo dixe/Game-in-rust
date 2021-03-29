@@ -20,14 +20,16 @@ A game in rust to learn rust and some opengl
 - [x] Trigger animation/action on controllerInput
 - [x] Sword collision, based on its location
 - [x] Complex model
-- [ ] Player/entity/action state. Some actions has to finishe before new input is valid
+- [x] Player/entity/action state. Some actions has to finishe before new input is valid
 - [ ] Sword collision bug fix
-- [ ] Sword animation only when attacking state
+- [x] Sword animation only when attacking state
 - [ ] render of collision boxes
 - [x] third person follow cam
 - [ ] camera rotate around player, ie. if distance less then follow_len don't update camera pos.
-- [ ] return weapon anchor model-plane along with models, if existing
-- [ ] use weapon achor to get normal (weapon dir) and position in animation, render weapon and hitbox there
+- [x] return weapon anchor model-plane along with models, if existing
+- [x] Use weapon achor to get normal (weapon dir) and position in animation, use to generate an action that can be used for render and hitbox
+
+
 
 # complex model
 based on multiple models, fx sword follow player, or hat or weapon, legs that are fixed to fx a player and when player move sword moves to. If we swing a sword we take into account the player physics too.

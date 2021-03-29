@@ -6,6 +6,7 @@ use stringreader::StringReader;
 use crate::resources::Resources;
 use obj;
 use tobj;
+use crate::entity;
 
 
 pub struct Model {
@@ -16,22 +17,12 @@ pub struct Model {
 }
 
 
-pub struct AnchorPoint {
-    pos: na::Vector3::<f32>,
-    normal: na::Vector3::<f32>,
-}
-
 
 impl Model {
 
-
-
-    pub fn load_from_path_tobj(gl: &gl::Gl, clr: na::Vector3::<f32>, path: &str, res: &Resources) -> Result<(Model, std::collections::HashMap::<String,AnchorPoint>), failure::Error> {
-
+    pub fn load_from_path_tobj(gl: &gl::Gl, clr: na::Vector3::<f32>, path: &str, res: &Resources) -> Result<(Model, Option<entity::AnchorPoint>), failure::Error> {
 
         // TODO RECATOR SO WE GET A FULL PATH FORM RESOURCES
-        println!("PAHT {}", path);
-
         let obj_path = path.to_string();
         let mtl_path = path.replace(".obj", ".mtl");
 
@@ -51,18 +42,21 @@ impl Model {
             }
         })?;;
 
-        let mut anchor_points = std::collections::HashMap::new();
+        let mut anchor_point = None;
         let mut model = None;
+
+
         for loaded_model in &models {
-            println!("Model name ={}", loaded_model.name);
             if loaded_model.name.to_lowercase().starts_with("model") {
-                model = Some(load_model(&loaded_model, gl, clr, res));
+                model = Some(load_model(loaded_model, gl, clr));
+            }
+            else {
+                anchor_point = Some(load_anchor(loaded_model));
             }
         }
 
-
         match model {
-            Some(m) => Ok((m, anchor_points)),
+            Some(m) => Ok((m, anchor_point)),
             _ => panic!("No model found"), //TODO make this a failure and not a panic
         }
 
@@ -86,10 +80,40 @@ impl Model {
 }
 
 
-fn load_model(loaded_model: &tobj::Model, gl: &gl::Gl, clr: na::Vector3::<f32>,  res: &Resources) -> Model {
-    println!("MODEL NAME: {:#?}", loaded_model.name);
+fn load_anchor(loaded_model: &tobj::Model) -> entity::AnchorPoint {
 
-    println!("MODEL face len: {:#?}", loaded_model.mesh.num_face_indices.len());
+    let mut normal = na::Vector3::<f32>::new(0.0, 0.0, 0.0);
+    let mut pos = na::Vector3::<f32>::new(0.0, 0.0, 0.0);
+
+    let mut i = 0;
+    while i < loaded_model.mesh.positions.len() {
+        // x y z
+        pos.x += loaded_model.mesh.positions[i];
+        pos.y += loaded_model.mesh.positions[i + 1];
+        pos.z += loaded_model.mesh.positions[i + 2];
+
+
+        normal.x += loaded_model.mesh.normals[i];
+        normal.y += loaded_model.mesh.normals[i + 1];
+        normal.z += loaded_model.mesh.normals[i + 2];
+
+        i += 3;
+
+    }
+
+    pos = pos / ((i/3) as f32);
+    normal = normal / ((i/3) as f32);
+
+    entity::AnchorPoint {
+        pos,
+        normal
+    }
+
+
+}
+
+fn load_model(loaded_model: &tobj::Model, gl: &gl::Gl, clr: na::Vector3::<f32>) -> Model {
+
     let vbo = buffer::ArrayBuffer::new(gl);
     let vao = buffer::VertexArray::new(gl);
 
