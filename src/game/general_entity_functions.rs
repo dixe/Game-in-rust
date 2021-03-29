@@ -27,8 +27,8 @@ pub fn add_projectile(projectilies: &mut std::collections::HashSet<usize>,
     let id = ecs.add_entity();
     let vel = shoot_dir.normalize() * shooter.speed;
 
-
-    let mut physics = entity::Physics::new(id,  model_id);
+    // TODO check that the projectile model is set for this new entity, it probably is not
+    let mut physics = entity::Physics::new(id);
 
     physics.pos = entity_pos;
     physics.velocity = vel;

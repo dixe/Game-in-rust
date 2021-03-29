@@ -106,9 +106,7 @@ impl Context {
         self.ecs.set_shooter(player_id, player_shooter);
 
 
-        let mut physics = entity::Physics::new(player_id, player_model_id);
-        physics.pos = na::Vector3::new(0.0, 3.0, 0.5);
-
+        let physics = entity::Physics::new(player_id);
 
         self.ecs.set_physics(player_id, physics);
 
@@ -176,7 +174,7 @@ impl Context {
 
         self.ecs.set_model(entity_id, model_id);
 
-        let mut physics = entity::Physics::new(entity_id, model_id);
+        let mut physics = entity::Physics::new(entity_id);
         physics.scale = scale;
         physics.inverse_mass = 0.0;
 
@@ -201,7 +199,7 @@ impl Context {
 
         let health = entity::Health::new(100.0);
 
-        let mut physics = entity::Physics::new(enemy_id, self.enemy_model_id);
+        let mut physics = entity::Physics::new(enemy_id);
         physics.pos = na::Vector3::new(0.0, -3.0, 0.5);
 
 

@@ -9,13 +9,12 @@ pub struct Physics {
     pub rotation: na::Vector3<f32>,
     pub scale: f32,
     //
-    pub model_id: usize,
     pub inverse_mass: f32,
     pub anchor_id: Option<usize>,
 }
 
 impl Physics {
-    pub fn new(entity_id: usize, model_id: usize) -> Physics {
+    pub fn new(entity_id: usize) -> Physics {
         Physics {
             entity_id: entity_id,
             rotation: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
@@ -23,7 +22,6 @@ impl Physics {
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             max_speed: 10.0,
             //TODO remove from phyiscs
-            model_id: model_id,
             inverse_mass: 1.0,
             scale: 1.0,
             anchor_id: None

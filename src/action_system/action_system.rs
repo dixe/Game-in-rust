@@ -41,20 +41,17 @@ pub struct BezierAction {
 
 impl BezierAction {
     pub fn update(&self, time_passed: f32, physics: &mut entity::Physics, init: &entity::Physics) {
-        // println!("{}", t);
+
         for p in self.parts.iter() {
             if p.start <= time_passed && time_passed <= p.end {
 
-                // make to clamp to 0 and 1, with p.start and p.end as max and min
                 let t = clamp01(time_passed, p.start, p.end);
-                //println!("{:#?}\n{:#?}\n\n", time_passed, t);
 
                 let bz = match p.curve {
                     Curve::Linear(p0, p1) => action_system::bezier_linear(t, p0, p1),
                     Curve::Cubic(p0, p1, p2) => action_system::bezier_cubic(t, p0, p1, p2),
                 };
 
-                println!("T={}\nBZ =  {:#?}", time_passed, bz);
                 physics.pos = init.pos + bz;
             }
         }
@@ -145,7 +142,6 @@ pub fn from_anchor_points(in_an: &Vec<entity::AnchorPoint>, base_anchor: entity:
 
     while i < anchors.len() {
 
-        println!("{}", i);
         let prev = anchors[i - 1];
         let this = anchors[i];
 
@@ -160,11 +156,9 @@ pub fn from_anchor_points(in_an: &Vec<entity::AnchorPoint>, base_anchor: entity:
             end
         };
 
-        println!("start={}, end={}", start, end);
         parts.push(part);
 
         i += 1;
-        println!("{:#?}", curve);
     }
 
     BezierAction {

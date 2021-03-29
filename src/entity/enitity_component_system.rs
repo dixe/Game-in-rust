@@ -7,7 +7,7 @@ use crate::action_system;
 pub struct EntityComponentSystem {
 
     next_id: usize,
-    pub models: Vec<Model>,
+    models: Vec<Model>,
 
     // Components
     #[component = "Physics"]
@@ -49,6 +49,10 @@ impl EntityComponentSystem {
         let id = self.next_id;
         self.next_id += 1;
         id
+    }
+
+    pub fn get_model(&self, entity_id: usize) -> Option<&Model> {
+        self.model_reference.get(&entity_id).and_then(|index| self.models.get(*index))
     }
 
     pub fn set_model(&mut self, entity_id: usize, model_id: usize)  {

@@ -163,7 +163,7 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
 
     for w in ctx.scene.border_sides() {
         // todo have these stored in the scene along side the collision shapes
-        let mut entity = entity::Physics::new(usize::MIN, usize::MIN);
+        let mut entity = entity::Physics::new(usize::MIN);
 
         entity.inverse_mass = 0.0;
 

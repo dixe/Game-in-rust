@@ -42,7 +42,7 @@ pub fn render(ecs: &entity::EntityComponentSystem, entity_id: usize, gl: &gl::Gl
             ani.render(gl, shader, model_mat, percent);
         },
         None => {
-            match ecs.models.get(physics.model_id) {
+            match ecs.get_model(physics.entity_id) {
                 Some(m) => {
                     let model_mat = calculate_model_mat(&physics);
                     m.render_from_model_mat(gl, shader, model_mat);

@@ -161,6 +161,11 @@ fn run() -> Result<(), failure::Error> {
             break 'main;
         }
 
+        if ctx.controls.reset {
+            let physics = entity::Physics::new(ctx.player_id);
+            ctx.ecs.set_physics(ctx.player_id, physics);
+        }
+
         unsafe {
             ctx.render_context.gl.Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }
@@ -179,7 +184,7 @@ fn run() -> Result<(), failure::Error> {
         //UPDATE CAMERA IF FOLLOW MODE
 
         if ctx.controls.cam_mode == controls::CameraMode::Follow {
-            let default = entity::Physics::new(0,0);
+            let default = entity::Physics::new(0);
             let physics = ctx.ecs.get_physics(ctx.player_id).unwrap_or(&default);
 
 

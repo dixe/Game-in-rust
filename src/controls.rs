@@ -14,6 +14,7 @@ pub struct Controls {
     pub right_stick: Option<na::Vector3::<f32>>,
     pub right_shoulder: bool,
     pub cam_mode: CameraMode,
+    pub reset: bool,
 }
 
 
@@ -46,12 +47,14 @@ impl Controls {
             s: false,
             d: false,
             right_shoulder: false,
-            cam_mode: CameraMode::Follow
+            cam_mode: CameraMode::Follow,
+            reset: false
         }
     }
 
     pub fn handle_inputs(&mut self,  ctx: &mut render_gl::context::Context) -> Action  {
 
+        self.reset = false;
         let mut action = Action::NoAction;
         let mut right_stick = match self.right_stick {
             Some(dir) => dir,
@@ -168,6 +171,7 @@ impl Controls {
                     //println!("Pressed button : {:#?} ", button);
                     match button {
                         sdl2::controller::Button::RightShoulder => self.right_shoulder = true,
+                        sdl2::controller::Button::Y => self.reset = true,
                         _ => {}
 
                     }
