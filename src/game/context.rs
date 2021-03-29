@@ -90,11 +90,9 @@ impl Context {
         // Use loaded model
         //let player_model = entity::Model::cube(player_cube);
 
-        println!("L!");
-        let loaded_model = render_gl::Model::load_from_path_obj_rs(&self.render_context.gl, player_color, "models/player_02.obj", &self.render_context.res)?;
-        println!("L3 - {}", loaded_model.indices_count);
+
         println!("L2");
-        let loaded_model = render_gl::Model::load_from_path_tobj(&self.render_context.gl, player_color, "models/player_02", &self.render_context.res)?;
+        let (loaded_model, player_anchors) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, player_color, "models/player.obj", &self.render_context.res)?;
 
 
         println!("L3 - {}", loaded_model.indices_count);
@@ -122,7 +120,7 @@ impl Context {
 
         //PLAYER SWORD
 
-        let sword = self.add_model_with_physics(na::Vector3::new(0.2, 0.2, 0.2), 3.0, Some(player_id), "models/sword_01.obj")?;
+        let sword = self.add_model_with_physics(na::Vector3::new(0.2, 0.2, 0.2), 1.0, Some(player_id), "models/sword.obj")?;
         self.player_weapon_id = sword.entity_id;
 
         // SWORD ANIMATION
@@ -152,7 +150,7 @@ impl Context {
 
     fn add_model_with_physics(&mut self, clr: na::Vector3::<f32>, scale: f32, anchor_id: Option<usize>, model_path: &str) -> Result<NewModel, failure::Error>  {
 
-        let model = render_gl::Model::load_from_path_obj_rs(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
+        let (model, anchors) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
         let model_entity = entity::Model::wave_model(model);
         let model_id = self.ecs.add_model(model_entity);
         let entity_id = self.ecs.add_entity();
@@ -164,7 +162,6 @@ impl Context {
         physics.pos.y = -1.0;
         physics.inverse_mass = 0.0;
 
-        physics.rotation.x += 1.57;
         physics.anchor_id = anchor_id;
 
 
@@ -289,7 +286,10 @@ impl Context {
 
 fn empty() -> Result<Context, failure::Error> {
 
-    let render_context = render_gl::context::setup()?;
+    let width = 1920;
+    let height = 1080;
+
+    let render_context = render_gl::context::setup(width, height)?;
 
     let background_color_buffer = render_gl::ColorBuffer::from_color(na::Vector3::new(0.3, 0.3, 0.5));
 
@@ -298,7 +298,7 @@ fn empty() -> Result<Context, failure::Error> {
 
     background_color_buffer.set_used(&render_context.gl);
 
-    let mut camera = camera::Camera::new();
+    let mut camera = camera::Camera::new(width, height);
 
     camera.change_follow_dir(na::Vector3::new(0.0, 0.0, 0.0));
 

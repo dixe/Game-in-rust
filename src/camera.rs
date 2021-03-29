@@ -18,7 +18,7 @@ pub struct Camera {
 
 impl Camera {
 
-    pub fn new() -> Camera {
+    pub fn new(width: u32, height: u32) -> Camera {
 
         let cam_pos = na::Vector3::new(0.0, -10.5, 20.0);
 
@@ -39,7 +39,7 @@ impl Camera {
         let fov: f32 = 60.0;
 
         // perspective 3d with depth
-        let projection = na::Matrix4::new_perspective(900.0 / 700.0, fov.to_radians(), 0.1, 100.0);
+        let projection = na::Matrix4::new_perspective(width as f32 / height as f32, fov.to_radians(), 0.1, 100.0);
 
         //orthonoal, more topdown 2d like
         //let zoom = 0.27;

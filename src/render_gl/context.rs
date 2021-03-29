@@ -63,7 +63,7 @@ impl Context {
 
 
 
-pub fn setup() -> Result<Context, failure::Error>
+pub fn setup(width: u32, height: u32) -> Result<Context, failure::Error>
 {
     let res = Resources::from_relative_exe_path(Path::new("assets")).unwrap();
 
@@ -80,10 +80,10 @@ pub fn setup() -> Result<Context, failure::Error>
     gl_attr.set_context_version(4,5);
 
 
-    let viewport = render_gl::Viewport::for_window(900, 700);
+    let viewport = render_gl::Viewport::for_window(width as i32, height as i32);
 
     let window = video_subsystem
-        .window("Game", 900, 700)
+        .window("Game", width, height)
         .opengl()
         .resizable()
         .build()?;

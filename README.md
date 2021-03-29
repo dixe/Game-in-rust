@@ -24,11 +24,17 @@ A game in rust to learn rust and some opengl
 - [ ] Sword collision bug fix
 - [ ] Sword animation only when attacking state
 - [ ] render of collision boxes
-- [x] 3. person follow cam
-- [ ] camer rotate around player, ie. if distance less then follow_len don't update camera pos.
+- [x] third person follow cam
+- [ ] camera rotate around player, ie. if distance less then follow_len don't update camera pos.
+- [ ] return weapon anchor model-plane along with models, if existing
+- [ ] use weapon achor to get normal (weapon dir) and position in animation, render weapon and hitbox there
 
 # complex model
 based on multiple models, fx sword follow player, or hat or weapon, legs that are fixed to fx a player and when player move sword moves to. If we swing a sword we take into account the player physics too.
 
 # Cool stuff
 distortion shader fx https://lindenreid.wordpress.com/2018/03/05/heat-distortion-shader-tutorial/#:~:text=The%20basic%20premise%20of%20the,uses%20to%20sample%20that%20texture.
+
+
+# Export of models from blender
+Z up and -X forward
