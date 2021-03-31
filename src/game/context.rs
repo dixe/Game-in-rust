@@ -82,24 +82,37 @@ impl Context {
     }
 
 
+
+    pub fn load_model(&mut self, entity_id: usize,  clr: na::Vector3::<f32>, model_path: &str) ->  Result<(), failure::Error> {
+
+        // RELOADING MODELS WITH THIS WILL LEAK THE DATA, SINCE IT WILL ONLY ADD TO MODELS VEC
+        // BUT NOT REMOVE THE OLD UNUSED ONES. FINE FOR DEBUGGING
+        let (model, anchors) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
+
+        let model_entity = entity::Model::wave_model(model);
+        let model_id = self.ecs.add_model(model_entity);
+
+        self.ecs.set_model(entity_id, model_id);
+        Ok(())
+    }
+
+
+
+
     fn setup_player(&mut self) -> Result<(), failure::Error>  {
         let player_id = self.ecs.add_entity();
 
         // MODEL
         let player_color = na::Vector3::new(0.0, 1.0, 1.0);
 
-        // Use loaded model
-        //let player_model = entity::Model::cube(player_cube);
-
-
         let (loaded_model, weapon_anchor) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, player_color, "models/player.obj", &self.render_context.res)?;
 
 
 
         let player_model = entity::Model::wave_model(loaded_model);
-
         let player_model_id = self.ecs.add_model(player_model);
         self.ecs.set_model(player_id, player_model_id);
+
 
         // SHOOTER
         let player_shooter = entity::Shooter::default_player();
@@ -116,11 +129,9 @@ impl Context {
         self.ecs.set_health(player_id, health);
 
 
-        //PLAYER SWORD
 
+        //SWORD
         let sword = self.add_model_with_physics(na::Vector3::new(0.2, 0.2, 0.2), 1.0, Some(player_id), "models/sword.obj")?;
-
-
 
 
         weapon_anchor.map(|anchor| {
@@ -131,10 +142,6 @@ impl Context {
                 }, _ => {}
             };
         });
-
-
-
-
 
 
 
@@ -165,7 +172,10 @@ impl Context {
     }
 
 
+
+
     fn add_model_with_physics(&mut self, clr: na::Vector3::<f32>, scale: f32, anchor_id: Option<usize>, model_path: &str) -> Result<NewModel, failure::Error>  {
+
 
         let (model, anchors) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
         let model_entity = entity::Model::wave_model(model);
@@ -179,7 +189,6 @@ impl Context {
         physics.inverse_mass = 0.0;
 
         physics.anchor_id = anchor_id;
-
 
         self.ecs.set_physics(entity_id, physics);
 

@@ -28,7 +28,7 @@ A game in rust to learn rust and some opengl
 - [ ] camera rotate around player, ie. if distance less then follow_len don't update camera pos.
 - [x] return weapon anchor model-plane along with models, if existing
 - [x] Use weapon achor to get normal (weapon dir) and position in animation, use to generate an action that can be used for render and hitbox
-
+- [ ] load hitbox from blender models
 
 
 # complex model

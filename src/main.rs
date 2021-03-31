@@ -246,7 +246,10 @@ fn run() -> Result<(), failure::Error> {
             match CMD {
                 Command::Nop => {continue},
                 Command::Quit => { break 'main},
-                Command::ReloadActions => { ctx.reload_actions()},
+                Command::ReloadActions => {
+                    //ctx.reload_actions();
+                    ctx.load_model(ctx.player_weapon_id, na::Vector3::new(0.2, 0.2, 0.2), "models/sword.obj")?;
+                },
                 Command::SwitchRenderMode => {
                     ctx.render_context.switch_mode();
                 },

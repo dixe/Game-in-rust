@@ -39,6 +39,7 @@ impl From<roxmltree::Error> for Error {
 
 pub fn load_player_actions(res: &Resources) -> Result<ActionsImpl, Error> {
 
+    println!("Loading swing");
     let swing_name = "actions/swing.xml";
     let swing_data = res.load_string(swing_name)
         .map_err(|e| Error::ResourceLoad {
@@ -194,36 +195,5 @@ fn parse_point(string_data: &str) -> Result<na::Vector3::<f32>, Error> {
 mod tests {
 
     use crate::action_system::action_loader::*;
-
-
-
-    #[test]
-    fn parser_test_v1() {
-
-        let input = "<action>
-  <part start=\"0\" end=\"1\">
-    <cubic>
-      <p0 x=\"0\" y = \"0\" z =\"0\"/>
-      <p1 x=\"0\" y = \"0\" z =\"0\"/>
-      <p2 x=\"0\" y = \"0\" z =\"0\"/>
-            </cubic>
-            </part>
-            </action>
-            ";
-
-        let res = parse(input);
-
-        println!("{:#?}", res);
-
-        match res {
-            Ok(r) => {
-                assert!(r.len() == 1);
-            },
-            Err(err) => {
-                assert!(false);
-            }
-        };
-
-    }
 
 }

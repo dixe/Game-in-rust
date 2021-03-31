@@ -58,6 +58,13 @@ pub struct Side {
     pub v2: na::Vector3::<f32>
 }
 
+
+#[derive(Copy, Clone, Debug)]
+pub struct SatAxis {
+    pub v1: na::Vector3::<f32>,
+    pub v2: na::Vector3::<f32>
+}
+
 fn get_shape_vertices(shape: &ConvexCollisionShape) -> Vec<na::Vector3::<f32>> {
 
     let mut res = Vec::new();
