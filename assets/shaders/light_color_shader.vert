@@ -10,7 +10,6 @@ out VS_OUTPUT {
    vec3 FragPos;
 } OUT;
 
-uniform mat4 transform;
 
 uniform mat4 model;
 uniform mat4 view;
