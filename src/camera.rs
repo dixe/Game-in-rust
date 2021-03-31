@@ -231,6 +231,8 @@ impl Camera for FreeCamera {
         self.pos += self.front * dir.y * delta * speed;
 
         self.pos += self.right * dir.x * delta * speed;
+
+        self.pos += self.up * dir.z * delta * speed;
     }
 
     fn update_movement(&mut self, x_change: f32, y_change: f32) {
@@ -252,7 +254,6 @@ impl Camera for FreeCamera {
         if self.pitch < -max_pitch {
             self.pitch = -max_pitch;
         }
-
 
         self.update_camera_vectors();
     }

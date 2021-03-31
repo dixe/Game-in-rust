@@ -41,7 +41,6 @@ pub struct Context<'a> {
     pub enemy_model_id: usize,
 
     pub cube_shader: render_gl::Shader,
-    pub light_shader: render_gl::Shader,
 
     pub swing_animation: Option<render_gl::Animation>,
 
@@ -334,8 +333,6 @@ fn empty<'a>(camera: &'a mut camera::Camera) -> Result<Context<'a>, failure::Err
 
     let cube_shader = render_gl::Shader::new("light_color_shader", &render_context.res, &render_context.gl)?;
 
-    let light_shader = render_gl::Shader::new("lightcube", &render_context.res, &render_context.gl)?;
-
     let mut scene = scene::Scene::new(&level, &render_context)?;
 
     scene.add_box(na::Vector3::new(3.0, 0.0, 0.5));
@@ -365,7 +362,6 @@ fn empty<'a>(camera: &'a mut camera::Camera) -> Result<Context<'a>, failure::Err
         projectile_model_id: 9999,
         enemy_model_id: 9999,
         cube_shader,
-        light_shader,
         state: game::State::new(),
         player_weapon_id: 9999,
         swing_animation,

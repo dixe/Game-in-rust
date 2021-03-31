@@ -5,6 +5,8 @@ use gl;
 use crate::game;
 use crate::cube;
 use crate::controls;
+use crate::render_gl;
+use crate::physics;
 
 pub struct PhysicsTest {
     pub static_cube: cube::Cube,
@@ -12,6 +14,8 @@ pub struct PhysicsTest {
     pub static_pos: na::Vector3::<f32>,
     pub pos: na::Vector3::<f32>,
     pub rot: na::Vector3::<f32>,
+
+    pub col: bool
 }
 
 
@@ -34,6 +38,7 @@ impl PhysicsTest {
             static_pos: na::Vector3::new(-5.0, 0.0, 2.0),
             pos: na::Vector3::new(-5.0, 2.0, 2.0),
             rot: na::Vector3::new(0.0, 0.0, 0.0),
+            col: false
         }
     }
 
@@ -88,17 +93,51 @@ impl PhysicsTest {
             is_set
         });
 
+
+
+
+        let static_rot = na::Rotation3::new(na::Vector3::new(0.0, 0.0, 0.0));
+        let static_scale = na::Matrix3::identity();
+        let static_cb = physics::CollisionBox::new(self.static_pos, static_rot, static_scale);
+
+        let rot = na::Rotation3::new(self.rot);
+        let scale = na::Matrix3::identity();
+        let cb = physics::CollisionBox::new(self.pos, rot, scale);
+
+        self.col = physics::check_collision(&static_cb, &cb);
     }
 
 
-    pub fn render(&self, ctx: &game::Context) {
+    pub fn render(&self, ctx: &game::Context, shader: &render_gl::Shader) {
+
+        shader.set_used();
+
+        // CAN BE MOVED OUTSIDE THE LOOP
+
+
+
+        shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera.projection(), ctx.camera.view());
+
 
         let model_static = na::Matrix4::new_translation(&self.static_pos);
 
         let rot_mat = na::Matrix4::<f32>::new_rotation(self.rot);
         let model = na::Matrix4::new_translation(&self.pos);
+
+        // static cube
+        let static_color = na::Vector3::new(1.0, 1.0, 1.0);
+        shader.set_vec3(&ctx.render_context.gl, "color", static_color);
         self.static_cube.render(&ctx.render_context.gl, &ctx.cube_shader, model_static);
-        self.cube.render(&ctx.render_context.gl, &ctx.cube_shader, model * rot_mat);
+
+
+        // dynamic cube
+        let mut color = na::Vector3::new(1.0, 1.0, 1.0);
+
+        if self.col {
+            color = na::Vector3::new(1.0, 0.0, 0.0);
+        }
+        shader.set_vec3(&ctx.render_context.gl, "color", color);
+        self.cube.render(&ctx.render_context.gl, shader, model * rot_mat);
 
     }
 

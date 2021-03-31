@@ -156,6 +156,9 @@ fn run() -> Result<(), failure::Error> {
 
     let mut physics_test = physics_test::PhysicsTest::new(&ctx.render_context.gl);
 
+    let collision_shader = render_gl::Shader::new("collision_test_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
+
+
     ctx.controls.cam_mode = controls::CameraMode::Free;
 
     'main: loop{
@@ -194,18 +197,15 @@ fn run() -> Result<(), failure::Error> {
 
         //PHYSICS TEST
         physics_test.update(&ctx.controls, ctx.get_delta_time());
-        physics_test.render(&ctx);
+
+        physics_test.render(&ctx, &collision_shader);
 
 
 
         // RENDERING
         ctx.render();
 
-        ctx.light_shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera.projection(), ctx.camera.view());
-
         ctx.render_context.gl_swap_window();
-
-        //println!("{}, {}", ctx.get_delta_millis(), ctx.get_delta_time());
 
         unsafe {
             match CMD {
@@ -231,13 +231,27 @@ fn run() -> Result<(), failure::Error> {
 
 fn update_camera(ctx: &mut game::Context) {
 
+    use sdl2::keyboard::Keycode;
     println!("{:#?}", ctx.controls.movement_dir);
 
-    ctx.camera.move_camera(ctx.controls.movement_dir, ctx.get_delta_time());
+    let mut move_dir = ctx.controls.movement_dir;
 
+    if ctx.controls.cam_mode == controls::CameraMode::Free {
+        ctx.controls.keys.get(&Keycode::LShift).map(|is_set| {
+            if *is_set {
+                move_dir.z += 1.0;
+            }
+        });
+
+        ctx.controls.keys.get(&Keycode::LCtrl).map(|is_set| {
+            if *is_set {
+                move_dir.z -= 1.0;
+            }
+        });
+    }
+
+    ctx.camera.move_camera(move_dir, ctx.get_delta_time());
     ctx.camera.update_movement(ctx.controls.mouse_move.x, ctx.controls.mouse_move.y);
-
-
 }
 
 /*

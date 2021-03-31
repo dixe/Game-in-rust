@@ -19,7 +19,25 @@ pub struct CollisionBox {
 
 
 
+
+
 impl  CollisionBox {
+
+
+    pub fn new(center: na::Vector3::<f32>, rot: na::Rotation3::<f32>, scale: na::Matrix3::<f32> ) -> CollisionBox {
+
+        CollisionBox {
+            v0: rot * (scale * na::Vector3::new(-0.5, -0.5, -0.5)) + center,
+            v1: rot * (scale * na::Vector3::new(0.5, -0.5, -0.5) ) + center,
+            v2: rot * (scale * na::Vector3::new(0.5, 0.5, -0.5)) + center,
+            v3: rot * (scale * na::Vector3::new(-0.5, 0.5, -0.5)) + center,
+            v4: rot * (scale * na::Vector3::new(-0.5, -0.5, 0.5)) + center,
+            v5: rot * (scale * na::Vector3::new(0.5, -0.5, 0.5)) + center,
+            v6: rot * (scale * na::Vector3::new(0.5, 0.5, 0.5)) + center,
+            v7: rot * (scale * na::Vector3::new(-0.5, 0.5, 0.5)) + center,
+        }
+    }
+
 
     pub fn vertices(&self) -> Vec<na::Vector3::<f32>> {
         vec![ self.v0, self.v1, self.v2, self.v3, self.v4, self.v5, self.v6, self.v7]

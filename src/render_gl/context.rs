@@ -17,7 +17,6 @@ pub struct Context {
     pub gl: gl::Gl,
 
 
-    pub transform: na::Matrix4<f32>,
     pub viewport: render_gl::Viewport,
 
     controller: Option<sdl2::controller::GameController>,
@@ -103,8 +102,6 @@ pub fn setup(width: u32, height: u32) -> Result<Context, failure::Error>
 
     let wire_frame = false;
 
-    let transform = na::Matrix4::identity();
-
     unsafe {
         gl.Enable(gl::DEPTH_TEST);
     }
@@ -119,7 +116,6 @@ pub fn setup(width: u32, height: u32) -> Result<Context, failure::Error>
         window,
         gl,
         wire_frame,
-        transform,
         viewport,
         controller: None,
     })
