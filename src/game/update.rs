@@ -76,7 +76,8 @@ fn update_player_movement(ctx: &mut game::Context, player: &mut entity::Physics)
             let player_move_dir = rot_mat * na::Vector3::new(-ctx.controls.movement_dir.y, ctx.controls.movement_dir.x, 0.0);
 
             game::update_velocity(player, player_move_dir);
-        }
+        },
+        controls::CameraMode::Free => {},
     }
 
 

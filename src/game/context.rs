@@ -16,7 +16,7 @@ struct NewModel {
     init_physics: entity::Physics,
 }
 
-pub struct Context {
+pub struct Context<'a> {
 
     // should be in ecs
     //GAME STATE SHOULD MOVE INTO STRUCT/MODULE
@@ -30,7 +30,9 @@ pub struct Context {
     pub scene: scene::Scene,
     pub level: level::Level,
     pub render_context: render_gl::context::Context,
-    pub camera: camera::Camera,
+
+    pub camera: &'a mut camera::Camera,
+
 
     pub ecs: entity::EntityComponentSystem,
 
@@ -51,11 +53,11 @@ pub struct Context {
 
 }
 
-impl Context {
+impl Context<'_> {
 
-    pub fn new() -> Result<Context, failure::Error> {
+    pub fn new<'a>(camera: &'a mut camera::Camera) -> Result<Context<'a>, failure::Error> {
 
-        let mut ctx = empty()?;
+        let mut ctx = empty(camera)?;
 
         ctx.setup_player()?;
 
@@ -301,7 +303,6 @@ impl Context {
         // all in state
         self.state.render(&self.ecs, &self.render_context.gl, &self.cube_shader);
 
-
     }
 
 }
@@ -309,7 +310,7 @@ impl Context {
 
 
 
-fn empty() -> Result<Context, failure::Error> {
+fn empty<'a>(camera: &'a mut camera::Camera) -> Result<Context<'a>, failure::Error> {
 
     let width = 900;
     let height = 700;
@@ -323,9 +324,9 @@ fn empty() -> Result<Context, failure::Error> {
 
     background_color_buffer.set_used(&render_context.gl);
 
-    let mut camera = camera::Camera::new(width, height);
+    //let mut camera = camera::Camera::new(width, height);
 
-    camera.change_follow_dir(na::Vector3::new(0.0, 0.0, 0.0));
+    //camera.change_follow_dir(na::Vector3::new(0.0, 0.0, 0.0));
 
     let event_pump = render_context.sdl.event_pump().unwrap();
 
@@ -347,7 +348,8 @@ fn empty() -> Result<Context, failure::Error> {
 
     let player_color = na::Vector3::new(0.0, 1.0, 1.0);
     let mut swing_animation = None;
-    swing_animation = Some(render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?);
+    //swing_animation = Some(render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?);
+
 
 
     Ok(Context {
@@ -366,6 +368,6 @@ fn empty() -> Result<Context, failure::Error> {
         light_shader,
         state: game::State::new(),
         player_weapon_id: 9999,
-        swing_animation
+        swing_animation,
     })
 }

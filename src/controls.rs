@@ -6,22 +6,35 @@ use crate::render_gl;
 pub struct Controls {
     pub quit: bool,
     event_pump: sdl2::EventPump,
-    a: bool,
-    d: bool,
-    w: bool,
-    s: bool,
+    pub a: bool,
+    pub d: bool,
+    pub w: bool,
+    pub s: bool,
+    pub up: bool,
+    pub down: bool,
+    pub left: bool,
+    pub right: bool,
+    pub q: bool,
+    pub e: bool,
     pub movement_dir: na::Vector3::<f32>,
     pub right_stick: Option<na::Vector3::<f32>>,
     pub right_shoulder: bool,
     pub cam_mode: CameraMode,
     pub reset: bool,
+    pub keys: std::collections::HashMap<sdl2::keyboard::Keycode, bool>,
+
+    pub mouse_move: na::Vector2::<f32>,
+
+
+
 }
 
 
 #[derive(PartialEq)]
 pub enum CameraMode {
     Follow,
-    TopDown
+    TopDown,
+    Free
 }
 
 
@@ -46,9 +59,18 @@ impl Controls {
             w: false,
             s: false,
             d: false,
+            q: false,
+            e: false,
+            up: false,
+            down: false,
+            left: false,
+            right: false,
             right_shoulder: false,
             cam_mode: CameraMode::Follow,
-            reset: false
+            reset: false,
+            keys: std::collections::HashMap::new(),
+
+            mouse_move: na::Vector2::new(0.0, 0.0),
         }
     }
 
@@ -62,7 +84,8 @@ impl Controls {
         };
 
 
-        if self.a || self.w || self.d || self.s {
+        self.mouse_move = na::Vector2::new(0.0, 0.0);
+        if self.a || self.w || self.d || self.s  {
             self.movement_dir.x = 0.0;
             self.movement_dir.y = 0.0;
             self.movement_dir.z = 0.0;
@@ -94,10 +117,39 @@ impl Controls {
                         },
                         Some(sdl2::keyboard::Keycode::S) =>  {
                             self.s = false;
+                        }
+                        Some(sdl2::keyboard::Keycode::E) =>  {
+                            self.e = false;
                         },
+                        Some(sdl2::keyboard::Keycode::Q) =>  {
+                            self.q = false;
+                        },
+
+                        Some(sdl2::keyboard::Keycode::Left) =>  {
+                            self.left = false;
+                        },
+                        Some(sdl2::keyboard::Keycode::Right) =>  {
+                            self.right = false;
+                        },
+                        Some(sdl2::keyboard::Keycode::Down) =>  {
+                            self.down = false;
+                        },
+                        Some(sdl2::keyboard::Keycode::Up) =>  {
+                            self.up = false;
+                        },
+                        Some(sdl2::keyboard::Keycode::A) =>  {
+                            self.s = false;
+                        }
+
+                        Some(key) => {
+                            self.keys.insert(key, false);
+                        },
+
                         _ => {}
+
                     }
                 },
+
                 Event::KeyDown {keycode, ..} =>  {
                     match keycode {
                         Some(sdl2::keyboard::Keycode::A) =>  {
@@ -112,6 +164,27 @@ impl Controls {
                         Some(sdl2::keyboard::Keycode::S) =>  {
                             self.s = true;
                         },
+                        Some(sdl2::keyboard::Keycode::E) =>  {
+                            self.e = true;
+                        },
+                        Some(sdl2::keyboard::Keycode::Q) =>  {
+                            self.q = true;
+                        },
+
+                        Some(sdl2::keyboard::Keycode::Left) =>  {
+                            self.left = true;
+                        },
+                        Some(sdl2::keyboard::Keycode::Right) =>  {
+                            self.right = true;
+                        },
+                        Some(sdl2::keyboard::Keycode::Down) =>  {
+                            self.down = true;
+                        },
+                        Some(sdl2::keyboard::Keycode::Up) =>  {
+                            self.up = true;
+                        },
+
+
                         Some(sdl2::keyboard::Keycode::Escape) =>  {
                             self.quit = true;
                         },
@@ -126,6 +199,7 @@ impl Controls {
                                 },
                                 CameraMode::Follow => { self.cam_mode = CameraMode::TopDown;
                                 },
+                                _ => {}
                             }
 
                         },
@@ -134,6 +208,11 @@ impl Controls {
                         Some(sdl2::keyboard::Keycode::N) =>  {
                             action = Action::AddEnemy
                         },
+
+                        Some(key) => {
+                            self.keys.insert(key, true);
+                        },
+
                         _ => {}
                     }
                 },
@@ -179,6 +258,11 @@ impl Controls {
 
                 Event::ControllerDeviceAdded {which,..} => {
                     ctx.set_controller(which);
+                },
+                Event::MouseMotion {xrel, yrel, x, y, ..} => {
+                    println!("x: {}\ny: {}",xrel,yrel);
+                    self.mouse_move.x = xrel as f32;
+                    self.mouse_move.y = yrel as f32;
                 },
                 _ => {
                     //println!("Pressed : {:#?} ", a);

@@ -70,6 +70,10 @@ pub fn setup(width: u32, height: u32) -> Result<Context, failure::Error>
     let sdl = sdl2::init().unwrap();
     let video_subsystem = sdl.video().unwrap();
 
+    sdl.mouse().show_cursor(false);
+
+    sdl.mouse().set_relative_mouse_mode(true);
+
     let controller_subsystem = sdl.game_controller().unwrap();
 
     controller_subsystem.set_event_state(true);
@@ -87,6 +91,8 @@ pub fn setup(width: u32, height: u32) -> Result<Context, failure::Error>
         .opengl()
         .resizable()
         .build()?;
+
+    window.grab();
 
     let gl_context = window.gl_create_context().unwrap();
     let gl = gl::Gl::load_with(|s|{
