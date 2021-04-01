@@ -78,12 +78,49 @@ pub fn get_absoulte_physics(entity_id: usize, ecs: &entity::EntityComponentSyste
     };
 
 
-    let rot_mat = na::Matrix3::<f32>::new_rotation(anchor_physics.rotation.z);
+
+
+    //let rot_mat = na::Matrix3::<f32>::new_rotation(anchor_physics.rotation.z);
+
+    let rot_mat = na::Rotation3::from_euler_angles(anchor_physics.rotation.x, anchor_physics.rotation.y, anchor_physics.rotation.z);
 
     anchor_point.pos = rot_mat * anchor_point.pos;
     let rotated_pos = rot_mat * physics.pos;
 
+
+
+
     physics.rotation += anchor_physics.rotation;
+
+    while physics.rotation.z > std::f32::consts::PI {
+        physics.rotation.z -= std::f32::consts::PI * 2.0 ;
+    }
+
+    while physics.rotation.x > std::f32::consts::PI {
+        physics.rotation.x -= std::f32::consts::PI * 2.0 ;
+    }
+
+    while physics.rotation.y > std::f32::consts::PI * 2.0 {
+        physics.rotation.y -= std::f32::consts::PI * 2.0 ;
+    }
+
+
+
+    while physics.rotation.z < -std::f32::consts::PI {
+        physics.rotation.z += std::f32::consts::PI * 2.0 ;
+    }
+
+    while physics.rotation.x < -std::f32::consts::PI {
+        physics.rotation.x += std::f32::consts::PI * 2.0 ;
+    }
+
+    while physics.rotation.y < -std::f32::consts::PI {
+        physics.rotation.y += std::f32::consts::PI * 2.0 ;
+    }
+
+
+
+    println!("{:#?}", physics.rotation);
 
     physics.pos = rotated_pos + anchor_physics.pos + anchor_point.pos;
     Some(physics)

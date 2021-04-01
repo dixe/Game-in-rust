@@ -106,13 +106,13 @@ fn parse_xml_parts(node: &roxmltree::Node) -> Result<Vec<Part>, Error> {
 
 fn parse_xml_part(node: &roxmltree::Node) -> Result<Part, Error> {
 
-    // parse a curve
+    // parse a part
 
     let cubic = node.descendants().find(|n| n.has_tag_name("cubic"));
 
-    let parsed_curve: Option<action_system::Curve>;
+    let positions_curve: Option<action_system::Curve>;
 
-    parsed_curve = cubic.and_then(|c| {
+    positions_curve = cubic.and_then(|c| {
         match parse_xml_cubic(&c) {
             Ok(cub) => Some(cub),
             _ => None
@@ -121,7 +121,7 @@ fn parse_xml_part(node: &roxmltree::Node) -> Result<Part, Error> {
     });
 
 
-    if parsed_curve.is_none() {
+    if positions_curve.is_none() {
         return Err(Error::NoCurve);
     }
 
@@ -129,9 +129,16 @@ fn parse_xml_part(node: &roxmltree::Node) -> Result<Part, Error> {
     let start = get_attrib::<f32>(node, "start")?;
     let end = get_attrib::<f32>(node, "end")?;
 
-    let curve: action_system::Curve = parsed_curve.unwrap();
+    let positions: action_system::Curve = positions_curve.unwrap();
+
+
+    //TODO load of normals into a curve list positions
+    let normals = Curve::Linear(na::Vector3::new(0.0, 0.0, 1.0), na::Vector3::new(0.0, 0.0, 1.0));
+
+
     Ok(Part{
-        curve,
+        positions,
+        normals,
         start,
         end})
 }

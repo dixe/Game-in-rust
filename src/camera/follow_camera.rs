@@ -11,7 +11,8 @@ pub struct FollowCamera {
     pub width: f32,
     pub height: f32,
     pub fov: f32,
-
+    pub max_dist: f32,
+    pub max_pitch: f32,
 }
 
 
@@ -21,7 +22,7 @@ impl FollowCamera {
     pub fn new(_width: u32, _height: u32) -> FollowCamera {
 
 
-        let pos = na::Vector3::new(0.0, 0.0, 3.0);
+        let pos = na::Vector3::new(-5.0, 0.0, 5.0);
         let target = na::Vector3::new(0.0, 0.0, 3.0);
         let look_dir = na::Vector3::new(0.0, 0.0, 0.0);
         let up = na::Vector3::new(0.0, 0.0, 1.0);
@@ -36,7 +37,9 @@ impl FollowCamera {
             right,
             width: 900.0,
             height: 700.0,
-            fov: 60.0
+            fov: 60.0,
+            max_dist: 12.0,
+            max_pitch: 80.0_f32.to_radians(),
         }
     }
 }
@@ -59,7 +62,7 @@ impl Camera for FollowCamera {
 
 
         let speed = 0.4;
-        let change_x = self.right * (x_change * speed);
+        let change_x = self.right * (-x_change * speed);
 
         let change_y = self.up * (y_change * speed);
 
@@ -67,9 +70,9 @@ impl Camera for FollowCamera {
 
         let new_pitch = f32::asin(-(self.target - self.pos).normalize().z);
 
-        let max_pitch = 80.0_f32.to_radians();
 
-        if new_pitch < max_pitch || y_change < 0.0 {
+
+        if new_pitch < self.max_pitch || y_change < 0.0 {
             self.pos = new_pos;
         }
         else {
@@ -83,22 +86,6 @@ impl Camera for FollowCamera {
 
 
     fn update_camera_vectors(&mut self) {
-        // if distance is too far, move camera closer
-
-        let dist_vec = self.pos - self.target;
-
-        let dist = dist_vec.magnitude();
-        self.look_dir = (self.target - self.pos).normalize();
-
-        if dist > 10.0 {
-            self.pos = self.target - self.look_dir.normalize() * (10.0);
-        }
-
-        if dist < 3.0 {
-            self.pos.z += 1.0;
-        }
-
-
         self.look_dir = (self.target - self.pos).normalize();
         self.right = self.look_dir.cross(&self.world_up).normalize();
         self.up = self.right.cross(&self.look_dir).normalize();
@@ -112,7 +99,16 @@ impl Camera for FollowCamera {
 
     fn update_target(&mut self, target: na::Vector3::<f32>)  {
         self.target = target;
-        self.look_dir = (target - self.pos).normalize();
+        let new_dist = (self.target - self.pos).magnitude();
+
+
+
+        if new_dist < self.max_dist {
+            self.look_dir = (self.target - self.pos).normalize();
+        }
+        else {
+            self.pos = self.target - self.look_dir * self.max_dist;
+        }
 
 
         self.update_camera_vectors();

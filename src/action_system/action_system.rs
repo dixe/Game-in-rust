@@ -27,7 +27,8 @@ pub enum Curve {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Part {
-    pub curve: Curve,
+    pub positions: Curve,
+    pub normals: Curve,
     pub start: f32,
     pub end: f32
 }
@@ -42,15 +43,38 @@ pub struct BezierAction {
 impl BezierAction {
     pub fn update(&self, time_passed: f32, physics: &mut entity::Physics, init: &entity::Physics) {
 
+        let base = na::Vector3::new(0.0, 0.0, 1.0);
+
         for p in self.parts.iter() {
             if p.start <= time_passed && time_passed <= p.end {
 
                 let t = clamp01(time_passed, p.start, p.end);
 
-                let bz = match p.curve {
+                let bz = match p.positions {
                     Curve::Linear(p0, p1) => action_system::bezier_linear(t, p0, p1),
                     Curve::Cubic(p0, p1, p2) => action_system::bezier_cubic(t, p0, p1, p2),
                 };
+
+
+                let bz_normal = match p.normals {
+                    Curve::Linear(p0, p1) => action_system::bezier_linear(t, p0, p1),
+                    Curve::Cubic(p0, p1, p2) => action_system::bezier_cubic(t, p0, p1, p2),
+                };
+
+
+                //TODO handle NAN when bz_normal is also 0 0 1
+
+
+                let mut rot_axis = base.cross(&bz_normal);
+
+                let angle = (bz_normal.dot(&base)).acos();
+
+                let rot = na::Rotation3::from_axis_angle(&na::Unit::new_normalize(rot_axis), angle);
+                let (rx,ry,rz) = rot.euler_angles();
+
+                physics.rotation.x = rx;
+                physics.rotation.y = ry;
+                physics.rotation.z = rz;
 
                 physics.pos = init.pos + bz;
             }
@@ -142,16 +166,26 @@ pub fn from_anchor_points(in_an: &Vec<entity::AnchorPoint>, base_anchor: entity:
 
     while i < anchors.len() {
 
+
+
         let prev = anchors[i - 1];
         let this = anchors[i];
 
-        let curve = Curve::Linear(prev.pos - base_anchor.pos, this.pos - base_anchor.pos);
+        let norm_diff = this.normal - prev.normal;
+
+        let rotation = na::Rotation3::new(norm_diff);
+
+
+        let positions = Curve::Linear(prev.pos - base_anchor.pos, this.pos - base_anchor.pos);
+        let normals = Curve::Linear(prev.normal, this.normal);
+
 
         let start = ((i-1) as f32) * step;
         let end = (i as f32) * step;
 
         let part =  Part {
-	    curve,
+	    positions,
+            normals,
             start,
             end
         };

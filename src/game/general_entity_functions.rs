@@ -8,7 +8,7 @@ pub fn add_projectile(projectilies: &mut std::collections::HashSet<usize>,
                       shooter_ref: &entity::Shooter,
                       shoot_dir: na::Vector3::<f32>,
                       entity_id: usize,
-                      _model_id: usize) {
+                      model_id: usize) {
 
     let mut shooter = *shooter_ref;
     if !shooter.can_shoot() {
@@ -38,7 +38,7 @@ pub fn add_projectile(projectilies: &mut std::collections::HashSet<usize>,
     physics.scale = 0.5;
     ecs.set_physics(id, physics);
 
-
+    ecs.set_model(id, model_id);
     let shot = entity::Shot::new(id, (shooter.speed * shooter.distance) / 1000.0);
 
     ecs.set_shot(id, shot);

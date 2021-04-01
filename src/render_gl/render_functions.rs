@@ -47,8 +47,11 @@ pub fn render(ecs: &entity::EntityComponentSystem, entity_id: usize, gl: &gl::Gl
                     let model_mat = calculate_model_mat(&physics);
                     m.render_from_model_mat(gl, shader, model_mat);
                 },
-                _ => {}
-            };
+                _ => {
+
+
+                }
+            }
         }
     }
 }
