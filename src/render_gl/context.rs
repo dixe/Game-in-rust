@@ -91,7 +91,7 @@ pub fn setup(width: u32, height: u32) -> Result<Context, failure::Error>
         .resizable()
         .build()?;
 
-    window.grab();
+
 
     let gl_context = window.gl_create_context().unwrap();
     let gl = gl::Gl::load_with(|s|{

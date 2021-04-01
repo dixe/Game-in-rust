@@ -3,6 +3,8 @@ use crate::physics;
 use crate::entity;
 use crate::action_system;
 use crate::controls;
+use crate::camera;
+
 
 pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::EntityCollision>) {
 
@@ -26,7 +28,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
         None => return, // Dead player, don't care about ai update
     };
 
-    update_player_movement(ctx, &mut player);
+    update_player_movement(ctx, &mut player, delta);
 
 
     ctx.ecs.set_physics(ctx.player_id, player);
@@ -58,31 +60,29 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 }
 
 
-fn update_player_movement(ctx: &mut game::Context, player: &mut entity::Physics) {
+fn update_player_movement(ctx: &mut game::Context, player: &mut entity::Physics, delta:  f32) {
     if ctx.state.player_state != game::PlayerState::Moving {
         game::update_velocity(player, na::Vector3::new(0.0, 0.0, 0.0));
         return;
     }
 
-    match ctx.controls.cam_mode {
-        controls::CameraMode::TopDown => {
-            game::update_velocity(player, ctx.controls.movement_dir);
-        },
-        controls::CameraMode::Follow => {
 
-            let z_rot = ctx.camera.z_rotation();
+    match ctx.camera().mode() {
+        camera::CameraMode::Follow => {
+            let z_rot = ctx.camera().z_rotation();
 
             let rot_mat = na::Matrix3::new_rotation(z_rot);
             let player_move_dir = rot_mat * na::Vector3::new(-ctx.controls.movement_dir.y, ctx.controls.movement_dir.x, 0.0);
 
             game::update_velocity(player, player_move_dir);
+
+            if player_move_dir.magnitude() > 0.0 {
+                player.target_dir = player_move_dir.normalize();
+            }
+
         },
-        controls::CameraMode::Free => {},
-    }
 
-
-    if player.velocity.magnitude() > 0.0 {
-        game::update_rotation(player, player.velocity);
+        camera::CameraMode::Free => {},
     }
 
 }

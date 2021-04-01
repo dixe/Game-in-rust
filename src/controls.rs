@@ -1,7 +1,8 @@
 use nalgebra as na;
 use sdl2;
 use crate::render_gl;
-
+use crate::camera;
+use crate::game;
 
 pub struct Controls {
     pub quit: bool,
@@ -19,7 +20,6 @@ pub struct Controls {
     pub movement_dir: na::Vector3::<f32>,
     pub right_stick: Option<na::Vector3::<f32>>,
     pub right_shoulder: bool,
-    pub cam_mode: CameraMode,
     pub reset: bool,
     pub keys: std::collections::HashMap<sdl2::keyboard::Keycode, bool>,
 
@@ -28,15 +28,6 @@ pub struct Controls {
 
 
 }
-
-
-#[derive(PartialEq)]
-pub enum CameraMode {
-    Follow,
-    TopDown,
-    Free
-}
-
 
 #[derive(Debug)]
 pub enum Action {
@@ -66,7 +57,6 @@ impl Controls {
             left: false,
             right: false,
             right_shoulder: false,
-            cam_mode: CameraMode::Follow,
             reset: false,
             keys: std::collections::HashMap::new(),
 
@@ -74,7 +64,7 @@ impl Controls {
         }
     }
 
-    pub fn handle_inputs(&mut self,  ctx: &mut render_gl::context::Context) -> Action  {
+    pub fn handle_inputs(&mut self, ctx: &mut render_gl::context::Context, cameras: &mut game::Cameras ) -> Action  {
 
         self.reset = false;
         let mut action = Action::NoAction;
@@ -193,13 +183,16 @@ impl Controls {
                             ctx.switch_mode();
                         },
                         Some(sdl2::keyboard::Keycode::C) =>  {
-                            println!("Switch Cam mdoe");
-                            match &self.cam_mode {
-                                CameraMode::TopDown => { self.cam_mode = CameraMode::Follow;
+
+                            match cameras.mode {
+                                camera::CameraMode::Follow => {
+                                    println!("Switch camera to free");
+                                    cameras.mode = camera::CameraMode::Free
                                 },
-                                CameraMode::Follow => { self.cam_mode = CameraMode::TopDown;
+                                camera::CameraMode::Free => {
+                                    println!("Switch camera to follow");
+                                    cameras.mode = camera::CameraMode::Follow
                                 },
-                                _ => {}
                             }
 
                         },
@@ -260,7 +253,6 @@ impl Controls {
                     ctx.set_controller(which);
                 },
                 Event::MouseMotion {xrel, yrel, x, y, ..} => {
-                    println!("x: {}\ny: {}",xrel,yrel);
                     self.mouse_move.x = xrel as f32;
                     self.mouse_move.y = yrel as f32;
                 },

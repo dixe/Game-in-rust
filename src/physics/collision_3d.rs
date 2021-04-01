@@ -18,11 +18,7 @@ pub struct CollisionBox {
 }
 
 
-
-
-
 impl  CollisionBox {
-
 
     pub fn new(center: na::Vector3::<f32>, rot: na::Rotation3::<f32>, scale: na::Matrix3::<f32> ) -> CollisionBox {
 
@@ -82,7 +78,6 @@ pub struct AxisBox {
     pub max_y: f32,
     pub min_z: f32,
     pub max_z: f32,
-
 }
 
 
@@ -163,11 +158,6 @@ fn axis_aligned_collision(box_1: &CollisionBox, box_2: &CollisionBox) -> bool {
     let res = (ab_1.min_x <= ab_2.max_x && ab_1.max_x >= ab_2.min_x) &&
         (ab_1.min_y <= ab_2.max_y && ab_1.max_y >= ab_2.min_y) &&
         (ab_1.min_z <= ab_2.max_z && ab_1.max_z >= ab_2.min_z);
-
-
-
-    println!("AB 1{:#?}", ab_1);
-    println!("AB 2{:#?}", ab_2);
 
     res
 }

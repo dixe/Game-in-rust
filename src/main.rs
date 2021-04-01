@@ -151,15 +151,12 @@ fn copy_assets() {
 
 fn run() -> Result<(), failure::Error> {
 
-    let mut camera =  camera::FreeCamera::new();
-    let mut ctx = game::Context::new(&mut camera)?;
+
+    let mut ctx = game::Context::new()?;
 
     let mut physics_test = physics_test::PhysicsTest::new(&ctx.render_context.gl);
 
     let collision_shader = render_gl::Shader::new("collision_test_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
-
-
-    ctx.controls.cam_mode = controls::CameraMode::Free;
 
     'main: loop{
         ctx.update_delta();
@@ -192,7 +189,7 @@ fn run() -> Result<(), failure::Error> {
 
         //UPDATE CAMERA IF FOLLOW MODE
 
-        update_camera(&mut ctx);
+        update_free_camera(&mut ctx);
 
 
         //PHYSICS TEST
@@ -229,14 +226,15 @@ fn run() -> Result<(), failure::Error> {
 
 
 
-fn update_camera(ctx: &mut game::Context) {
+fn update_free_camera(ctx: &mut game::Context) {
 
     use sdl2::keyboard::Keycode;
-    println!("{:#?}", ctx.controls.movement_dir);
+
 
     let mut move_dir = ctx.controls.movement_dir;
 
-    if ctx.controls.cam_mode == controls::CameraMode::Free {
+
+    if ctx.camera().mode() == camera::CameraMode::Free {
         ctx.controls.keys.get(&Keycode::LShift).map(|is_set| {
             if *is_set {
                 move_dir.z += 1.0;
@@ -250,8 +248,13 @@ fn update_camera(ctx: &mut game::Context) {
         });
     }
 
-    ctx.camera.move_camera(move_dir, ctx.get_delta_time());
-    ctx.camera.update_movement(ctx.controls.mouse_move.x, ctx.controls.mouse_move.y);
+    let delta = ctx.get_delta_time();
+    ctx.camera_mut().move_camera(move_dir, delta);
+
+    let mouse_move = ctx.controls.mouse_move;
+
+
+    ctx.camera_mut().update_movement(mouse_move.x, mouse_move.y);
 }
 
 /*
@@ -264,7 +267,7 @@ let default = entity::Physics::new(0);
 let physics = ctx.ecs.get_physics(ctx.player_id).unwrap_or(&default);
 
 
-ctx.camera.set_target(physics.pos);
+ctx.camera().set_target(physics.pos);
 
 
 if ctx.controls.movement_dir.magnitude() > 0.0 && ctx.controls.right_stick.is_none(){
@@ -272,13 +275,13 @@ if ctx.controls.movement_dir.magnitude() > 0.0 && ctx.controls.right_stick.is_no
 let z_rot =  physics.rotation.z;
 
 /*println!("\n\n\n");
-println!("BEHIND VEC: {:#?}", player_behind_vec);//ctx.camera.follow_dir);
+println!("BEHIND VEC: {:#?}", player_behind_vec);//ctx.camera().follow_dir);
 println!("FOLLOW VEC: {:#?}", behind_xy);
 println!("DIFF: {:#?}", diff);
 
  */
 
-let mut rot_diff = ctx.camera.follow_yaw - (z_rot + 180.0_f32.to_radians());
+let mut rot_diff = ctx.camera().follow_yaw - (z_rot + 180.0_f32.to_radians());
 
 if rot_diff < -std::f32::consts::PI {
 rot_diff += 2.0 * std::f32::consts::PI;
@@ -293,13 +296,13 @@ rot_diff += 2.0 * std::f32::consts::PI;
     rot_diff = f32::min(smooth, f32::max(-smooth, rot_diff));
     let change_vec = na::Vector3::new(rot_diff, 0.0, 0.0) ;
 
-    ctx.camera.change_follow_dir(change_vec);
+    ctx.camera().change_follow_dir(change_vec);
 
 }
 
     let right_stick = ctx.controls.right_stick;
 
-    right_stick.map(|dir| ctx.camera.change_follow_dir(dir));
+    right_stick.map(|dir| ctx.camera().change_follow_dir(dir));
 }
 
     if ctx.controls.cam_mode == controls::CameraMode::Free {
@@ -321,15 +324,15 @@ rot_diff += 2.0 * std::f32::consts::PI;
     dir.y -= speed
 }
 
-    ctx.camera.cam_target +=  dir * ctx.get_delta_time();
+    ctx.camera().cam_target +=  dir * ctx.get_delta_time();
 
-    ctx.camera.cam_pos += dir * ctx.get_delta_time();
+    ctx.camera().cam_pos += dir * ctx.get_delta_time();
 
     let sens = 0.005;
-    ctx.camera.follow_yaw += ctx.controls.mouse_move.y * sens;
-    ctx.camera.follow_pitch += ctx.controls.mouse_move.x * sens;
+    ctx.camera().follow_yaw += ctx.controls.mouse_move.y * sens;
+    ctx.camera().follow_pitch += ctx.controls.mouse_move.x * sens;
 
-    ctx.camera.update_target();
+    ctx.camera().update_target();
 
 
 }

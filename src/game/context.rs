@@ -16,7 +16,14 @@ struct NewModel {
     init_physics: entity::Physics,
 }
 
-pub struct Context<'a> {
+pub struct Cameras {
+    free_camera: camera::FreeCamera,
+    follow_camera: camera::FollowCamera,
+    pub mode: camera::CameraMode,
+}
+
+
+pub struct Context {
 
     // should be in ecs
     //GAME STATE SHOULD MOVE INTO STRUCT/MODULE
@@ -31,7 +38,9 @@ pub struct Context<'a> {
     pub level: level::Level,
     pub render_context: render_gl::context::Context,
 
-    pub camera: &'a mut camera::Camera,
+
+    // CAMERAS
+    cameras: Cameras,
 
 
     pub ecs: entity::EntityComponentSystem,
@@ -52,11 +61,11 @@ pub struct Context<'a> {
 
 }
 
-impl Context<'_> {
+impl Context {
 
-    pub fn new<'a>(camera: &'a mut camera::Camera) -> Result<Context<'a>, failure::Error> {
+    pub fn new() -> Result<Context, failure::Error> {
 
-        let mut ctx = empty(camera)?;
+        let mut ctx = empty()?;
 
         ctx.setup_player()?;
 
@@ -120,7 +129,9 @@ impl Context<'_> {
         self.ecs.set_shooter(player_id, player_shooter);
 
 
-        let physics = entity::Physics::new(player_id);
+        let mut physics = entity::Physics::new(player_id);
+        physics.pos.x = -5.0;
+
 
         self.ecs.set_physics(player_id, physics);
 
@@ -233,6 +244,26 @@ impl Context<'_> {
     }
 
 
+    pub fn camera(&self) -> &camera::Camera {
+        match self.cameras.mode {
+            camera::CameraMode::Free =>
+                &self.cameras.free_camera,
+            camera::CameraMode::Follow =>
+                &self.cameras.follow_camera,
+        }
+    }
+
+
+    pub fn camera_mut(&mut self) -> &mut camera::Camera {
+        match self.cameras.mode {
+            camera::CameraMode::Free =>
+                &mut self.cameras.free_camera,
+            camera::CameraMode::Follow =>
+                &mut self.cameras.follow_camera,
+        }
+    }
+
+
     pub fn reload_actions (&mut self) {
         let actions = action_system::load_player_actions(&self.render_context.res);
         match actions {
@@ -240,7 +271,6 @@ impl Context<'_> {
             Err(err) => println!("Reload actions error: {:#?}", err),
         }
     }
-
 
 
     // Call once pr update step
@@ -254,7 +284,7 @@ impl Context<'_> {
 
 
     pub fn handle_inputs(&mut self) {
-        let action = self.controls.handle_inputs(&mut self.render_context);
+        let action = self.controls.handle_inputs(&mut self.render_context, &mut self.cameras);
 
         match action {
             controls::Action::AddEnemy => self.add_enemy(),
@@ -274,7 +304,7 @@ impl Context<'_> {
         self.cube_shader.set_vec3(&self.render_context.gl, "lightPos", na::Vector3::new(0.0, 0.0, 5.0)); //
         self.cube_shader.set_vec3(&self.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
 
-        self.cube_shader.set_projection_and_view(&self.render_context.gl, self.camera.projection(), self.camera.view());
+        self.cube_shader.set_projection_and_view(&self.render_context.gl, self.camera().projection(), self.camera().view());
 
         self.scene.render(&self.render_context.gl, &self.cube_shader);
 
@@ -309,7 +339,7 @@ impl Context<'_> {
 
 
 
-fn empty<'a>(camera: &'a mut camera::Camera) -> Result<Context<'a>, failure::Error> {
+fn empty() -> Result<Context, failure::Error> {
 
     let width = 900;
     let height = 700;
@@ -323,9 +353,12 @@ fn empty<'a>(camera: &'a mut camera::Camera) -> Result<Context<'a>, failure::Err
 
     background_color_buffer.set_used(&render_context.gl);
 
-    //let mut camera = camera::Camera::new(width, height);
 
-    //camera.change_follow_dir(na::Vector3::new(0.0, 0.0, 0.0));
+    let follow_camera = camera::FollowCamera::new(width, height); //
+    let free_camera = camera::FreeCamera::new();
+
+
+
 
     let event_pump = render_context.sdl.event_pump().unwrap();
 
@@ -348,6 +381,13 @@ fn empty<'a>(camera: &'a mut camera::Camera) -> Result<Context<'a>, failure::Err
     //swing_animation = Some(render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?);
 
 
+    let cameras = Cameras {
+        free_camera,
+        follow_camera,
+        mode: camera::CameraMode::Free
+    };
+
+
 
     Ok(Context {
         player_id: 9999,
@@ -355,7 +395,6 @@ fn empty<'a>(camera: &'a mut camera::Camera) -> Result<Context<'a>, failure::Err
         controls,
         render_context,
         level,
-        camera,
         delta_time,
         ecs,
         actions,
@@ -365,5 +404,6 @@ fn empty<'a>(camera: &'a mut camera::Camera) -> Result<Context<'a>, failure::Err
         state: game::State::new(),
         player_weapon_id: 9999,
         swing_animation,
+        cameras,
     })
 }

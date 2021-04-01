@@ -7,6 +7,7 @@ pub struct Physics {
     pub velocity: na::Vector3<f32>,
     pub max_speed: f32,
     pub rotation: na::Vector3<f32>,
+    pub target_dir: na::Vector3<f32>,
     pub scale: f32,
     //
     pub inverse_mass: f32,
@@ -20,6 +21,7 @@ impl Physics {
             rotation: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             pos: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
+            target_dir: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             max_speed: 10.0,
             //TODO remove from phyiscs
             inverse_mass: 1.0,
