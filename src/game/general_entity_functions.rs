@@ -8,7 +8,7 @@ pub fn add_projectile(projectilies: &mut std::collections::HashSet<usize>,
                       shooter_ref: &entity::Shooter,
                       shoot_dir: na::Vector3::<f32>,
                       entity_id: usize,
-                      model_id: usize) {
+                      _model_id: usize) {
 
     let mut shooter = *shooter_ref;
     if !shooter.can_shoot() {

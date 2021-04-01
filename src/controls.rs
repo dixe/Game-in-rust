@@ -127,9 +127,6 @@ impl Controls {
                         Some(sdl2::keyboard::Keycode::Up) =>  {
                             self.up = false;
                         },
-                        Some(sdl2::keyboard::Keycode::A) =>  {
-                            self.s = false;
-                        }
 
                         Some(key) => {
                             self.keys.insert(key, false);
@@ -252,7 +249,7 @@ impl Controls {
                 Event::ControllerDeviceAdded {which,..} => {
                     ctx.set_controller(which);
                 },
-                Event::MouseMotion {xrel, yrel, x, y, ..} => {
+                Event::MouseMotion {xrel, yrel, x: _, y: _, ..} => {
                     self.mouse_move.x = xrel as f32;
                     self.mouse_move.y = yrel as f32;
                 },

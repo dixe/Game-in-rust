@@ -97,7 +97,7 @@ impl Context {
 
         // RELOADING MODELS WITH THIS WILL LEAK THE DATA, SINCE IT WILL ONLY ADD TO MODELS VEC
         // BUT NOT REMOVE THE OLD UNUSED ONES. FINE FOR DEBUGGING
-        let (model, anchors) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
+        let (model, _anchors) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
 
         let model_entity = entity::Model::wave_model(model);
         let model_id = self.ecs.add_model(model_entity);
@@ -160,7 +160,7 @@ impl Context {
         self.player_weapon_id = sword.entity_id;
 
         // SWORD ACTION
-        let sword_idle = entity::ActionData::new(action_system::Actions::Idle, None, sword.init_physics);
+        let _sword_idle = entity::ActionData::new(action_system::Actions::Idle, None, sword.init_physics);
         let actions_info = entity::ActionsInfo::new(sword.entity_id, None);
 
         self.ecs.set_actions_info(sword.entity_id, actions_info);
@@ -189,7 +189,7 @@ impl Context {
     fn add_model_with_physics(&mut self, clr: na::Vector3::<f32>, scale: f32, anchor_id: Option<usize>, model_path: &str) -> Result<NewModel, failure::Error>  {
 
 
-        let (model, anchors) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
+        let (model, _anchors) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
         let model_entity = entity::Model::wave_model(model);
         let model_id = self.ecs.add_model(model_entity);
         let entity_id = self.ecs.add_entity();
@@ -244,7 +244,7 @@ impl Context {
     }
 
 
-    pub fn camera(&self) -> &camera::Camera {
+    pub fn camera(&self) -> &dyn camera::Camera {
         match self.cameras.mode {
             camera::CameraMode::Free =>
                 &self.cameras.free_camera,
@@ -254,7 +254,7 @@ impl Context {
     }
 
 
-    pub fn camera_mut(&mut self) -> &mut camera::Camera {
+    pub fn camera_mut(&mut self) -> &mut dyn camera::Camera {
         match self.cameras.mode {
             camera::CameraMode::Free =>
                 &mut self.cameras.free_camera,
@@ -314,7 +314,7 @@ impl Context {
             (game::PlayerState::Attacking, Some(ref swing)) => {
                 // get player action and how far we are in it
 
-                let info = self.ecs.get_actions_info(self.player_weapon_id);
+                let _info = self.ecs.get_actions_info(self.player_weapon_id);
 
                 let percent = self.ecs.get_actions_info(self.player_weapon_id).and_then(|info| info.active.map(|a| a.percent_done())).unwrap_or_default();
 
@@ -374,10 +374,10 @@ fn empty() -> Result<Context, failure::Error> {
 
     let delta_time = deltatime::Deltatime::new();
 
-    let mut actions = action_system::load_player_actions(&render_context.res)?;
+    let actions = action_system::load_player_actions(&render_context.res)?;
 
-    let player_color = na::Vector3::new(0.0, 1.0, 1.0);
-    let mut swing_animation = None;
+    let _player_color = na::Vector3::new(0.0, 1.0, 1.0);
+    let swing_animation = None;
     //swing_animation = Some(render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?);
 
 

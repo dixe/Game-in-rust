@@ -27,9 +27,9 @@ impl PhysicsTest {
 
         let static_clr = na::Vector3::new(0.0, 0.0, 1.0);
 
-        let static_cube = cube::Cube::new(static_clr, gl);
+        let _static_cube = cube::Cube::new(static_clr, gl);
 
-        let cube = cube::Cube::new(clr, gl);
+        let _cube = cube::Cube::new(clr, gl);
 
 
         PhysicsTest {

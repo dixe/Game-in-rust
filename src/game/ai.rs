@@ -10,7 +10,6 @@ pub fn run_ai(ctx: &mut game::Context) {
         None => return, // Dead player, don't care about ai update
     };
 
-    return;
 
     for e_id in &ctx.state.enemies {
         let mut enemy = match ctx.ecs.get_physics(*e_id) {
@@ -109,9 +108,9 @@ fn move_to_point(entity: &mut entity::Physics, new_point: na::Vector3<f32>) {
 #[cfg(test)]
 mod tests {
 
-    use crate::game::ai::*;
-    use crate::entity;
-    use nalgebra as na;
+
+
+
 
 
 }

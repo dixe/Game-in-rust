@@ -1,5 +1,5 @@
 use crate::game;
-use crate::entity;
+
 use crate::physics::impulse_resolution::*;
 use crate::physics::projection_collision::*;
 
@@ -58,7 +58,7 @@ pub fn process(ctx: &mut game::Context) -> Vec<EntityCollision> {
 
 fn weapon_collision(weapon: &ConvexCollisionShape, enemies: Vec::<(usize, ConvexCollisionShape)>) {
 
-    for (id, enemy) in &enemies {
+    for (_id, enemy) in &enemies {
         let (col, _, _) = collision_sat_shapes_impulse(weapon, &enemy);
         if col {
             println!("Hit yuo stupid");

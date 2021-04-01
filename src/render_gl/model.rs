@@ -4,7 +4,7 @@ use nalgebra as na;
 use std::io::BufReader;
 use stringreader::StringReader;
 use crate::resources::Resources;
-use obj;
+
 use tobj;
 use crate::entity;
 
@@ -31,16 +31,16 @@ impl Model {
         let mut obj_buf = BufReader::new(str_reader);
 
 
-        let (models, materials) = tobj::load_obj_buf(&mut obj_buf, true, |p| {
+        let (models, _materials) = tobj::load_obj_buf(&mut obj_buf, true, |p| {
             match p.file_name().unwrap().to_str().unwrap() {
-                m => {
+                _m => {
                     let mtl_content = res.load_string(&mtl_path).unwrap();
                     let str_mtl_reader = StringReader::new(&mtl_content);
                     let mut mtl_buf = BufReader::new(str_mtl_reader);
                     tobj::load_mtl_buf(&mut mtl_buf)
                 }
             }
-        })?;;
+        })?;
 
         let mut anchor_point = None;
         let mut model = None;

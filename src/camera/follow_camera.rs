@@ -19,7 +19,7 @@ pub struct FollowCamera {
 
 impl FollowCamera {
 
-    pub fn new(width: u32, height: u32) -> FollowCamera {
+    pub fn new(_width: u32, _height: u32) -> FollowCamera {
 
 
         let pos = na::Vector3::new(0.0, 3.0, 3.0);
@@ -51,7 +51,7 @@ impl Camera for FollowCamera {
     }
 
 
-    fn move_camera(&mut self, dir: na::Vector3::<f32>, delta: f32) {
+    fn move_camera(&mut self, _dir: na::Vector3::<f32>, _delta: f32) {
 
 
     }

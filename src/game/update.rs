@@ -2,7 +2,7 @@ use crate::game;
 use crate::physics;
 use crate::entity;
 use crate::action_system;
-use crate::controls;
+
 use crate::camera;
 
 
@@ -60,7 +60,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 }
 
 
-fn update_player_movement(ctx: &mut game::Context, player: &mut entity::Physics, delta:  f32) {
+fn update_player_movement(ctx: &mut game::Context, player: &mut entity::Physics, _delta:  f32) {
     if ctx.state.player_state != game::PlayerState::Moving {
         game::update_velocity(player, na::Vector3::new(0.0, 0.0, 0.0));
         return;
@@ -153,7 +153,7 @@ fn update_player_swing(ctx: &mut game::Context) {
         _=> return
     };
 
-    let mut action_info =
+    let action_info =
         match ctx.ecs.actions_info.get_mut(&ctx.player_weapon_id) {
             Some(info) => info,
             _ => return

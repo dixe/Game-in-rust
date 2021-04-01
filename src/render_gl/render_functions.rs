@@ -21,7 +21,7 @@ fn calculate_model_mat(physics: &entity::Physics) -> na::Matrix4::<f32> {
 
     let trans_mat = na::Matrix4::new_translation(&pos);
 
-    let mut model_mat = trans_mat * rot_mat * scale_mat;
+    let model_mat = trans_mat * rot_mat * scale_mat;
 
     model_mat
 }

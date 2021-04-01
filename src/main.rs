@@ -17,7 +17,7 @@ use std::time::Duration;
 
 use std::io;
 use std::thread;
-use fs_extra::dir;
+
 
 
 pub mod render_gl;
@@ -57,7 +57,7 @@ static mut CMD: Command = Command::Nop;
 fn start_cmd_thread() {
     thread::spawn(move || {
 
-        while true {
+        loop {
 
             let mut input = String::new();
             io::stdin()
@@ -101,7 +101,7 @@ fn start_notify_thread() {
 
         loop {
             match rx.recv() {
-                Ok(event) => {
+                Ok(_event) => {
                     println!("Updated on disk copy assets");
                     copy_assets();
                     unsafe {

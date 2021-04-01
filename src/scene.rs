@@ -19,9 +19,9 @@ pub struct Scene {
 
 
 impl Scene {
-    pub fn new(level: &level::Level, ctx: &render_gl::context::Context) -> Result<Scene, failure::Error> {
+    pub fn new(_level: &level::Level, ctx: &render_gl::context::Context) -> Result<Scene, failure::Error> {
 
-        let mut border_positions = Vec::<na::Vector3::<f32>>::new();
+        let border_positions = Vec::<na::Vector3::<f32>>::new();
 
         let clr = na::Vector3::new(0.6, 0.5, 0.4);
         //TODO should be model ids
@@ -36,7 +36,7 @@ impl Scene {
         // this is to not do collision with all 4 sides, when only 1 is needed
         let border_sides = Vec::<physics::ConvexCollisionShape>::new();
 
-        let mut scene = Scene {
+        let scene = Scene {
             border_positions,
             border,
             floor,

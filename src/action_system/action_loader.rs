@@ -2,7 +2,7 @@ use nalgebra as na;
 
 
 use crate::resources::{self, Resources} ;
-use crate::entity;
+
 use crate::action_system::*;
 
 
@@ -10,10 +10,6 @@ use crate::action_system::*;
 pub enum Error {
     #[fail(display = "Failed to load resource {}", name)]
     ResourceLoad { name: String, inner: resources::Error },
-    #[fail(display = "Can not parse the point: {}, because {}", input, reason)]
-    ParsePointFailed { input: String, reason: String },
-    #[fail(display = "Can not parse cubic: {}, because {}", input, reason)]
-    ParseCubicFailed { input: String, reason: String },
     #[fail(display = "Version Error")]
     VersionError,
     #[fail(display = "Xml error")]
@@ -84,7 +80,7 @@ fn parse_xml(input: &str) -> Result<Vec<Part>, Error> {
 fn get_attrib<T>(node: &roxmltree::Node, name: &str) -> Result<T, Error>
 where T: std::str::FromStr {
     node.attribute(name).ok_or(Error::MissingAttrib {attrib: name.to_string() } ).map(|s| s.to_string())
-        .and_then(|v: String| v.parse::<T>().map_err(|e| Error::VersionError))
+        .and_then(|v: String| v.parse::<T>().map_err(|_e| Error::VersionError))
 }
 
 fn parse_xml_v1(node: &roxmltree::Node) -> Result<Vec<Part>, Error> {
@@ -98,7 +94,7 @@ fn parse_xml_v1(node: &roxmltree::Node) -> Result<Vec<Part>, Error> {
 fn parse_xml_parts(node: &roxmltree::Node) -> Result<Vec<Part>, Error> {
     let mut parts = Vec::new();
 
-    let mut next = node.descendants().find(|n| n.has_tag_name("part")) ;
+    let _next = node.descendants().find(|n| n.has_tag_name("part")) ;
 
     for next in node.descendants().filter(|n| n.has_tag_name("part")) {
         let part = parse_xml_part(&next)?;
@@ -114,7 +110,7 @@ fn parse_xml_part(node: &roxmltree::Node) -> Result<Part, Error> {
 
     let cubic = node.descendants().find(|n| n.has_tag_name("cubic"));
 
-    let mut parsed_curve: Option<action_system::Curve> = None;
+    let parsed_curve: Option<action_system::Curve>;
 
     parsed_curve = cubic.and_then(|c| {
         match parse_xml_cubic(&c) {
@@ -160,40 +156,9 @@ fn parse_xml_point(node: &roxmltree::Node) -> Result<na::Vector3::<f32>, Error> 
 
 }
 
-
-fn parse_cubic(string_data: &str) -> Result<Curve, Error> {
-    let data = string_data.split('|').collect::<Vec<_>>();
-    if data.len() != 3 {
-        return Err(Error::ParseCubicFailed { input: string_data.to_string(), reason: "length was not 3".to_string()})
-    }
-
-    let p0 = parse_point(data[0])?;
-    let p1 = parse_point(data[1])?;
-    let p2 = parse_point(data[2])?;
-
-    Ok(Curve::Cubic(p0, p1, p2))
-}
-
-fn parse_point(string_data: &str) -> Result<na::Vector3::<f32>, Error> {
-
-    let data = string_data.split(',').collect::<Vec<&str>>();
-
-    if data.len() != 3 {
-        return Err(Error::ParsePointFailed { input: string_data.to_string(), reason: "length was not 3".to_string()})
-    }
-
-    let x = data[0].trim().parse::<f32>().map_err(|_| Error::ParsePointFailed { input: string_data.to_string(), reason: "Error parsing x".to_string()})?;
-    let y = data[1].trim().parse::<f32>().map_err(|_| Error::ParsePointFailed { input: string_data.to_string(), reason: "Error parsing y".to_string()})?;
-    let z = data[2].trim().parse::<f32>().map_err(|_| Error::ParsePointFailed { input: string_data.to_string(), reason: "Error parsing z".to_string()})?;
-
-
-    Ok(na::Vector3::new(x,y,z))
-}
-
-
 #[cfg(test)]
 mod tests {
 
-    use crate::action_system::action_loader::*;
+
 
 }

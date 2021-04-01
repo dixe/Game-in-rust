@@ -417,7 +417,7 @@ mod tests {
 
         let shape = ConvexCollisionShape::rectangle(&na::Vector3::new(3.0, 3.0, 0.0), 1.0, 1.0, &physics);
 
-        let (has_col,dir) = collision_sat_shapes(&shape, &wall);
+        let (has_col,_dir) = collision_sat_shapes(&shape, &wall);
 
         assert!(!has_col);
 
@@ -462,7 +462,7 @@ mod tests {
 
     fn create_wall_collision_shape(v1: na::Vector3::<f32>, v2: na::Vector3::<f32>) -> ConvexCollisionShape {
 
-        let physics = entity::Physics::new(0);
+        let _physics = entity::Physics::new(0);
 
         let line  = v2 - v1;
         let last = na::Vector3::new( line.y, line.x, line.z);

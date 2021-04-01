@@ -1,4 +1,4 @@
-use nalgebra as na;
+
 use crate::render_gl;
 
 use crate::resources::Resources;
