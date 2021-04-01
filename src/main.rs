@@ -189,7 +189,16 @@ fn run() -> Result<(), failure::Error> {
 
         //UPDATE CAMERA IF FOLLOW MODE
 
-        update_free_camera(&mut ctx);
+        let mode = ctx.camera().mode();
+        match mode {
+            camera::CameraMode::Free => {
+                update_free_camera(&mut ctx);
+            },
+            camera::CameraMode::Follow => {
+                update_follow_camera(&mut ctx);
+            },
+        };
+
 
 
         //PHYSICS TEST
@@ -225,6 +234,26 @@ fn run() -> Result<(), failure::Error> {
 }
 
 
+fn update_follow_camera(ctx: &mut game::Context) {
+
+
+    let mut player = match ctx.ecs.get_physics(ctx.player_id) {
+        Some(e) => *e,
+        None => return, // No player no follow
+    };
+
+    // pos.z bottom of player model
+    player.pos.z += 1.6;
+
+    ctx.camera_mut().update_target(player.pos);
+
+
+
+    ctx.controls.right_stick.map(|right_stick| {
+        ctx.camera_mut().update_movement(right_stick.x, right_stick.y);
+    });
+
+}
 
 fn update_free_camera(ctx: &mut game::Context) {
 
@@ -256,86 +285,3 @@ fn update_free_camera(ctx: &mut game::Context) {
 
     ctx.camera_mut().update_movement(mouse_move.x, mouse_move.y);
 }
-
-/*
-
-
-
-
-if ctx.controls.cam_mode == controls::CameraMode::Follow {
-let default = entity::Physics::new(0);
-let physics = ctx.ecs.get_physics(ctx.player_id).unwrap_or(&default);
-
-
-ctx.camera().set_target(physics.pos);
-
-
-if ctx.controls.movement_dir.magnitude() > 0.0 && ctx.controls.right_stick.is_none(){
-
-let z_rot =  physics.rotation.z;
-
-/*println!("\n\n\n");
-println!("BEHIND VEC: {:#?}", player_behind_vec);//ctx.camera().follow_dir);
-println!("FOLLOW VEC: {:#?}", behind_xy);
-println!("DIFF: {:#?}", diff);
-
- */
-
-let mut rot_diff = ctx.camera().follow_yaw - (z_rot + 180.0_f32.to_radians());
-
-if rot_diff < -std::f32::consts::PI {
-rot_diff += 2.0 * std::f32::consts::PI;
-}
-
-    if rot_diff > std::f32::consts::PI {
-    rot_diff -= 2.0 * std::f32::consts::PI;
-}
-
-    let smooth = 1.0;
-
-    rot_diff = f32::min(smooth, f32::max(-smooth, rot_diff));
-    let change_vec = na::Vector3::new(rot_diff, 0.0, 0.0) ;
-
-    ctx.camera().change_follow_dir(change_vec);
-
-}
-
-    let right_stick = ctx.controls.right_stick;
-
-    right_stick.map(|dir| ctx.camera().change_follow_dir(dir));
-}
-
-    if ctx.controls.cam_mode == controls::CameraMode::Free {
-
-    let mut dir = na::Vector3::new(0.0, 0.0, 0.0);
-
-    let speed = 5.0;
-    if ctx.controls.w {
-    dir.x += speed
-}
-    if ctx.controls.s {
-    dir.x -= speed
-}
-
-    if ctx.controls.a {
-    dir.y += speed
-}
-    if ctx.controls.d {
-    dir.y -= speed
-}
-
-    ctx.camera().cam_target +=  dir * ctx.get_delta_time();
-
-    ctx.camera().cam_pos += dir * ctx.get_delta_time();
-
-    let sens = 0.005;
-    ctx.camera().follow_yaw += ctx.controls.mouse_move.y * sens;
-    ctx.camera().follow_pitch += ctx.controls.mouse_move.x * sens;
-
-    ctx.camera().update_target();
-
-
-}
-
-}
-     */

@@ -384,7 +384,7 @@ fn empty() -> Result<Context, failure::Error> {
     let cameras = Cameras {
         free_camera,
         follow_camera,
-        mode: camera::CameraMode::Free
+        mode: camera::CameraMode::Follow
     };
 
 

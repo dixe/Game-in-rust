@@ -20,11 +20,12 @@ pub trait Camera {
 
     fn projection(&self ) -> na::Matrix4::<f32> ;
 
-    fn z_rotation(&self ) -> f32;
+    fn z_rotation(&self ) -> f32 {
+        let follow_dir = -self.front();
+        f32::atan2(follow_dir.y, follow_dir.x)
+    }
 
-    fn y_rotation(&self ) -> f32;
-
-    fn update_target(&mut self );
+    fn update_target(&mut self, target: na::Vector3::<f32>);
 
     fn pos(&self) -> na::Vector3::<f32>;
 

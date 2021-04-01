@@ -89,7 +89,6 @@ impl Camera for FreeCamera {
             self.yaw.cos() * self.pitch.cos(),
             self.yaw.sin() * self.pitch.cos(),
             self.pitch.sin(),
-
         );
 
         self.front.normalize();
@@ -104,15 +103,8 @@ impl Camera for FreeCamera {
         na::Matrix4::new_perspective(self.width / self.height, self.fov.to_radians(), 0.1, 100.0)
     }
 
-    fn z_rotation(&self ) -> f32 {
-        0.0
-    }
 
-    fn y_rotation(&self ) -> f32 {
-        0.0
-    }
-
-    fn update_target(&mut self )  {
+    fn update_target(&mut self, target: na::Vector3::<f32>) {
 
     }
 
