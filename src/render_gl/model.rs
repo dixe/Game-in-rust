@@ -112,6 +112,7 @@ fn load_anchor(loaded_model: &tobj::Model) -> entity::AnchorPoint {
 
 }
 
+
 fn load_model(loaded_model: &tobj::Model, gl: &gl::Gl, clr: na::Vector3::<f32>) -> Model {
 
     let vbo = buffer::ArrayBuffer::new(gl);

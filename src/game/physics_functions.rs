@@ -120,8 +120,6 @@ pub fn get_absoulte_physics(entity_id: usize, ecs: &entity::EntityComponentSyste
 
 
 
-    println!("{:#?}", physics.rotation);
-
     physics.pos = rotated_pos + anchor_physics.pos + anchor_point.pos;
     Some(physics)
 }

@@ -9,11 +9,13 @@ extern crate nalgebra_glm as glm;
 extern crate roxmltree;
 extern crate notify;
 extern crate walkdir;
-
+extern crate collada;
 
 use notify::{Watcher, RecursiveMode, watcher};
 use std::sync::mpsc::channel;
 use std::time::Duration;
+
+
 
 use std::io;
 use std::thread;
@@ -136,7 +138,6 @@ fn copy_assets() {
     let mut options = fs_extra::dir::CopyOptions::new(); //Initialize default values for CopyOptions
     options.overwrite = true;
 
-
     // copy source/dir1 to target/dir1
     let copy_res = fs_extra::dir::copy("E:/repos/Game-in-rust/assets", "E:/repos/Game-in-rust/target/debug/", &options);
 
@@ -149,6 +150,17 @@ fn copy_assets() {
 
 
 
+fn load_collada(gl: &gl::Gl) -> Result<render_gl::Mesh, failure::Error> {
+
+    let path = std::path::Path::new("E:/repos/Game-in-rust/blender_models/player_01.dae");
+
+    let doc: collada::document::ColladaDocument = collada::document::ColladaDocument::from_path(path).unwrap();
+
+    Ok(render_gl::Mesh::from_collada(&doc, gl, "cube"))
+
+}
+
+
 fn run() -> Result<(), failure::Error> {
 
 
@@ -157,6 +169,10 @@ fn run() -> Result<(), failure::Error> {
     let mut physics_test = physics_test::PhysicsTest::new(&ctx.render_context.gl);
 
     let collision_shader = render_gl::Shader::new("collision_test_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
+
+    let mesh_shader =  render_gl::Shader::new("mesh_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
+
+    let mesh = load_collada(&ctx.render_context.gl)?;
 
     'main: loop{
         ctx.update_delta();
@@ -211,6 +227,14 @@ fn run() -> Result<(), failure::Error> {
         // RENDERING
         ctx.render();
 
+        mesh_shader.set_used();
+
+        mesh_shader.set_vec3(&ctx.render_context.gl, "lightPos", na::Vector3::new(0.0, 0.0, 5.0)); //
+        mesh_shader.set_vec3(&ctx.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
+
+        mesh_shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera().projection(), ctx.camera().view());
+        mesh.render(&ctx.render_context.gl, &mesh_shader, na::Matrix4::identity());
+
         ctx.render_context.gl_swap_window();
 
         unsafe {
@@ -230,6 +254,7 @@ fn run() -> Result<(), failure::Error> {
         }
 
     }
+
     Ok(())
 }
 

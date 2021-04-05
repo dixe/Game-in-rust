@@ -104,7 +104,7 @@ impl Camera for FreeCamera {
     }
 
 
-    fn update_target(&mut self, target: na::Vector3::<f32>) {
+    fn update_target(&mut self, _target: na::Vector3::<f32>) {
 
     }
 

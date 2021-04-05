@@ -65,7 +65,7 @@ impl BezierAction {
                 //TODO handle NAN when bz_normal is also 0 0 1
 
 
-                let mut rot_axis = base.cross(&bz_normal);
+                let rot_axis = base.cross(&bz_normal);
 
                 let angle = (bz_normal.dot(&base)).acos();
 
@@ -173,7 +173,7 @@ pub fn from_anchor_points(in_an: &Vec<entity::AnchorPoint>, base_anchor: entity:
 
         let norm_diff = this.normal - prev.normal;
 
-        let rotation = na::Rotation3::new(norm_diff);
+        let _rotation = na::Rotation3::new(norm_diff);
 
 
         let positions = Curve::Linear(prev.pos - base_anchor.pos, this.pos - base_anchor.pos);

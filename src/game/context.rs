@@ -130,7 +130,7 @@ impl Context {
         self.ecs.set_shooter(player_id, player_shooter);
 
 
-        let mut physics = entity::Physics::new(player_id);
+        let physics = entity::Physics::new(player_id);
 
 
         self.ecs.set_physics(player_id, physics);
@@ -378,9 +378,9 @@ fn empty() -> Result<Context, failure::Error> {
 
     let actions = action_system::load_player_actions(&render_context.res)?;
 
-    let player_color = na::Vector3::new(0.0, 1.0, 1.0);
-    let mut swing_animation = None;
-    swing_animation = Some(render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?);
+    let _player_color = na::Vector3::new(0.0, 1.0, 1.0);
+    let swing_animation = None;
+    //swing_animation = Some(render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?);
 
 
     let cameras = Cameras {
