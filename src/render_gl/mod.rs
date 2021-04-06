@@ -34,7 +34,7 @@ mod keyframe_animation;
 pub use self::keyframe_animation::{KeyframeAnimation,Transformation, KeyFrame};
 
 mod mesh;
-pub use self::mesh::{Mesh};
+pub use self::mesh::{Mesh, VertexWeights, SkinnedMesh};
 
 mod skeleton;
 pub use self::skeleton::{Skeleton, Joint};

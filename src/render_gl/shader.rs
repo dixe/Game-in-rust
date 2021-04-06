@@ -8,7 +8,6 @@ use crate::render_gl;
 
 pub struct Shader {
     program: render_gl::Program,
-
 }
 
 impl Shader {
@@ -24,9 +23,14 @@ impl Shader {
         })
     }
 
+
+    pub fn program_id(&self) -> gl::types::GLuint {
+        self.program.id()
+    }
+
+
     pub fn set_used(&self) {
         self.program.set_used();
-
     }
 
     pub fn set_vec3(&self, gl: &gl::Gl, name: &str, vec3: na::Vector3<f32>) {

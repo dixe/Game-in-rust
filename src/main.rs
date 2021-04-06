@@ -149,15 +149,13 @@ fn copy_assets() {
 }
 
 
-
-fn load_collada(gl: &gl::Gl) -> Result<render_gl::Mesh, failure::Error> {
+fn load_collada(gl: &gl::Gl) -> Result<render_gl::SkinnedMesh, failure::Error> {
 
     let path = std::path::Path::new("E:/repos/Game-in-rust/blender_models/player_01.dae");
 
     let doc: collada::document::ColladaDocument = collada::document::ColladaDocument::from_path(path).unwrap();
 
-    Ok(render_gl::Mesh::from_collada(&doc, gl, "cube"))
-
+    Ok(render_gl::SkinnedMesh::from_collada(&doc, gl, "cube"))
 }
 
 
@@ -173,6 +171,13 @@ fn run() -> Result<(), failure::Error> {
     let mesh_shader =  render_gl::Shader::new("mesh_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
 
     let mesh = load_collada(&ctx.render_context.gl)?;
+
+    let mut bones = [na::Matrix4::identity() ; 12];
+
+
+
+    println!("{:#?}", bones);
+
 
     'main: loop{
         ctx.update_delta();
@@ -233,7 +238,7 @@ fn run() -> Result<(), failure::Error> {
         mesh_shader.set_vec3(&ctx.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
 
         mesh_shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera().projection(), ctx.camera().view());
-        mesh.render(&ctx.render_context.gl, &mesh_shader, na::Matrix4::identity());
+        mesh.render(&ctx.render_context.gl, &mesh_shader, na::Matrix4::identity(), &bones);
 
         ctx.render_context.gl_swap_window();
 

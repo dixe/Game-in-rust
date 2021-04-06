@@ -13,7 +13,7 @@ out vec4 Color;
 
 void main()
 {
-float ambientStrength = 0.5;
+    float ambientStrength = 0.5;
     vec3 ambient = ambientStrength * lightColor;
 
     vec3 norm = normalize(IN.Normal);
@@ -21,5 +21,5 @@ float ambientStrength = 0.5;
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = (diff * lightColor) * 0.5;
 
-Color =  vec4( (ambient + diffuse) * IN.Color, 1.0f);
+    Color =  vec4( (ambient + diffuse) * IN.Color, 1.0f);
  }

@@ -327,7 +327,6 @@ impl Context {
             }
         };
 
-
         render_gl::render(&self.ecs, self.player_weapon_id, &self.render_context.gl, &self.cube_shader, None);
 
 

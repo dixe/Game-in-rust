@@ -19,6 +19,7 @@ uniform mat4 projection;
 void main()
 {
     OUT.FragPos = vec3(model * vec4(Position, 1.0));
+
     // This is called normal matrix, maybe do on cpu( the transpose and invere part)
     // and send it in as a uniform
     OUT.Normal = mat3(transpose(inverse(model))) * Normal;

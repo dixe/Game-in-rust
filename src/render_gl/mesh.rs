@@ -3,6 +3,12 @@ use std::fmt;
 use crate::render_gl::{self, buffer};
 use collada;
 
+
+pub struct SkinnedMesh {
+    mesh: Mesh,
+    pub joint_names: Vec::<String>
+}
+
 pub struct Mesh {
     name: String,
     vao: buffer::VertexArray,
@@ -12,12 +18,15 @@ pub struct Mesh {
 }
 
 
-#[derive(Debug)]
-struct VertexWeights {
 
-    joints: Vec<usize>,
-    weights: Vec<f32>
+
+#[derive(Debug, Copy, Clone)]
+pub struct VertexWeights {
+    // maybe keep the actual vertex index instead of having it just as the index in the vec this is stored in
+    joints: [usize; 2],
+    weights: [f32; 2],
 }
+
 
 impl fmt::Display for Mesh {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -33,12 +42,9 @@ impl fmt::Debug for Mesh {
     }
 }
 
+impl SkinnedMesh {
 
-impl Mesh {
-
-    pub fn from_collada(doc: &collada::document::ColladaDocument, gl: &gl::Gl, name: &str) -> Mesh {
-
-        let bind_data = doc.get_bind_data_set().unwrap();
+    pub fn from_collada(doc: &collada::document::ColladaDocument, gl: &gl::Gl, name: &str) -> SkinnedMesh {
         let obj_set = doc.get_obj_set().unwrap();
 
         println!("Objects {:#?}", obj_set.objects.len());
@@ -47,26 +53,14 @@ impl Mesh {
             println!("Object Name = {:#?}", obj.name);
             println!("veritces_count {:#?}", obj.vertices.len());
 
-            let mut vert_joints = Vec::<VertexWeights>::new();
+            let bind_info = load_vertex_weights(doc, obj);
 
-            for i in 0..obj.vertices.len() {
-                vert_joints.push(VertexWeights {
-                    joints: Vec::new(),
-                    weights: Vec::new(),
-                });
-            }
+            let mesh = load_mesh(obj, &bind_info.vertex_weights, gl, name.to_string());
 
-            for bind in &bind_data.bind_data {
-                for vw in &bind.vertex_weights {
-                    vert_joints[vw.vertex].joints.push(vw.joint.into());
-                    vert_joints[vw.vertex].weights.push(bind.weights[vw.weight]);
-
-                }
-
-                //println!("VertWeights {:#?}", bind.vertex_weights);
-
-            }
-            return load_model(obj, gl, name.to_string());
+            return SkinnedMesh {
+                mesh,
+                joint_names: bind_info.joint_names.clone()
+            };
         }
 
 
@@ -74,14 +68,29 @@ impl Mesh {
     }
 
 
-    pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader, model: na::Matrix4<f32>,) {
-        shader.set_model(gl, model);
+    pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader, model: na::Matrix4<f32>, bones: &[na::Matrix4::<f32> ; 12]) {
 
-        self.vao.bind();
+        let bones_str = std::ffi::CString::new("uBones").unwrap();
+
         unsafe {
+            let bones_loc = gl.GetUniformLocation(
+                shader.program_id(),
+                bones_str.as_ptr() as *mut gl::types::GLchar);
+
+
+            gl.UniformMatrix4fv(
+                bones_loc,
+                12,
+                gl::FALSE,
+                bones.as_ptr() as *const f32);
+
+            shader.set_model(gl, model);
+
+            self.mesh.vao.bind();
+
             gl.DrawElements(
                 gl::TRIANGLES,
-                self.indices_count,
+                self.mesh.indices_count,
                 gl::UNSIGNED_INT,
                 0 as *const gl::types::GLvoid
             );
@@ -90,25 +99,21 @@ impl Mesh {
 }
 
 
-fn load_model(obj: &collada::Object, gl: &gl::Gl, name: String) -> Mesh {
+fn load_mesh(obj: &collada::Object, vert_joints: &Vec::<VertexWeights>, gl: &gl::Gl, name: String) -> Mesh {
 
     let vbo = buffer::ArrayBuffer::new(gl);
     let vao = buffer::VertexArray::new(gl);
 
-    let mut vertices = Vec::<f32>::new();
+    let mut vertex_data = Vec::<f32>::new();
 
     let mut ebo_data = Vec::<u32>::new();
 
     let ebo = buffer::ElementArrayBuffer::new(gl);
 
+    let mut verts = Vec::new();
+    let mut vert_norms = Vec::new();
 
-    let mut vertex_normals = Vec::<collada::Vertex>::with_capacity(obj.vertices.len());
-
-    for i in 0..obj.vertices.len() {
-        vertex_normals.push(collada::Vertex { x: 0.0, y: 0.0, z: 0.0});
-    }
-
-    let mut indices_count = 0;
+    let mut vert_weights = Vec::new();
 
     // Fill EBO and vertex normals
     for geo in &obj.geometry {
@@ -117,23 +122,39 @@ fn load_model(obj: &collada::Object, gl: &gl::Gl, name: String) -> Mesh {
 
         for mesh in &geo.mesh {
             println!("mesh_count {:#?}", geo.mesh.len());
+
+
             match mesh {
                 collada::PrimitiveElement::Triangles(triangles) => {
-
-                    indices_count = triangles.vertices.len() * 3;
                     let tri_norms = triangles.normals.as_ref().unwrap();
-                    for i in 0..triangles.vertices.len() {
-                        let (v_0,v_1,v_2) = triangles.vertices[i];
-                        ebo_data.push(v_0 as u32);
-                        ebo_data.push(v_1 as u32);
-                        ebo_data.push(v_2 as u32);
 
+                    println!("obj normals {:#?}", tri_norms.len());
+
+                    for i in 0..triangles.vertices.len() {
+                        let (v_0, v_1, v_2) = triangles.vertices[i];
                         let (n_0, n_1, n_2) = tri_norms[i];
 
-                        vertex_normals[v_0] = obj.normals[n_0];
-                        vertex_normals[v_1] = obj.normals[n_1];
-                        vertex_normals[v_2] = obj.normals[n_2];
+                        vert_weights.push(vert_joints[v_0]);
+                        vert_weights.push(vert_joints[v_1]);
+                        vert_weights.push(vert_joints[v_2]);
+
+
+                        ebo_data.push((i * 3) as u32);
+                        ebo_data.push((i * 3 + 1) as u32);
+                        ebo_data.push((i * 3 + 2) as u32);
+
+
+                        verts.push(obj.vertices[v_0]);
+                        verts.push(obj.vertices[v_1]);
+                        verts.push(obj.vertices[v_2]);
+
+
+                        vert_norms.push(obj.normals[n_0]);
+                        vert_norms.push(obj.normals[n_1]);
+                        vert_norms.push(obj.normals[n_2]);
+
                     }
+
                     println!("triVerts: {:#?}", triangles.vertices.len());
                 },
 
@@ -141,35 +162,53 @@ fn load_model(obj: &collada::Object, gl: &gl::Gl, name: String) -> Mesh {
                     panic!("Not triangles");
                 }
             };
-
         }
     }
 
 
-    for i in 0..obj.vertices.len() {
-        // x y z
-        let vert = obj.vertices[i];
-        let norm = vertex_normals[i];
 
-        vertices.push(vert.x as f32);
-        vertices.push(vert.y as f32);
-        vertices.push(vert.z as f32);
+    let indices_count = verts.len();
+
+    for i in 0..verts.len() {
+        // x y z
+
+        let vert = verts[i];
+
+        let norm = vert_norms[i];
+
+        vertex_data.push(vert.x as f32);
+        vertex_data.push(vert.y as f32);
+        vertex_data.push(vert.z as f32);
 
         //NORMAL
-        vertices.push(norm.x as f32);
-        vertices.push(norm.y as f32);
-        vertices.push(norm.z as f32);
+        vertex_data.push(norm.x as f32);
+        vertex_data.push(norm.y as f32);
+        vertex_data.push(norm.z as f32);
+
+
+        // BONE WEIGHTS
+
+        let joint_weights = vert_weights[i];
+
+        vertex_data.push(joint_weights.weights[0]);
+        vertex_data.push(joint_weights.weights[1]);
+
+
+        // BONE INDICES
+        vertex_data.push(joint_weights.joints[0] as f32);
+        vertex_data.push(joint_weights.joints[1] as f32);
+
+
     }
 
-
-    let stride = 6;
+    let stride = ((3 + 3 + 2 + 2) * std::mem::size_of::<f32>()) as gl::types::GLint;
     unsafe {
         // 1
         vao.bind();
 
         // 2.
         vbo.bind();
-        vbo.static_draw_data(&vertices);
+        vbo.static_draw_data(&vertex_data);
 
         //3
         ebo.bind();
@@ -179,6 +218,7 @@ fn load_model(obj: &collada::Object, gl: &gl::Gl, name: String) -> Mesh {
             ebo_data.as_ptr() as *const gl::types::GLvoid,
             gl::STATIC_DRAW);
 
+
         // 4.
         // vertecies
         gl.VertexAttribPointer(
@@ -186,7 +226,7 @@ fn load_model(obj: &collada::Object, gl: &gl::Gl, name: String) -> Mesh {
             3,
             gl::FLOAT,
             gl::FALSE,
-            (stride * std::mem::size_of::<f32>()) as gl::types::GLint,
+            stride,
             0 as *const gl::types::GLvoid,
         );
         gl.EnableVertexAttribArray(0);
@@ -198,21 +238,153 @@ fn load_model(obj: &collada::Object, gl: &gl::Gl, name: String) -> Mesh {
             3,
             gl::FLOAT,
             gl::FALSE,
-            (stride * std::mem::size_of::<f32>()) as gl::types::GLint,
+            stride,
             (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
         );
 
         gl.EnableVertexAttribArray(1);
 
+
+        // bone weights
+
+        gl.VertexAttribPointer(
+            2,
+            2,
+            gl::FLOAT,
+            gl::FALSE,
+            stride,
+            (6 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
+        );
+
+        gl.EnableVertexAttribArray(2);
+
+
+        // bone indices
+        gl.VertexAttribPointer(
+            3,
+            2,
+            gl::FLOAT,
+            gl::FALSE,
+            stride,
+            (8 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
+        );
+
+
+        gl.EnableVertexAttribArray(3);
+
+
+
+
     }
 
     println!("indices count {:#?}", indices_count);
 
-    Mesh {
+    let mesh = Mesh {
         vao,
         _vbo: vbo,
         _ebo: ebo,
         indices_count: indices_count as i32,
         name
+    };
+
+    mesh
+}
+
+struct VWeights {
+    joints: Vec::<usize>,
+    weights: Vec::<f32>
+}
+
+
+struct BindInfo {
+    vertex_weights: Vec::<VertexWeights>,
+    joint_names: Vec::<String>
+}
+
+
+
+fn load_vertex_weights(doc: &collada::document::ColladaDocument, obj: &collada::Object) -> BindInfo {
+    let mut vert_joints = Vec::<VWeights>::new();
+
+    let bind_data = doc.get_bind_data_set().unwrap();
+
+    for i in 0..obj.vertices.len() {
+        vert_joints.push(VWeights {
+            joints: Vec::new(),
+            weights: Vec::new(),
+        });
+    }
+
+    let mut joint_names = Vec::new();
+    for bind in &bind_data.bind_data {
+        for vw in &bind.vertex_weights {
+            vert_joints[vw.vertex].joints.push(vw.joint.into());
+            vert_joints[vw.vertex].weights.push(bind.weights[vw.weight]);
+
+        }
+
+        joint_names = bind.joint_names.clone();
+    }
+
+
+    let mut res =  Vec::<VertexWeights>::new();
+    for vertex in &vert_joints {
+
+        match vertex.joints.len() {
+            1 => {
+                res.push(VertexWeights {
+                    joints: [vertex.joints[0], vertex.joints[0]],
+                    weights: [ vertex.weights[0], 0.0]
+                });
+            },
+            2 => {
+                res.push(VertexWeights {
+                    joints: [vertex.joints[0], vertex.joints[1]],
+                    weights: [ vertex.weights[0], vertex.weights[1]]
+                });
+            },
+            n => {
+
+
+                // find the two largest weights and use them also normalize the two weights to
+                // sum to 1
+                // TODO IMPL NEEDED TO RUN
+
+                let mut max1 = 0.0;
+                let mut max2 = 0.0;
+                let mut max1_i = 0;
+                let mut max2_i = 0;
+
+                for (i,w) in vertex.weights.iter().enumerate() {
+                    if *w >= max1 {
+                        max2 = max1;
+                        max2_i = max1_i;
+                        max1 = *w;
+                        max1_i = i;
+                    }
+                    else if *w >= max2 {
+                        max2 = *w;
+                        max2_i = i;
+                    }
+                }
+
+                if max1_i == max2_i {
+                    max2 = 0.0;
+                }
+                let sum = max1 + max2;
+                let max1 = max1 / sum;
+                let max2 = max2 / sum;
+
+                res.push(VertexWeights {
+                    joints: [max1_i, max2_i],
+                    weights: [ max1, max2]
+                });
+            }
+        };
+    }
+
+    BindInfo {
+        vertex_weights: res,
+        joint_names,
     }
 }
