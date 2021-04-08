@@ -12,7 +12,7 @@ out VS_OUTPUT {
 } OUT;
 
 
-uniform mat4 uBones[32];
+uniform mat4 uBones[11];
 
 uniform mat4 model;
 uniform mat4 view;
@@ -41,8 +41,10 @@ void main()
     // This is called normal matrix, maybe do on cpu( the transpose and invere part)
     // and send it in as a uniform
     OUT.Normal = mat3(transpose(inverse(model))) * (model * bt * vec4(Normal, 1.0)).xyz;
-    OUT.Color = vec3(1.0,1.0,0.0);
+
+    OUT.Color = vec3(0.30,1.0, 0.2);
 
     gl_Position =  projection * view * model * bt * vec4(Position, 1.0);
+
 
 }

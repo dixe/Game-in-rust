@@ -351,9 +351,7 @@ fn empty() -> Result<Context, failure::Error> {
 
     let ecs = entity::EntityComponentSystem::new();
 
-
     background_color_buffer.set_used(&render_context.gl);
-
 
     let follow_camera = camera::FollowCamera::new(width, height); //
     let free_camera = camera::FreeCamera::new();
@@ -385,7 +383,7 @@ fn empty() -> Result<Context, failure::Error> {
     let cameras = Cameras {
         free_camera,
         follow_camera,
-        mode: camera::CameraMode::Follow
+        mode: camera::CameraMode::Free
     };
 
 

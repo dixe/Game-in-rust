@@ -6,7 +6,9 @@ use collada;
 
 pub struct SkinnedMesh {
     mesh: Mesh,
-    pub joint_names: Vec::<String>
+    pub joint_names: Vec::<String>,
+    pub skeleton_name: String,
+    pub inverse_bind_poses: Vec::<na::Matrix4::<f32>>
 }
 
 pub struct Mesh {
@@ -55,11 +57,16 @@ impl SkinnedMesh {
 
             let bind_info = load_vertex_weights(doc, obj);
 
+
+
             let mesh = load_mesh(obj, &bind_info.vertex_weights, gl, name.to_string());
 
+            //println!("{:#?}", bind_info.joint_names);
             return SkinnedMesh {
                 mesh,
-                joint_names: bind_info.joint_names.clone()
+                inverse_bind_poses: bind_info.inverse_bind_poses,
+                joint_names: bind_info.joint_names.clone(),
+                skeleton_name: bind_info.skeleton_name,
             };
         }
 
@@ -68,7 +75,7 @@ impl SkinnedMesh {
     }
 
 
-    pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader, model: na::Matrix4<f32>, bones: &[na::Matrix4::<f32> ; 12]) {
+    pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader, model: na::Matrix4<f32>, bones: &[na::Matrix4::<f32> ; 10]) {
 
         let bones_str = std::ffi::CString::new("uBones").unwrap();
 
@@ -80,9 +87,10 @@ impl SkinnedMesh {
 
             gl.UniformMatrix4fv(
                 bones_loc,
-                12,
+                10,
                 gl::FALSE,
                 bones.as_ptr() as *const f32);
+
 
             shader.set_model(gl, model);
 
@@ -138,16 +146,13 @@ fn load_mesh(obj: &collada::Object, vert_joints: &Vec::<VertexWeights>, gl: &gl:
                         vert_weights.push(vert_joints[v_1]);
                         vert_weights.push(vert_joints[v_2]);
 
-
                         ebo_data.push((i * 3) as u32);
                         ebo_data.push((i * 3 + 1) as u32);
                         ebo_data.push((i * 3 + 2) as u32);
 
-
                         verts.push(obj.vertices[v_0]);
                         verts.push(obj.vertices[v_1]);
                         verts.push(obj.vertices[v_2]);
-
 
                         vert_norms.push(obj.normals[n_0]);
                         vert_norms.push(obj.normals[n_1]);
@@ -298,7 +303,9 @@ struct VWeights {
 
 struct BindInfo {
     vertex_weights: Vec::<VertexWeights>,
-    joint_names: Vec::<String>
+    joint_names: Vec::<String>,
+    skeleton_name: String,
+    inverse_bind_poses: Vec<na::Matrix4::<f32>>,
 }
 
 
@@ -308,6 +315,8 @@ fn load_vertex_weights(doc: &collada::document::ColladaDocument, obj: &collada::
 
     let bind_data = doc.get_bind_data_set().unwrap();
 
+
+
     for i in 0..obj.vertices.len() {
         vert_joints.push(VWeights {
             joints: Vec::new(),
@@ -316,7 +325,14 @@ fn load_vertex_weights(doc: &collada::document::ColladaDocument, obj: &collada::
     }
 
     let mut joint_names = Vec::new();
+    let mut skeleton_name: String = "".to_string();
+    let mut inverse_bind_poses = Vec::new();
+
     for bind in &bind_data.bind_data {
+
+        inverse_bind_poses = bind.inverse_bind_poses.iter().map(|mat| map_mat4(mat)).collect();
+
+        skeleton_name = bind.skeleton_name.as_ref().unwrap().clone();
         for vw in &bind.vertex_weights {
             vert_joints[vw.vertex].joints.push(vw.joint.into());
             vert_joints[vw.vertex].weights.push(bind.weights[vw.weight]);
@@ -386,5 +402,22 @@ fn load_vertex_weights(doc: &collada::document::ColladaDocument, obj: &collada::
     BindInfo {
         vertex_weights: res,
         joint_names,
+        inverse_bind_poses,
+        skeleton_name,
     }
+}
+
+
+fn map_mat4(col_mat: &collada::Matrix4<f32>) -> na::Matrix4::<f32> {
+
+    let mut res = na::Matrix4::<f32>::identity();
+
+    let mut index = 0;
+
+    for i in 0..4 {
+        for j in 0..4 {
+            res[j*4 + i] =col_mat[i][j];
+        }
+    }
+    res
 }

@@ -148,14 +148,82 @@ fn copy_assets() {
 
 }
 
+struct MeshAndSkeleton {
 
-fn load_collada(gl: &gl::Gl) -> Result<render_gl::SkinnedMesh, failure::Error> {
+    mesh: render_gl::SkinnedMesh,
+    skeleton: render_gl::Skeleton,
+}
+
+
+fn load_collada(gl: &gl::Gl) -> Result<MeshAndSkeleton, failure::Error> {
 
     let path = std::path::Path::new("E:/repos/Game-in-rust/blender_models/player_01.dae");
 
     let doc: collada::document::ColladaDocument = collada::document::ColladaDocument::from_path(path).unwrap();
 
-    Ok(render_gl::SkinnedMesh::from_collada(&doc, gl, "cube"))
+
+    let mesh = render_gl::SkinnedMesh::from_collada(&doc, gl, "cube");
+
+    let mut skeleton = render_gl::Skeleton::from_collada(&doc, &mesh.skeleton_name);
+
+    Ok(MeshAndSkeleton {
+        mesh,
+        skeleton
+    })
+}
+
+
+fn initialize_joint(skeleton: &mut render_gl::Skeleton, index: usize) {
+
+    let joint = &skeleton.joints[index];
+
+    let local_matrix = joint.get_local_matrix();
+
+    let mut world_matrix = local_matrix;
+
+    if joint.parent_index != 255 {
+        world_matrix = skeleton.joints[joint.parent_index].world_matrix * local_matrix;
+    }
+
+    if joint.parent_index >= index && joint.parent_index != 255{
+        panic!("Bones are not in correct order. All children should be after parent current {}, parent {}", index, joint.parent_index);
+    }
+
+    //println!("LocalMatrix index: {} {:#?}", index, local_matrix);
+
+
+    skeleton.joints[index].world_matrix = world_matrix;
+    skeleton.joints[index].inverse_bind_pose = world_matrix.try_inverse().unwrap();
+
+
+    /*
+    let z_trans = na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 3.67));
+
+    for i in 0..16 {
+    println!("indexLOCAL: {} val: {:#?}", index, local_matrix[i]);
+    println!("indexZTRANS: {} val: {:#?}", index, z_trans[i]);
+
+}
+     */
+}
+
+fn set_bone(bones: &mut [na::Matrix4::<f32>],  skeleton: &render_gl::Skeleton, index: usize, mat: na::Matrix4::<f32>) {
+
+    let joint = &skeleton.joints[index];
+
+    let local_matrix = joint.get_local_matrix();
+
+    let mut world_matrix = joint.world_matrix;
+
+    if joint.parent_index != 255 {
+        world_matrix = skeleton.joints[joint.parent_index].world_matrix * local_matrix;
+    }
+
+    //println!(" WORLD MAT: {:#?}", world_matrix);
+
+    bones[index] = world_matrix * joint.inverse_bind_pose;
+    //bones[index] = world_matrix * skeleton.joints[index].inverse_bind_pose;
+
 }
 
 
@@ -170,14 +238,25 @@ fn run() -> Result<(), failure::Error> {
 
     let mesh_shader =  render_gl::Shader::new("mesh_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
 
-    let mesh = load_collada(&ctx.render_context.gl)?;
+    let mesh_and_skeleton = load_collada(&ctx.render_context.gl)?;
 
-    let mut bones = [na::Matrix4::identity() ; 12];
+    let mesh = mesh_and_skeleton.mesh;
+    let mut skeleton = mesh_and_skeleton.skeleton;
+
+    let mut bones = [na::Matrix4::identity() ; 10];
+
+    for i in 0..10 {
+        initialize_joint(&mut skeleton, i);
+    }
+
+    println!("joints {:#?}", skeleton.joints.len());
 
 
+    let bone_9_rot = na::Matrix4::from_euler_angles(2.0, 0.0, 0.0);
 
-    println!("{:#?}", bones);
+    //let bone_9_rot = na::Matrix4::new_translation(&na::Vector3::new(2.0, 0.0, 0.0));
 
+    //set_bone(&mut bones, &skeleton, 9, bone_9_rot);
 
     'main: loop{
         ctx.update_delta();
@@ -230,12 +309,15 @@ fn run() -> Result<(), failure::Error> {
 
 
         // RENDERING
-        ctx.render();
+        //ctx.render();
 
         mesh_shader.set_used();
 
         mesh_shader.set_vec3(&ctx.render_context.gl, "lightPos", na::Vector3::new(0.0, 0.0, 5.0)); //
+
         mesh_shader.set_vec3(&ctx.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
+
+
 
         mesh_shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera().projection(), ctx.camera().view());
         mesh.render(&ctx.render_context.gl, &mesh_shader, na::Matrix4::identity(), &bones);
