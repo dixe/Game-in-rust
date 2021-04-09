@@ -13,7 +13,7 @@ render_gl_derive = { path = "render_gl_derive" }
 entity_component_derive = { path = "entity_component_derive" }
 vec-2-10-10-10  = "0.1.2"
 half = "1.1.1"
-nalgebra = "0.16"
+nalgebra = "0.25.4"
 nalgebra-glm = "0.11.0"
 obj-rs = "0.6.2"
 stringreader = "0.1.1"

@@ -44,7 +44,7 @@ void main()
 
     OUT.Color = vec3(0.30,1.0, 0.2);
 
-    gl_Position =  projection * view * model * bt * vec4(Position, 1.0);
+    gl_Position =  projection * view * model * bt  * vec4(Position, 1.0);
 
 
 }

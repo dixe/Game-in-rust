@@ -157,7 +157,7 @@ struct MeshAndSkeleton {
 
 fn load_collada(gl: &gl::Gl) -> Result<MeshAndSkeleton, failure::Error> {
 
-    let path = std::path::Path::new("E:/repos/Game-in-rust/blender_models/player_01.dae");
+    let path = std::path::Path::new("E:/repos/Game-in-rust/blender_models/player_02.dae");
 
     let doc: collada::document::ColladaDocument = collada::document::ColladaDocument::from_path(path).unwrap();
 
@@ -173,11 +173,11 @@ fn load_collada(gl: &gl::Gl) -> Result<MeshAndSkeleton, failure::Error> {
 }
 
 
-fn initialize_joint(skeleton: &mut render_gl::Skeleton, index: usize) {
+fn set_t_pose(skeleton: &mut render_gl::Skeleton, index: usize) {
 
     let joint = &skeleton.joints[index];
 
-    let local_matrix = joint.get_local_matrix();
+    let local_matrix = joint.get_base_local_matrix();
 
     let mut world_matrix = local_matrix;
 
@@ -185,44 +185,36 @@ fn initialize_joint(skeleton: &mut render_gl::Skeleton, index: usize) {
         world_matrix = skeleton.joints[joint.parent_index].world_matrix * local_matrix;
     }
 
-    if joint.parent_index >= index && joint.parent_index != 255{
+    if joint.parent_index >= index && joint.parent_index != 255 {
         panic!("Bones are not in correct order. All children should be after parent current {}, parent {}", index, joint.parent_index);
     }
 
-    //println!("LocalMatrix index: {} {:#?}", index, local_matrix);
+    println!("Index: {} - name: {}", index, joint.name.clone());
+
+    let name = joint.name.clone();
 
 
     skeleton.joints[index].world_matrix = world_matrix;
     skeleton.joints[index].inverse_bind_pose = world_matrix.try_inverse().unwrap();
 
-
-    /*
-    let z_trans = na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 3.67));
-
-    for i in 0..16 {
-    println!("indexLOCAL: {} val: {:#?}", index, local_matrix[i]);
-    println!("indexZTRANS: {} val: {:#?}", index, z_trans[i]);
-
-}
-     */
 }
 
-fn set_bone(bones: &mut [na::Matrix4::<f32>],  skeleton: &render_gl::Skeleton, index: usize, mat: na::Matrix4::<f32>) {
+fn set_bone(bones: &mut [na::Matrix4::<f32>], skeleton: &mut render_gl::Skeleton, index: usize,  rot: na::UnitQuaternion::<f32>, trans: na::Vector3::<f32>) {
 
     let joint = &skeleton.joints[index];
 
-    let local_matrix = joint.get_local_matrix();
+    let local_matrix = joint.get_local_matrix(rot, trans);
 
-    let mut world_matrix = joint.world_matrix;
+    let mut world_matrix = local_matrix;
 
     if joint.parent_index != 255 {
         world_matrix = skeleton.joints[joint.parent_index].world_matrix * local_matrix;
     }
 
-    //println!(" WORLD MAT: {:#?}", world_matrix);
-
     bones[index] = world_matrix * joint.inverse_bind_pose;
-    //bones[index] = world_matrix * skeleton.joints[index].inverse_bind_pose;
+    skeleton.joints[index].world_matrix = world_matrix;
+
+
 
 }
 
@@ -236,27 +228,49 @@ fn run() -> Result<(), failure::Error> {
 
     let collision_shader = render_gl::Shader::new("collision_test_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
 
-    let mesh_shader =  render_gl::Shader::new("mesh_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
+    let mut mesh_shader = render_gl::Shader::new("mesh_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
 
     let mesh_and_skeleton = load_collada(&ctx.render_context.gl)?;
 
     let mesh = mesh_and_skeleton.mesh;
     let mut skeleton = mesh_and_skeleton.skeleton;
 
-    let mut bones = [na::Matrix4::identity() ; 10];
+    let bone_cube = cube::Cube::new(na::Vector3::new(0.5, 0.5, 0.5), &ctx.render_context.gl);
 
-    for i in 0..10 {
-        initialize_joint(&mut skeleton, i);
+
+    let mut bones = Vec::new();
+
+    let joint_count = skeleton.joints.len();
+
+    for i in 0..=joint_count {
+        bones.push(na::Matrix4::identity());
+    }
+
+    for i in 0..joint_count {
+        set_t_pose(&mut skeleton, i);
     }
 
     println!("joints {:#?}", skeleton.joints.len());
 
+    let trans = na::Vector3::new(0.0, 0.0, 0.0);
 
-    let bone_9_rot = na::Matrix4::from_euler_angles(2.0, 0.0, 0.0);
 
-    //let bone_9_rot = na::Matrix4::new_translation(&na::Vector3::new(2.0, 0.0, 0.0));
+    for i in 0..joint_count {
+        let mut rot = na::UnitQuaternion::identity();
 
-    //set_bone(&mut bones, &skeleton, 9, bone_9_rot);
+        if i == 3 {
+            rot = na::UnitQuaternion::from_euler_angles(-1.0, 0.0, 0.0);
+        }
+
+        if i == 4 {
+            rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0, 1.29);
+        }
+
+        set_bone(&mut bones, &mut skeleton, i, rot, trans);
+    }
+
+
+
 
     'main: loop{
         ctx.update_delta();
@@ -275,7 +289,6 @@ fn run() -> Result<(), failure::Error> {
         unsafe {
             ctx.render_context.gl.Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }
-
 
 
         game::run_ai(&mut ctx);
@@ -302,22 +315,34 @@ fn run() -> Result<(), failure::Error> {
 
 
         //PHYSICS TEST
-        physics_test.update(&ctx.controls, ctx.get_delta_time());
+        //physics_test.update(&ctx.controls, ctx.get_delta_time());
 
-        physics_test.render(&ctx, &collision_shader);
+        //physics_test.render(&ctx, &collision_shader);
 
 
 
         // RENDERING
         //ctx.render();
 
+        ctx.cube_shader.set_used();
+
+        ctx.cube_shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera().projection(), ctx.camera().view());
+
+        let mut scale_mat = na::Matrix4::identity();
+        scale_mat = scale_mat * 0.2;
+        scale_mat[15] = 1.0;
+
+
+        for joint in &skeleton.joints {
+            bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, joint.world_matrix * scale_mat);
+        }
+
+
         mesh_shader.set_used();
 
         mesh_shader.set_vec3(&ctx.render_context.gl, "lightPos", na::Vector3::new(0.0, 0.0, 5.0)); //
 
         mesh_shader.set_vec3(&ctx.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
-
-
 
         mesh_shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera().projection(), ctx.camera().view());
         mesh.render(&ctx.render_context.gl, &mesh_shader, na::Matrix4::identity(), &bones);
@@ -329,7 +354,18 @@ fn run() -> Result<(), failure::Error> {
                 Command::Nop => {continue},
                 Command::Quit => { break 'main},
                 Command::ReloadActions => {
-                    //ctx.reload_actions();
+                    println!("Reload action");
+
+                    match render_gl::Shader::new("mesh_shader", &ctx.render_context.res, &ctx.render_context.gl) {
+                        Ok(shader) => {
+                            println!("Reloaded mesh shader");
+                            mesh_shader = shader;
+                        },
+                        Err(err) => {
+                            println!("Error loading mesh shader: {}",err);
+                        }
+                    };
+
                     ctx.load_model(ctx.player_weapon_id, na::Vector3::new(0.2, 0.2, 0.2), "models/sword.obj")?;
                 },
                 Command::SwitchRenderMode => {

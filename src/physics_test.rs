@@ -111,11 +111,7 @@ impl PhysicsTest {
     pub fn render(&self, ctx: &game::Context, shader: &render_gl::Shader) {
 
         shader.set_used();
-
-        // CAN BE MOVED OUTSIDE THE LOOP
-
         shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera().projection(), ctx.camera().view());
-
 
         let model_static = na::Matrix4::new_translation(&self.static_pos);
 

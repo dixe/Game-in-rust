@@ -69,7 +69,7 @@ pub fn setup(width: u32, height: u32) -> Result<Context, failure::Error>
     let sdl = sdl2::init().unwrap();
     let video_subsystem = sdl.video().unwrap();
 
-    sdl.mouse().show_cursor(false);
+    //sdl.mouse().show_cursor(false);
 
     sdl.mouse().set_relative_mouse_mode(true);
 

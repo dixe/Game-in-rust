@@ -19,14 +19,17 @@ pub struct Joint {
 
 impl Joint {
 
+    pub fn get_base_local_matrix(&self) -> na::Matrix4::<f32> {
+        self.get_local_matrix(na::UnitQuaternion::identity(), na::Vector3::new(0.0, 0.0, 0.0))
+    }
 
-    pub fn get_local_matrix(&self) -> na::Matrix4::<f32> {
-        let rot_mat = self.rotation.to_homogeneous();
+    pub fn get_local_matrix(&self, rot: na::UnitQuaternion::<f32>, trans: na::Vector3::<f32>) -> na::Matrix4::<f32> {
+        let r =  self.rotation * rot;
+        let rot_mat = r.to_homogeneous();
 
-        let trans_mat = na::Matrix4::new_translation(&self.translation);
+        let trans_mat = na::Matrix4::new_translation(&(self.translation + trans));
 
         trans_mat * rot_mat
-
     }
 }
 
@@ -55,11 +58,30 @@ impl Skeleton {
             for joint in &skel.joints {
 
                 let transform = bind_poses[index];
-                let translation = na::Vector3::new(transform[3], transform[7], transform[11]);
+                let translation = na::Vector3::new(transform[12], transform[13], transform[14]);
 
-                let rot_mat = na::Rotation3::from_euler_angles(0.0, 0.0,0.0);
+                let mut rot_mat = na::Matrix3::identity();
 
-                let rotation = na::UnitQuaternion::from_rotation_matrix(&rot_mat);
+                // take bind pose and remove all translation, giving us rotation
+                rot_mat[0] = transform[0];
+                rot_mat[1] = transform[1];
+                rot_mat[2] = transform[2];
+
+                rot_mat[3] = transform[4];
+                rot_mat[4] = transform[5];
+                rot_mat[5] = transform[6];
+
+                rot_mat[6] = transform[8];
+                rot_mat[7] = transform[9];
+                rot_mat[8] = transform[10];
+
+                let rotation = na::UnitQuaternion::from_matrix(&rot_mat);
+
+
+                //println!("name = {} rotation = {:#?}", joint.name.clone(), rotation);
+
+                //println!("name = {} transform = {:#?}", joint.name.clone(), transform);
+
 
                 joints.push(Joint {
                     world_matrix: na::Matrix4::identity(),
@@ -95,7 +117,7 @@ fn map_mat4(col_mat: &collada::Matrix4<f32>) -> na::Matrix4::<f32> {
 
     for i in 0..4 {
         for j in 0..4 {
-            res[j*4 + i] =col_mat[i][j];
+            res[j*4 + i] = col_mat[i][j];
         }
     }
 

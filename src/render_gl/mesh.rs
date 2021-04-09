@@ -75,9 +75,10 @@ impl SkinnedMesh {
     }
 
 
-    pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader, model: na::Matrix4<f32>, bones: &[na::Matrix4::<f32> ; 10]) {
+    pub fn render(&self, gl: &gl::Gl, shader: &render_gl::Shader, model: na::Matrix4<f32>, bones: &[na::Matrix4::<f32>]) {
 
         let bones_str = std::ffi::CString::new("uBones").unwrap();
+        let len: i32 = bones.len() as i32;
 
         unsafe {
             let bones_loc = gl.GetUniformLocation(
@@ -87,7 +88,7 @@ impl SkinnedMesh {
 
             gl.UniformMatrix4fv(
                 bones_loc,
-                10,
+                len,
                 gl::FALSE,
                 bones.as_ptr() as *const f32);
 
@@ -362,9 +363,9 @@ fn load_vertex_weights(doc: &collada::document::ColladaDocument, obj: &collada::
             n => {
 
 
+
                 // find the two largest weights and use them also normalize the two weights to
                 // sum to 1
-                // TODO IMPL NEEDED TO RUN
 
                 let mut max1 = 0.0;
                 let mut max2 = 0.0;
@@ -391,8 +392,13 @@ fn load_vertex_weights(doc: &collada::document::ColladaDocument, obj: &collada::
                 let max1 = max1 / sum;
                 let max2 = max2 / sum;
 
+
+                let joint_1 = vertex.joints[max1_i];
+                let joint_2 = vertex.joints[max2_i];
+                println!("n = {} selected = ({}, {}) - ({}, {})\n{:#?}, {:#?}", n, joint_1, joint_2, max1, max2, vertex.joints, vertex.weights );
+
                 res.push(VertexWeights {
-                    joints: [max1_i, max2_i],
+                    joints: [joint_1, joint_2],
                     weights: [ max1, max2]
                 });
             }
