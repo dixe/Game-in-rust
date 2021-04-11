@@ -12,7 +12,7 @@ out VS_OUTPUT {
 } OUT;
 
 
-uniform mat4 uBones[11];
+uniform mat4 uBones[32];
 
 uniform mat4 model;
 uniform mat4 view;
@@ -29,6 +29,7 @@ mat4 boneTransform() {
        + BoneWeights.y * uBones[int(BoneIndices.y)];
 
   return ret;
+
 }
 
 
@@ -43,6 +44,11 @@ void main()
     OUT.Normal = mat3(transpose(inverse(model))) * (model * bt * vec4(Normal, 1.0)).xyz;
 
     OUT.Color = vec3(0.30,1.0, 0.2);
+
+
+    if (int(BoneIndices.x) == 13) {
+      OUT.Color = vec3(0.0, 0.0, 0.0);
+    }
 
     gl_Position =  projection * view * model * bt  * vec4(Position, 1.0);
 

@@ -16,7 +16,14 @@ impl Shader {
 
         let shader_prefix = "shaders/".to_owned();
         let full_name = shader_prefix + shader_name;
-        let program = render_gl::Program::from_res(gl, res, &full_name).unwrap();
+        let compiled = render_gl::Program::from_res(gl, res, &full_name);
+        let program = match compiled {
+            Ok(prog) => prog,
+            res  => {
+                res?
+            }
+        };
+
 
         Ok(Shader {
             program

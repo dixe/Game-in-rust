@@ -130,8 +130,9 @@ impl Context {
         self.ecs.set_shooter(player_id, player_shooter);
 
 
-        let physics = entity::Physics::new(player_id);
-
+        // PHYSICS
+        let mut physics = entity::Physics::new(player_id);
+        physics.pos.x -= 2.0;
 
         self.ecs.set_physics(player_id, physics);
 

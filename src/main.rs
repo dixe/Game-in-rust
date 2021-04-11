@@ -15,12 +15,8 @@ use notify::{Watcher, RecursiveMode, watcher};
 use std::sync::mpsc::channel;
 use std::time::Duration;
 
-
-
 use std::io;
 use std::thread;
-
-
 
 pub mod render_gl;
 pub mod resources;
@@ -95,7 +91,7 @@ fn start_notify_thread() {
 
         // Create a watcher object, delivering debounced events.
         // The notification back-end is selected based on the platform.
-        let mut watcher = watcher(tx, Duration::from_secs(10)).unwrap();
+        let mut watcher = watcher(tx, Duration::from_secs(1)).unwrap();
 
         // Add a path to be watched. All files and directories at that path and
         // below will be monitored for changes.
@@ -157,7 +153,7 @@ struct MeshAndSkeleton {
 
 fn load_collada(gl: &gl::Gl) -> Result<MeshAndSkeleton, failure::Error> {
 
-    let path = std::path::Path::new("E:/repos/Game-in-rust/blender_models/player_02.dae");
+    let path = std::path::Path::new("E:/repos/Game-in-rust/blender_models/player_03.dae");
 
     let doc: collada::document::ColladaDocument = collada::document::ColladaDocument::from_path(path).unwrap();
 
@@ -190,6 +186,8 @@ fn set_t_pose(skeleton: &mut render_gl::Skeleton, index: usize) {
     }
 
     println!("Index: {} - name: {}", index, joint.name.clone());
+    //println!("name: {} worldmat :{:#?}", joint.name.clone(), world_matrix);
+    //println!("name: {} inver_inverseworldmat :{:#?}", joint.name.clone(), world_matrix);
 
     let name = joint.name.clone();
 
@@ -210,6 +208,7 @@ fn set_bone(bones: &mut [na::Matrix4::<f32>], skeleton: &mut render_gl::Skeleton
     if joint.parent_index != 255 {
         world_matrix = skeleton.joints[joint.parent_index].world_matrix * local_matrix;
     }
+
 
     bones[index] = world_matrix * joint.inverse_bind_pose;
     skeleton.joints[index].world_matrix = world_matrix;
@@ -240,6 +239,7 @@ fn run() -> Result<(), failure::Error> {
 
     let mut bones = Vec::new();
 
+
     let joint_count = skeleton.joints.len();
 
     for i in 0..=joint_count {
@@ -250,26 +250,16 @@ fn run() -> Result<(), failure::Error> {
         set_t_pose(&mut skeleton, i);
     }
 
+    //println!("BONES: {:#?}", bones);
     println!("joints {:#?}", skeleton.joints.len());
 
-    let trans = na::Vector3::new(0.0, 0.0, 0.0);
+
+    //test_pose(joint_count, &mut bones, &mut skeleton);
 
 
-    for i in 0..joint_count {
-        let mut rot = na::UnitQuaternion::identity();
-
-        if i == 3 {
-            rot = na::UnitQuaternion::from_euler_angles(-1.0, 0.0, 0.0);
-        }
-
-        if i == 4 {
-            rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0, 1.29);
-        }
-
-        set_bone(&mut bones, &mut skeleton, i, rot, trans);
+    for i in 0..bones.len() {
+        //println!(" bone {} - {:#?}", i, bones[i]);
     }
-
-
 
 
     'main: loop{
@@ -315,27 +305,33 @@ fn run() -> Result<(), failure::Error> {
 
 
         //PHYSICS TEST
-        //physics_test.update(&ctx.controls, ctx.get_delta_time());
+        physics_test.update(&ctx.controls, ctx.get_delta_time());
 
-        //physics_test.render(&ctx, &collision_shader);
+        physics_test.render(&ctx, &collision_shader);
 
 
 
         // RENDERING
-        //ctx.render();
-
-        ctx.cube_shader.set_used();
-
-        ctx.cube_shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera().projection(), ctx.camera().view());
-
-        let mut scale_mat = na::Matrix4::identity();
-        scale_mat = scale_mat * 0.2;
-        scale_mat[15] = 1.0;
+        ctx.render();
 
 
-        for joint in &skeleton.joints {
-            bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, joint.world_matrix * scale_mat);
-        }
+        match ctx.controls.keys.get(&sdl2::keyboard::Keycode::V) {
+            Some(true) => {
+
+                ctx.cube_shader.set_used();
+
+                ctx.cube_shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera().projection(), ctx.camera().view());
+                let mut scale_mat = na::Matrix4::identity();
+                scale_mat = scale_mat * 0.2;
+                scale_mat[15] = 1.0;
+
+
+                for joint in &skeleton.joints {
+                    bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, joint.world_matrix * scale_mat);
+                }
+            },
+            _ => {}
+        };
 
 
         mesh_shader.set_used();
@@ -348,6 +344,7 @@ fn run() -> Result<(), failure::Error> {
         mesh.render(&ctx.render_context.gl, &mesh_shader, na::Matrix4::identity(), &bones);
 
         ctx.render_context.gl_swap_window();
+
 
         unsafe {
             match CMD {
@@ -381,6 +378,28 @@ fn run() -> Result<(), failure::Error> {
     Ok(())
 }
 
+fn test_pose(joint_count: usize, bones: &mut [na::Matrix4::<f32>], skeleton: &mut render_gl::Skeleton) {
+
+    for i in 0..joint_count {
+        let mut rot = na::UnitQuaternion::identity();
+
+        if i == 16 {
+            rot = na::UnitQuaternion::from_euler_angles(1.0, 0.0, 0.0);
+        }
+        if i == 17 {
+            rot = na::UnitQuaternion::from_euler_angles(-0.9, 0.0, 0.0);
+        }
+
+        if i == 11 {
+            rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0, 1.29);
+        }
+
+        let trans = na::Vector3::new(0.0, 0.0, 0.0);
+
+        set_bone(bones, skeleton, i, rot, trans);
+    }
+
+}
 
 fn update_follow_camera(ctx: &mut game::Context) {
 

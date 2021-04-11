@@ -40,7 +40,20 @@ impl Skeleton {
         let name = " test".to_string();
         let mut joints = Vec::new();
 
-        let skels = doc.get_skeletons().unwrap();
+        let skel_res = doc.get_skeletons();
+
+
+        let skels = match skel_res {
+            Some(s) => s,
+            None => {
+                println!("Could not find skeleton");
+                return Skeleton {
+                    name,
+                    joints
+                }
+
+            }
+        };
 
         for skel in skels {
 

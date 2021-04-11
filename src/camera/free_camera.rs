@@ -19,7 +19,7 @@ impl FreeCamera {
 
     pub fn new() -> FreeCamera {
 
-        let pos = na::Vector3::new(7.0, 0.0, 3.0);
+        let pos = na::Vector3::new(0.0, 3.8, 2.5);
         let front = na::Vector3::new(0.0, -1.0, 0.0);
         let up = na::Vector3::new(0.0, 1.0, 1.0);
         let right = na::Vector3::new(1.0, 0.0, 0.0);
@@ -30,8 +30,8 @@ impl FreeCamera {
             up,
             world_up: na::Vector3::new(0.0, 0.0, 1.0),
             right,
-            yaw: -3.18,
-            pitch: -0.14,
+            yaw: -1.570,
+            pitch: -0.130,
             width: 900.0,
             height: 700.0,
             fov: 60.0
@@ -50,7 +50,7 @@ impl Camera for FreeCamera {
 
     fn move_camera(&mut self, dir: na::Vector3::<f32>, delta: f32) {
 
-        let speed = 4.0;
+        let speed = 5.0;
 
 
         self.pos += self.front * dir.y * delta * speed;
@@ -62,12 +62,13 @@ impl Camera for FreeCamera {
 
     fn update_movement(&mut self, x_change: f32, y_change: f32) {
 
-        let sens = 0.02;
+        let sens = 0.01;
 
         self.yaw -= x_change * sens;
         self.pitch -= y_change * sens;
 
 
+        //println!("yaw: {:.03} pitch: {:.03} pos: ({:?})", self.yaw, self.pitch, self.pos);
 
         let max_pitch = 80.0_f32.to_radians();
         if self.pitch > max_pitch {

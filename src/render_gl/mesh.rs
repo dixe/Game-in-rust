@@ -57,6 +57,14 @@ impl SkinnedMesh {
 
             let bind_info = load_vertex_weights(doc, obj);
 
+            for i in 0..obj.vertices.len() {
+
+                let v = obj.vertices[i];
+                let vw = bind_info.vertex_weights[i];
+
+                println!("vertex ({:.3},{:.3},{:.3}), {:?}", v.x, v.y, v.z, vw);
+
+            }
 
 
             let mesh = load_mesh(obj, &bind_info.vertex_weights, gl, name.to_string());
@@ -143,9 +151,20 @@ fn load_mesh(obj: &collada::Object, vert_joints: &Vec::<VertexWeights>, gl: &gl:
                         let (v_0, v_1, v_2) = triangles.vertices[i];
                         let (n_0, n_1, n_2) = tri_norms[i];
 
-                        vert_weights.push(vert_joints[v_0]);
-                        vert_weights.push(vert_joints[v_1]);
-                        vert_weights.push(vert_joints[v_2]);
+                        if vert_joints.len() > 0 {
+                            vert_weights.push(vert_joints[v_0]);
+                            vert_weights.push(vert_joints[v_1]);
+                            vert_weights.push(vert_joints[v_2]);
+                        }
+                        else {
+                            let vw = VertexWeights {
+                                joints: [0, 0],
+                                weights: [ 1.0, 0.0]
+                            };
+                            vert_weights.push(vw);
+                            vert_weights.push(vw);
+                            vert_weights.push(vw);
+                        }
 
                         ebo_data.push((i * 3) as u32);
                         ebo_data.push((i * 3 + 1) as u32);
@@ -325,6 +344,7 @@ fn load_vertex_weights(doc: &collada::document::ColladaDocument, obj: &collada::
         });
     }
 
+
     let mut joint_names = Vec::new();
     let mut skeleton_name: String = "".to_string();
     let mut inverse_bind_poses = Vec::new();
@@ -345,9 +365,14 @@ fn load_vertex_weights(doc: &collada::document::ColladaDocument, obj: &collada::
 
 
     let mut res =  Vec::<VertexWeights>::new();
+    let mut index = 0;
     for vertex in &vert_joints {
 
         match vertex.joints.len() {
+            0 => {
+                println!("ZERO VERT JOINTSS");
+
+            },
             1 => {
                 res.push(VertexWeights {
                     joints: [vertex.joints[0], vertex.joints[0]],
@@ -361,8 +386,6 @@ fn load_vertex_weights(doc: &collada::document::ColladaDocument, obj: &collada::
                 });
             },
             n => {
-
-
 
                 // find the two largest weights and use them also normalize the two weights to
                 // sum to 1
@@ -395,8 +418,10 @@ fn load_vertex_weights(doc: &collada::document::ColladaDocument, obj: &collada::
 
                 let joint_1 = vertex.joints[max1_i];
                 let joint_2 = vertex.joints[max2_i];
-                println!("n = {} selected = ({}, {}) - ({}, {})\n{:#?}, {:#?}", n, joint_1, joint_2, max1, max2, vertex.joints, vertex.weights );
 
+                //println!("vertex_id = {} selected = ({}, {}) - ({}, {})\n{:#?}, {:#?}", index, joint_1, joint_2, max1, max2, vertex.joints, vertex.weights );
+
+                index += 1;
                 res.push(VertexWeights {
                     joints: [joint_1, joint_2],
                     weights: [ max1, max2]
