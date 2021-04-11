@@ -13,15 +13,14 @@ out vec4 Color;
 
 void main()
 {
-    float ambientStrength = 0.5;
-    vec3 ambient = ambientStrength * lightColor;
+  float ambientStrength = 0.5;
+  vec3 ambient = ambientStrength * lightColor;
 
-    vec3 norm = normalize(IN.Normal);
-    vec3 lightDir = normalize(lightPos - IN.FragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = (diff * lightColor) * 0.5;
+  vec3 norm = normalize(IN.Normal);
+  vec3 lightDir = normalize(lightPos - IN.FragPos);
+  float diff = max(dot(norm, lightDir), 0.0);
+  vec3 diffuse = (diff * lightColor) * 0.5;
 
+  Color =  vec4( (ambient + diffuse) * IN.Color, 1.0f);
 
-
-    Color =  vec4( (ambient + diffuse) * IN.Color, 1.0f);
  }

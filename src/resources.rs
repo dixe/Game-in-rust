@@ -1,3 +1,5 @@
+use image::io::Reader as ImageReader;
+use image;
 use std::ffi;
 use std::fs;
 use std::io::{self, Read};
@@ -13,6 +15,8 @@ pub enum Error {
     Io(io::Error),
     #[fail(display = "WalkDir error")]
     Walkdir(walkdir::Error),
+    #[fail(display = "Image error")]
+    Image(image::ImageError),
     #[fail(display = "Failed to read CString from file that contains 0")]
     FailedToGetExePath,
     #[fail(display = "Failed to get executable path")]
@@ -34,6 +38,15 @@ impl From<io::Error> for Error {
         Error::Io(other)
     }
 }
+
+
+impl From<image::ImageError> for Error {
+
+    fn from(other: image::ImageError) -> Self {
+        Error::Image(other)
+    }
+}
+
 
 pub struct Resources {
     root_path: PathBuf
@@ -70,6 +83,18 @@ impl Resources {
         }
 
         Ok(res)
+    }
+
+
+    pub fn load_image_rgb8(&self, resource_name: &str) -> Result<image::RgbImage, Error> {
+
+        let path = resource_name_to_path(&self.root_path, resource_name);
+
+        println!("IMG PATH {:#?}", path);
+        let image = ImageReader::open(path)?.decode()?.into_rgb8();
+
+        Ok(image)
+
 
     }
 

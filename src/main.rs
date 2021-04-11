@@ -10,6 +10,8 @@ extern crate roxmltree;
 extern crate notify;
 extern crate walkdir;
 extern crate collada;
+extern crate image;
+
 
 use notify::{Watcher, RecursiveMode, watcher};
 use std::sync::mpsc::channel;
@@ -169,55 +171,6 @@ fn load_collada(gl: &gl::Gl) -> Result<MeshAndSkeleton, failure::Error> {
 }
 
 
-fn set_t_pose(skeleton: &mut render_gl::Skeleton, index: usize) {
-
-    let joint = &skeleton.joints[index];
-
-    let local_matrix = joint.get_base_local_matrix();
-
-    let mut world_matrix = local_matrix;
-
-    if joint.parent_index != 255 {
-        world_matrix = skeleton.joints[joint.parent_index].world_matrix * local_matrix;
-    }
-
-    if joint.parent_index >= index && joint.parent_index != 255 {
-        panic!("Bones are not in correct order. All children should be after parent current {}, parent {}", index, joint.parent_index);
-    }
-
-    println!("Index: {} - name: {}", index, joint.name.clone());
-    //println!("name: {} worldmat :{:#?}", joint.name.clone(), world_matrix);
-    //println!("name: {} inver_inverseworldmat :{:#?}", joint.name.clone(), world_matrix);
-
-    let name = joint.name.clone();
-
-
-    skeleton.joints[index].world_matrix = world_matrix;
-    skeleton.joints[index].inverse_bind_pose = world_matrix.try_inverse().unwrap();
-
-}
-
-fn set_bone(bones: &mut [na::Matrix4::<f32>], skeleton: &mut render_gl::Skeleton, index: usize,  rot: na::UnitQuaternion::<f32>, trans: na::Vector3::<f32>) {
-
-    let joint = &skeleton.joints[index];
-
-    let local_matrix = joint.get_local_matrix(rot, trans);
-
-    let mut world_matrix = local_matrix;
-
-    if joint.parent_index != 255 {
-        world_matrix = skeleton.joints[joint.parent_index].world_matrix * local_matrix;
-    }
-
-
-    bones[index] = world_matrix * joint.inverse_bind_pose;
-    skeleton.joints[index].world_matrix = world_matrix;
-
-
-
-}
-
-
 fn run() -> Result<(), failure::Error> {
 
 
@@ -234,33 +187,69 @@ fn run() -> Result<(), failure::Error> {
     let mesh = mesh_and_skeleton.mesh;
     let mut skeleton = mesh_and_skeleton.skeleton;
 
-    let bone_cube = cube::Cube::new(na::Vector3::new(0.5, 0.5, 0.5), &ctx.render_context.gl);
+    // setup texture
+    let texture = render_gl::Texture::new("low_poly.png", &ctx.render_context.res, &ctx.render_context.gl)?;
+
+    let mut keyframe = render_gl::KeyFrame { joints: Vec::new()};
 
 
-    let mut bones = Vec::new();
+    for i in 0..skeleton.joints.len() {
+        let joint = &skeleton.joints[i];
+        let mut transform = render_gl::Transformation::identity(&joint);
+
+        if i == 11 {
+            transform = render_gl::Transformation::rotation_euler(joint, 0.0, -1.0, 0.0);
+        }
+        if i == 12 {
+            transform = render_gl::Transformation::rotation_euler(joint, 1.2, -1.0, 0.0);
+        }
+
+
+        keyframe.joints.push(transform)
+    }
+
+    let mut keyframe2 = render_gl::KeyFrame { joints: Vec::new()};
+    for i in 0..skeleton.joints.len() {
+        let joint = &skeleton.joints[i];
+        let mut transform = render_gl::Transformation::identity(&joint);
+
+        if i == 11 {
+            transform = render_gl::Transformation::rotation_euler(joint, 0.0, 0.0, 0.0);
+        }
+        if i == 12 {
+            transform = render_gl::Transformation::rotation_euler(joint, 0.0, 0.0, 0.0);
+        }
+
+
+        keyframe2.joints.push(transform)
+    }
+
 
 
     let joint_count = skeleton.joints.len();
+
+    let mut keyframes = Vec::new();
+
+    keyframes.push(keyframe);
+    keyframes.push(keyframe2);
+
+    let animation = render_gl::KeyframeAnimation::new("test ani", 1.0, skeleton.clone(), keyframes);
+
+    let mut animation_player = render_gl::AnimationPlayer::new(animation);
+
+
+    let bone_cube = cube::Cube::new(na::Vector3::new(0.5, 0.5, 0.5), &ctx.render_context.gl);
+    let mut bones = Vec::new();
+
+
 
     for i in 0..=joint_count {
         bones.push(na::Matrix4::identity());
     }
 
-    for i in 0..joint_count {
-        set_t_pose(&mut skeleton, i);
-    }
 
     //println!("BONES: {:#?}", bones);
-    println!("joints {:#?}", skeleton.joints.len());
-
-
-    //test_pose(joint_count, &mut bones, &mut skeleton);
-
-
-    for i in 0..bones.len() {
-        //println!(" bone {} - {:#?}", i, bones[i]);
-    }
-
+    println!("joints {:#?}", joint_count);
 
     'main: loop{
         ctx.update_delta();
@@ -304,6 +293,15 @@ fn run() -> Result<(), failure::Error> {
 
 
 
+        // ANIMATION TEST
+
+        animation_player.set_frame_bones(&mut bones, ctx.get_delta_time());
+
+
+
+
+
+
         //PHYSICS TEST
         physics_test.update(&ctx.controls, ctx.get_delta_time());
 
@@ -336,7 +334,7 @@ fn run() -> Result<(), failure::Error> {
 
         mesh_shader.set_used();
 
-        mesh_shader.set_vec3(&ctx.render_context.gl, "lightPos", na::Vector3::new(0.0, 0.0, 5.0)); //
+        mesh_shader.set_vec3(&ctx.render_context.gl, "lightPos", na::Vector3::new(1.0, 0.0, 7.0)); //
 
         mesh_shader.set_vec3(&ctx.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
 
@@ -378,28 +376,6 @@ fn run() -> Result<(), failure::Error> {
     Ok(())
 }
 
-fn test_pose(joint_count: usize, bones: &mut [na::Matrix4::<f32>], skeleton: &mut render_gl::Skeleton) {
-
-    for i in 0..joint_count {
-        let mut rot = na::UnitQuaternion::identity();
-
-        if i == 16 {
-            rot = na::UnitQuaternion::from_euler_angles(1.0, 0.0, 0.0);
-        }
-        if i == 17 {
-            rot = na::UnitQuaternion::from_euler_angles(-0.9, 0.0, 0.0);
-        }
-
-        if i == 11 {
-            rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0, 1.29);
-        }
-
-        let trans = na::Vector3::new(0.0, 0.0, 0.0);
-
-        set_bone(bones, skeleton, i, rot, trans);
-    }
-
-}
 
 fn update_follow_camera(ctx: &mut game::Context) {
 

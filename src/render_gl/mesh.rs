@@ -20,8 +20,6 @@ pub struct Mesh {
 }
 
 
-
-
 #[derive(Debug, Copy, Clone)]
 pub struct VertexWeights {
     // maybe keep the actual vertex index instead of having it just as the index in the vec this is stored in
@@ -44,12 +42,30 @@ impl fmt::Debug for Mesh {
     }
 }
 
+fn vertex_debug_info(obj: &collada::Object, bind_info: &BindInfo) {
+    for i in 0..obj.vertices.len() {
+
+        let v = obj.vertices[i];
+        let vw = bind_info.vertex_weights[i];
+
+        println!("vertex ({:.3},{:.3},{:.3}), {:?}", v.x, v.y, v.z, vw);
+
+    }
+
+}
+
 impl SkinnedMesh {
 
     pub fn from_collada(doc: &collada::document::ColladaDocument, gl: &gl::Gl, name: &str) -> SkinnedMesh {
         let obj_set = doc.get_obj_set().unwrap();
 
+        println!("Materials {:#?}", obj_set.material_library);
         println!("Objects {:#?}", obj_set.objects.len());
+
+
+        // setup textures for mesh
+
+
 
         for obj in &obj_set.objects {
             println!("Object Name = {:#?}", obj.name);
@@ -57,14 +73,6 @@ impl SkinnedMesh {
 
             let bind_info = load_vertex_weights(doc, obj);
 
-            for i in 0..obj.vertices.len() {
-
-                let v = obj.vertices[i];
-                let vw = bind_info.vertex_weights[i];
-
-                println!("vertex ({:.3},{:.3},{:.3}), {:?}", v.x, v.y, v.z, vw);
-
-            }
 
 
             let mesh = load_mesh(obj, &bind_info.vertex_weights, gl, name.to_string());
@@ -129,6 +137,7 @@ fn load_mesh(obj: &collada::Object, vert_joints: &Vec::<VertexWeights>, gl: &gl:
 
     let mut verts = Vec::new();
     let mut vert_norms = Vec::new();
+    let mut vert_tex = Vec::new();
 
     let mut vert_weights = Vec::new();
 
@@ -137,19 +146,22 @@ fn load_mesh(obj: &collada::Object, vert_joints: &Vec::<VertexWeights>, gl: &gl:
 
         println!("geo_count {:#?}", obj.geometry.len());
 
+        println!("smooth shading {:#?}", geo.smooth_shading_group);
         for mesh in &geo.mesh {
+
             println!("mesh_count {:#?}", geo.mesh.len());
 
 
             match mesh {
                 collada::PrimitiveElement::Triangles(triangles) => {
                     let tri_norms = triangles.normals.as_ref().unwrap();
-
+                    let tri_tex = triangles.tex_vertices.as_ref().unwrap();
                     println!("obj normals {:#?}", tri_norms.len());
 
                     for i in 0..triangles.vertices.len() {
                         let (v_0, v_1, v_2) = triangles.vertices[i];
                         let (n_0, n_1, n_2) = tri_norms[i];
+                        let (t_0, t_1, t_2) = tri_tex[i];
 
                         if vert_joints.len() > 0 {
                             vert_weights.push(vert_joints[v_0]);
@@ -178,6 +190,10 @@ fn load_mesh(obj: &collada::Object, vert_joints: &Vec::<VertexWeights>, gl: &gl:
                         vert_norms.push(obj.normals[n_1]);
                         vert_norms.push(obj.normals[n_2]);
 
+                        vert_tex.push(obj.tex_vertices[t_0]);
+                        vert_tex.push(obj.tex_vertices[t_1]);
+                        vert_tex.push(obj.tex_vertices[t_2]);
+
                     }
 
                     println!("triVerts: {:#?}", triangles.vertices.len());
@@ -200,6 +216,10 @@ fn load_mesh(obj: &collada::Object, vert_joints: &Vec::<VertexWeights>, gl: &gl:
         let vert = verts[i];
 
         let norm = vert_norms[i];
+
+        let tex = vert_tex[i];
+
+        //println!("vertex ({:.3},{:.3},{:.3}), TEX {:.03},{:0.3}", vert.x, vert.y, vert.z, tex.x, tex.y);
 
         vertex_data.push(vert.x as f32);
         vertex_data.push(vert.y as f32);
@@ -224,9 +244,15 @@ fn load_mesh(obj: &collada::Object, vert_joints: &Vec::<VertexWeights>, gl: &gl:
         vertex_data.push(joint_weights.joints[1] as f32);
 
 
+        // TEXTURE INFO
+
+        vertex_data.push(tex.x as f32);
+        vertex_data.push(tex.y as f32);
+
+
     }
 
-    let stride = ((3 + 3 + 2 + 2) * std::mem::size_of::<f32>()) as gl::types::GLint;
+    let stride = ((3 + 3 + 2 + 2 + 2) * std::mem::size_of::<f32>()) as gl::types::GLint;
     unsafe {
         // 1
         vao.bind();
@@ -293,9 +319,20 @@ fn load_mesh(obj: &collada::Object, vert_joints: &Vec::<VertexWeights>, gl: &gl:
             stride,
             (8 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
         );
-
-
         gl.EnableVertexAttribArray(3);
+
+
+        // bone indices
+        gl.VertexAttribPointer(
+            4,
+            2,
+            gl::FLOAT,
+            gl::FALSE,
+            stride,
+            (10 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
+        );
+
+        gl.EnableVertexAttribArray(4);
 
 
 

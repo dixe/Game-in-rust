@@ -1,10 +1,12 @@
-#[derive(Debug)]
+use crate::render_gl::{Transformation};
+
+#[derive(Debug, Clone)]
 pub struct Skeleton {
     pub name: String,
     pub joints: Vec<Joint>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Joint {
     pub name: String,
     pub parent_index: usize,
@@ -19,22 +21,70 @@ pub struct Joint {
 
 impl Joint {
 
-    pub fn get_base_local_matrix(&self) -> na::Matrix4::<f32> {
-        self.get_local_matrix(na::UnitQuaternion::identity(), na::Vector3::new(0.0, 0.0, 0.0))
-    }
+    pub fn get_local_matrix(&self) -> na::Matrix4::<f32> {
+        let rot_mat = self.rotation.to_homogeneous();
 
-    pub fn get_local_matrix(&self, rot: na::UnitQuaternion::<f32>, trans: na::Vector3::<f32>) -> na::Matrix4::<f32> {
-        let r =  self.rotation * rot;
-        let rot_mat = r.to_homogeneous();
-
-        let trans_mat = na::Matrix4::new_translation(&(self.translation + trans));
+        let trans_mat = na::Matrix4::new_translation(&self.translation);
 
         trans_mat * rot_mat
+    }
+
+    pub fn get_local_matrix_data(&self, rotation: na::UnitQuaternion::<f32>, translation: na::Vector3::<f32>) -> na::Matrix4::<f32> {
+        let rot_mat = rotation.to_homogeneous();
+
+        let trans_mat = na::Matrix4::new_translation(&translation);
+
+        trans_mat * rot_mat
+    }
+
+    pub fn transformation(&self) -> Transformation {
+        Transformation {
+            rotation: self.rotation,
+            translation: self.translation
+        }
     }
 }
 
 
 impl Skeleton {
+
+    fn calc_t_pose(&mut self) {
+        for i in 0..self.joints.len() {
+            self.set_t_pose_joint(i);
+        }
+    }
+
+    fn set_t_pose_joint(&mut self, index: usize) {
+
+        let joint = &self.joints[index];
+
+        let local_matrix = joint.get_local_matrix();
+
+        let mut world_matrix = local_matrix;
+
+        if joint.parent_index != 255 {
+            world_matrix = self.joints[joint.parent_index].world_matrix * local_matrix;
+        }
+
+        if joint.parent_index >= index && joint.parent_index != 255 {
+            panic!("Bones are not in correct order. All children should be after parent current {}, parent {}", index, joint.parent_index);
+        }
+
+        println!("Index: {} - name: {}", index, joint.name.clone());
+        //println!("name: {} worldmat :{:#?}", joint.name.clone(), world_matrix);
+        //println!("name: {} inver_inverseworldmat :{:#?}", joint.name.clone(), world_matrix);
+
+        let name = joint.name.clone();
+
+
+        self.joints[index].world_matrix = world_matrix;
+        self.joints[index].inverse_bind_pose = world_matrix.try_inverse().unwrap();
+
+    }
+
+
+
+
     pub fn from_collada(doc: &collada::document::ColladaDocument, name: &str) -> Skeleton {
 
         let name = " test".to_string();
@@ -109,10 +159,15 @@ impl Skeleton {
                 index +=1;
             }
 
-            return Skeleton {
+
+            let mut skel =  Skeleton {
                 name,
                 joints
-            }
+            };
+
+            skel.calc_t_pose();
+
+            return skel
         }
 
 

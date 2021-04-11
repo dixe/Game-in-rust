@@ -12,7 +12,7 @@ A game in rust to learn rust and some opengl
 - [x] Enemies collide with each other
 - [x] Be able to load models
 - [x] Take console input while running.
-- [ ] Change shaders on the fly, required console input
+- [x] Change shaders on the fly, with notify and recompile of shaders
 - [x] Load .obj models
 - [x] Sword follow player
 - [x] Sword rotation is correct
@@ -23,12 +23,13 @@ A game in rust to learn rust and some opengl
 - [x] Player/entity/action state. Some actions has to finishe before new input is valid
 - [ ] Sword collision bug fix
 - [x] Sword animation only when attacking state
-- [ ] render of collision boxes
+- [x] render of collision boxes
 - [x] third person follow cam
-- [ ] camera rotate around player, ie. if distance less then follow_len don't update camera pos.
+- [x] camera rotate around player, ie. if distance less then follow_len don't update camera pos.
 - [x] return weapon anchor model-plane along with models, if existing
 - [x] Use weapon achor to get normal (weapon dir) and position in animation, use to generate an action that can be used for render and hitbox
 - [ ] load hitbox from blender models
+- [x] load collada with textures
 
 
 # complex model
