@@ -1,12 +1,12 @@
+use stringreader::StringReader;
+use std::io::BufReader;
 use image::io::Reader as ImageReader;
 use image;
 use std::ffi;
 use std::fs;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
-
-
-
+use bvh_anim;
 use walkdir::WalkDir;
 
 #[derive(Debug, Fail)]
@@ -23,7 +23,17 @@ pub enum Error {
     FileContainsNil,
     #[fail(display = "Was None")]
     NoneE,
+    #[fail(display = "Error loading Bvh")]
+    Bvh
 
+}
+
+
+
+impl From<bvh_anim::errors::LoadError> for Error {
+    fn from(other: bvh_anim::errors::LoadError) -> Self {
+        Error::Bvh
+    }
 }
 
 impl From<walkdir::Error> for Error {
@@ -86,11 +96,22 @@ impl Resources {
     }
 
 
+    pub fn load_bvh(&self, name: &str) -> Result<bvh_anim::Bvh, Error> {
+
+        let data = self.load_string(name)?;
+
+        let str_reader = StringReader::new(&data);
+        let mut buf = BufReader::new(str_reader);
+        let bvh = bvh_anim::from_reader(buf)?;
+
+        Ok(bvh)
+    }
+
+
     pub fn load_image_rgb8(&self, resource_name: &str) -> Result<image::RgbImage, Error> {
 
         let path = resource_name_to_path(&self.root_path, resource_name);
 
-        println!("IMG PATH {:#?}", path);
         let image = ImageReader::open(path)?.decode()?.into_rgb8();
 
         Ok(image)

@@ -11,7 +11,7 @@ extern crate notify;
 extern crate walkdir;
 extern crate collada;
 extern crate image;
-
+extern crate bvh_anim;
 
 use notify::{Watcher, RecursiveMode, watcher};
 use std::sync::mpsc::channel;
@@ -159,7 +159,6 @@ fn load_collada(gl: &gl::Gl) -> Result<MeshAndSkeleton, failure::Error> {
 
     let doc: collada::document::ColladaDocument = collada::document::ColladaDocument::from_path(path).unwrap();
 
-
     let mesh = render_gl::SkinnedMesh::from_collada(&doc, gl, "cube");
 
     let mut skeleton = render_gl::Skeleton::from_collada(&doc, &mesh.skeleton_name);
@@ -185,6 +184,7 @@ fn run() -> Result<(), failure::Error> {
     let mesh_and_skeleton = load_collada(&ctx.render_context.gl)?;
 
     let mesh = mesh_and_skeleton.mesh;
+
     let mut skeleton = mesh_and_skeleton.skeleton;
 
     // setup texture
@@ -193,8 +193,26 @@ fn run() -> Result<(), failure::Error> {
     let mut keyframe = render_gl::KeyFrame { joints: Vec::new()};
 
 
+    let mut joint_map = std::collections::HashMap::new();
+
+    for i in 0..skeleton.joints.len() {
+
+        let mut name = skeleton.joints[i].name.clone();
+
+        name = name.replace("Armature_","");
+
+        name = name.replace("_",".");
+
+        joint_map.insert(name, i);
+    }
+
+    let walk_keyframes = render_gl::key_frames_from_bvh(&ctx.render_context.res, &joint_map)?;
+
+
+
     for i in 0..skeleton.joints.len() {
         let joint = &skeleton.joints[i];
+
         let mut transform = render_gl::Transformation::identity(&joint);
 
         if i == 11 {
@@ -228,18 +246,30 @@ fn run() -> Result<(), failure::Error> {
 
     let joint_count = skeleton.joints.len();
 
+
+
+
     let mut keyframes = Vec::new();
+
 
     keyframes.push(keyframe);
     keyframes.push(keyframe2);
 
-    let animation = render_gl::KeyframeAnimation::new("test ani", 1.0, skeleton.clone(), keyframes);
+
+
+    for i in 0..walk_keyframes[1].joints.len() {
+
+    }
+
+
+    let animation = render_gl::KeyframeAnimation::new("test ani", 1.0, skeleton.clone(), walk_keyframes);
 
     let mut animation_player = render_gl::AnimationPlayer::new(animation);
 
 
     let bone_cube = cube::Cube::new(na::Vector3::new(0.5, 0.5, 0.5), &ctx.render_context.gl);
     let mut bones = Vec::new();
+
 
 
 
@@ -300,8 +330,6 @@ fn run() -> Result<(), failure::Error> {
 
 
 
-
-
         //PHYSICS TEST
         physics_test.update(&ctx.controls, ctx.get_delta_time());
 
@@ -312,6 +340,15 @@ fn run() -> Result<(), failure::Error> {
         // RENDERING
         ctx.render();
 
+        match ctx.controls.keys.get(&sdl2::keyboard::Keycode::B) {
+            Some(true) => {
+                println!("BONES");
+                for i in 0..bones.len() {
+                    println!("i = {} {:#?}", i, bones[i]);
+                }
+            },
+            _ => {}
+        }
 
         match ctx.controls.keys.get(&sdl2::keyboard::Keycode::V) {
             Some(true) => {

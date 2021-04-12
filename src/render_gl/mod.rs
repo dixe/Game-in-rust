@@ -35,7 +35,7 @@ pub use self::render_functions::{render};
 
 
 mod keyframe_animation;
-pub use self::keyframe_animation::{KeyframeAnimation,Transformation, KeyFrame};
+pub use self::keyframe_animation::{KeyframeAnimation,Transformation, KeyFrame, key_frames_from_bvh};
 
 
 mod animation_player;
