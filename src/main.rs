@@ -155,7 +155,7 @@ struct MeshAndSkeleton {
 
 fn load_collada(gl: &gl::Gl) -> Result<MeshAndSkeleton, failure::Error> {
 
-    let path = std::path::Path::new("E:/repos/Game-in-rust/blender_models/player_03.dae");
+    let path = std::path::Path::new("E:/repos/Game-in-rust/blender_models/player_04.dae");
 
     let doc: collada::document::ColladaDocument = collada::document::ColladaDocument::from_path(path).unwrap();
 
@@ -206,80 +206,33 @@ fn run() -> Result<(), failure::Error> {
         joint_map.insert(name, i);
     }
 
+
     let walk_keyframes = render_gl::key_frames_from_bvh(&ctx.render_context.res, &joint_map)?;
 
 
 
-    for i in 0..skeleton.joints.len() {
-        let joint = &skeleton.joints[i];
-
-        let mut transform = render_gl::Transformation::identity(&joint);
-
-        if i == 11 {
-            transform = render_gl::Transformation::rotation_euler(joint, 0.0, -1.0, 0.0);
-        }
-        if i == 12 {
-            transform = render_gl::Transformation::rotation_euler(joint, 1.2, -1.0, 0.0);
-        }
-
-
-        keyframe.joints.push(transform)
-    }
-
-    let mut keyframe2 = render_gl::KeyFrame { joints: Vec::new()};
-    for i in 0..skeleton.joints.len() {
-        let joint = &skeleton.joints[i];
-        let mut transform = render_gl::Transformation::identity(&joint);
-
-        if i == 11 {
-            transform = render_gl::Transformation::rotation_euler(joint, 0.0, 0.0, 0.0);
-        }
-        if i == 12 {
-            transform = render_gl::Transformation::rotation_euler(joint, 0.0, 0.0, 0.0);
-        }
-
-
-        keyframe2.joints.push(transform)
-    }
-
-
-
-    let joint_count = skeleton.joints.len();
-
-
-
-
-    let mut keyframes = Vec::new();
-
-
-    keyframes.push(keyframe);
-    keyframes.push(keyframe2);
-
-
-
-    for i in 0..walk_keyframes[1].joints.len() {
-
-    }
-
-
-    let animation = render_gl::KeyframeAnimation::new("test ani", 1.0, skeleton.clone(), walk_keyframes);
+    let animation = render_gl::KeyframeAnimation::new("test ani", 2.0, skeleton.clone(), walk_keyframes);
 
     let mut animation_player = render_gl::AnimationPlayer::new(animation);
 
 
     let bone_cube = cube::Cube::new(na::Vector3::new(0.5, 0.5, 0.5), &ctx.render_context.gl);
+
     let mut bones = Vec::new();
-
-
-
-
-    for i in 0..=joint_count {
+    let joint_count = skeleton.joints.len();
+    for i in 0..joint_count {
         bones.push(na::Matrix4::identity());
     }
 
 
+    set_t_pose(&mut bones);
+
+    let mut t_pose = false;
+
+
     //println!("BONES: {:#?}", bones);
     println!("joints {:#?}", joint_count);
+    println!("hip joints {:#?}", skeleton.joints[0]);
 
     'main: loop{
         ctx.update_delta();
@@ -325,10 +278,12 @@ fn run() -> Result<(), failure::Error> {
 
         // ANIMATION TEST
 
-        animation_player.set_frame_bones(&mut bones, ctx.get_delta_time());
-
-
-
+        if t_pose {
+            set_t_pose(&mut bones);
+        }
+        else{
+            animation_player.set_frame_bones(&mut bones, ctx.get_delta_time());
+        }
 
         //PHYSICS TEST
         physics_test.update(&ctx.controls, ctx.get_delta_time());
@@ -342,16 +297,31 @@ fn run() -> Result<(), failure::Error> {
 
         match ctx.controls.keys.get(&sdl2::keyboard::Keycode::B) {
             Some(true) => {
+
                 println!("BONES");
+                println!("there are {:#?} bones", bones.len());
+                println!("there are {:#?} skel joints", skeleton.joints.len());
                 for i in 0..bones.len() {
-                    println!("i = {} {:#?}", i, bones[i]);
+                    println!("i = {} {:#?}", skeleton.joints[i].name.clone(), bones[i]);
                 }
             },
             _ => {}
         }
 
+        match ctx.controls.keys.get(&sdl2::keyboard::Keycode::T) {
+            Some(true) => {
+                t_pose = true;
+            },
+            _ => {
+                t_pose = false;
+            }
+        };
+
         match ctx.controls.keys.get(&sdl2::keyboard::Keycode::V) {
             Some(true) => {
+
+                let key_frame = animation_player.current_key_frame().joints;
+
 
                 ctx.cube_shader.set_used();
 
@@ -361,9 +331,27 @@ fn run() -> Result<(), failure::Error> {
                 scale_mat[15] = 1.0;
 
 
-                for joint in &skeleton.joints {
-                    bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, joint.world_matrix * scale_mat);
+                let mut world_mats = Vec::new();
+
+                for i in 0..skeleton.joints.len() {
+                    let local = skeleton.joints[i].get_local_matrix_data(key_frame[i].rotation, key_frame[i].translation);
+                    let world_matrix;
+
+                    if i == 0 {
+                        world_matrix = local;
+                    }
+                    else {
+
+                        world_matrix = world_mats[skeleton.joints[i].parent_index] * local;
+                    }
+
+                    world_mats.push(world_matrix);
+
+
+                    bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, world_matrix * scale_mat);
                 }
+
+
             },
             _ => {}
         };
@@ -414,6 +402,11 @@ fn run() -> Result<(), failure::Error> {
 }
 
 
+fn set_t_pose(bones: &mut [na::Matrix4::<f32>]) {
+    for i in 0..bones.len() {
+        bones[i] = na::Matrix4::identity();
+    }
+}
 fn update_follow_camera(ctx: &mut game::Context) {
 
 
@@ -439,9 +432,7 @@ fn update_free_camera(ctx: &mut game::Context) {
 
     use sdl2::keyboard::Keycode;
 
-
     let mut move_dir = ctx.controls.movement_dir;
-
 
     if ctx.camera().mode() == camera::CameraMode::Free {
         ctx.controls.keys.get(&Keycode::LShift).map(|is_set| {

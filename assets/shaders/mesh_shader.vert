@@ -38,7 +38,7 @@ void main()
 {
     mat4 bt = boneTransform();
 
-    OUT.FragPos = vec3( model * bt * vec4(Position, 1.0));
+    OUT.FragPos = vec3(model * bt * vec4(Position, 1.0));
 
     // This is called normal matrix, maybe do on cpu( the transpose and invere part)
     // and send it in as a uniform

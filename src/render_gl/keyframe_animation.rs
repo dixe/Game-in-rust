@@ -11,7 +11,7 @@ pub struct KeyframeAnimation {
     pub key_frames: Vec<KeyFrame>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct KeyFrame {
     pub joints: Vec<Transformation>,
 }
@@ -34,11 +34,11 @@ fn load_joint_data(bvh: &bvh_anim::Bvh, joint: &bvh_anim::JointData, frame: usiz
     let mut y = offset.y;
     let mut z = offset.z;
 
+    // should be the bones default
+    // which might not be 0
     let mut rx = 0.0;
     let mut ry = 0.0;
     let mut rz = 0.0;
-
-
 
     for c in joint.channels() {
         match c.channel_type() {
@@ -46,13 +46,12 @@ fn load_joint_data(bvh: &bvh_anim::Bvh, joint: &bvh_anim::JointData, frame: usiz
                 rx = bvh.get_motion(frame, c);
             },
             bvh_anim::ChannelType::RotationY => {
-                rz = bvh.get_motion(frame, c);
-            },
-            bvh_anim::ChannelType::RotationZ => {
                 ry = bvh.get_motion(frame, c);
             },
+            bvh_anim::ChannelType::RotationZ => {
+                rz = bvh.get_motion(frame, c);
+            },
 
-            // TODO should these be + instead of overwrite?
             bvh_anim::ChannelType::PositionX => {
                 x = bvh.get_motion(frame, c);
             },
@@ -63,14 +62,12 @@ fn load_joint_data(bvh: &bvh_anim::Bvh, joint: &bvh_anim::JointData, frame: usiz
                 z = bvh.get_motion(frame, c);
             },
         };
-
-        //println!("{:#?}", c)
-
     }
 
 
 
-    let mut translation = na::Vector3::new(x,y,z);
+    let translation = na::Vector3::new(x,y,z);
+
     let rotation = na::UnitQuaternion::from_euler_angles(rx.to_radians(), ry.to_radians(), rz.to_radians());
 
 
@@ -81,17 +78,24 @@ fn load_joint_data(bvh: &bvh_anim::Bvh, joint: &bvh_anim::JointData, frame: usiz
 }
 
 
+
+
 pub fn key_frames_from_bvh(res: &Resources, joint_map: &std::collections::HashMap::<std::string::String, usize>) -> Result<Vec<KeyFrame>, failure::Error> {
     // some kind of joint name to index in result mapping
 
-    let bvh = res.load_bvh("animations/walk/walk.bvh")?;
+    let bvh = res.load_bvh("animations/test/knees.bvh")?;
+    //let bvh = res.load_bvh("animations/run/run.bvh")?;
     let mut res = Vec::new();
-    for frame in &[0, 19, 39, 59] {
 
+    //TODO get frames from file??
+
+    for frame in 0..bvh.frames().len() {
 
         let mut transforms = Vec::new();
-        println!("FRAME : {:#?}", frame);
+
+        let mut i = 0;
         for j in bvh.joints() {
+
             let data = j.data();
             let name: String = data.name().to_string();
 
@@ -99,11 +103,14 @@ pub fn key_frames_from_bvh(res: &Resources, joint_map: &std::collections::HashMa
                 Some(i) => *i,
                 None => {continue}
             };
-            let transform = load_joint_data(&bvh, &data, *frame);
-            //println!("joint: {} transform\n {:#?}", name, transform);
-            transforms.push(transform);
-        }
 
+            let transform = load_joint_data(&bvh, &data, frame);
+            println!("joint: {} transform\n {:#?}", name, transform);
+            println!("Keyframe index {} {:#?}", i, name);
+            transforms.push(transform);
+            i += 1;
+        }
+        println!(" keyframe joints {:#?}", transforms.len());
         res.push( KeyFrame {
             joints: transforms
         });
@@ -142,11 +149,13 @@ impl KeyframeAnimation {
         }
     }
 
+
     pub fn move_to_key_frame(&mut self, bones: &mut [na::Matrix4::<f32>], keyframe: usize, t: f32) {
 
         // interpolate joints new transformation
 
 
+        let mut world_matrices = Vec::new();
         for i in 0..self.skeleton.joints.len() {
 
 
@@ -159,7 +168,7 @@ impl KeyframeAnimation {
 
                     println!("target {:#?}", &self.key_frames[keyframe].joints[i]);
                      */
-                    self.skeleton.joints[i].transformation()
+                    self.key_frames[self.key_frames.len() - 1].joints[i]
 
                 },
                 n => {
@@ -172,18 +181,27 @@ impl KeyframeAnimation {
 
 
             let rotation = current_transformation.rotation.slerp(&target_joint.rotation, t);
-            let translation = current_transformation.translation * (1.0-t) + target_joint.translation * t;
+            let translation = current_transformation.translation * (1.0 - t) + target_joint.translation * t;
 
-            let local_matrix = self.skeleton.joints[i].get_local_matrix_data(rotation, translation);
+            /*
+            let rotation = current_transformation.rotation;
+            let translation = current_transformation.translation;
+
+            let translation = self.skeleton.joints[i].translation;
+            let rotation = self.skeleton.joints[i].rotation;
+             */
+            let local_matrix  = self.skeleton.joints[i].get_local_matrix_data(rotation, translation);
 
             let mut world_matrix = local_matrix;
 
             let parent_index = self.skeleton.joints[i].parent_index;
             if parent_index  != 255 {
-                world_matrix = self.skeleton.joints[parent_index].world_matrix * local_matrix;
+                world_matrix = world_matrices[parent_index] * local_matrix;
             }
 
-            self.skeleton.joints[i].world_matrix = world_matrix;
+            world_matrices.push(world_matrix);
+
+            //self.skeleton.joints[i].world_matrix = world_matrix;
             bones[i] = world_matrix * self.skeleton.joints[i].inverse_bind_pose;
 
         }

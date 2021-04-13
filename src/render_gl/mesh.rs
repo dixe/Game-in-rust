@@ -65,15 +65,11 @@ impl SkinnedMesh {
 
         // setup textures for mesh
 
-
-
         for obj in &obj_set.objects {
             println!("Object Name = {:#?}", obj.name);
             println!("veritces_count {:#?}", obj.vertices.len());
 
             let bind_info = load_vertex_weights(doc, obj);
-
-
 
             let mesh = load_mesh(obj, &bind_info.vertex_weights, gl, name.to_string());
 
@@ -371,8 +367,6 @@ fn load_vertex_weights(doc: &collada::document::ColladaDocument, obj: &collada::
     let mut vert_joints = Vec::<VWeights>::new();
 
     let bind_data = doc.get_bind_data_set().unwrap();
-
-
 
     for i in 0..obj.vertices.len() {
         vert_joints.push(VWeights {

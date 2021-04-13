@@ -1,4 +1,4 @@
-use crate::render_gl::{KeyframeAnimation};
+use crate::render_gl::{KeyframeAnimation, KeyFrame};
 
 
 pub struct AnimationPlayer {
@@ -15,6 +15,16 @@ impl AnimationPlayer {
             elapsed: 0.0
         }
     }
+
+
+    pub fn current_key_frame(&self) -> KeyFrame {
+        let frame_time = self.current_animation.duration/ self.current_animation.key_frames.len() as f32;
+        // find next frame id
+        let frame_index = usize::min(self.current_animation.key_frames.len() -1,  (self.elapsed / frame_time) as usize);
+
+        self.current_animation.key_frames[frame_index].clone()
+    }
+
 
     pub fn set_frame_bones(&mut self, bones: &mut [na::Matrix4::<f32>], delta: f32) {
 
