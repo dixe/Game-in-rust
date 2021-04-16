@@ -30,6 +30,11 @@ A game in rust to learn rust and some opengl
 - [x] Use weapon achor to get normal (weapon dir) and position in animation, use to generate an action that can be used for render and hitbox
 - [ ] load hitbox from blender models
 - [x] load collada with textures
+- [ ] Run animation
+- [ ] Idle animation
+- [ ] blender model as player model
+- [ ] Play run when moving and idle when not
+
 
 
 # complex model

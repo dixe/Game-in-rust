@@ -2,6 +2,7 @@ use nalgebra as na;
 
 use crate::render_gl::{Mesh, Skeleton, Joint};
 use crate::resources::Resources;
+use crate::resources;
 
 #[derive(Debug)]
 pub struct KeyframeAnimation {
@@ -21,6 +22,28 @@ pub struct Transformation {
     pub translation: na::Vector3::<f32>,
     pub rotation: na::UnitQuaternion::<f32>,
 }
+
+
+
+#[derive(Debug, Fail)]
+pub enum Error {
+    #[fail(display = "No root found")]
+    NoRootFound,
+    #[fail(display = "Resource Error")]
+    ResourceError(resources::Error)
+}
+
+
+
+impl From<resources::Error> for Error {
+    fn from(other: resources::Error) -> Self {
+        Error::ResourceError(other)
+    }
+}
+
+
+
+
 
 
 fn load_joint_data(bvh: &bvh_anim::Bvh, joint: &bvh_anim::JointData, frame: usize) -> Transformation {
@@ -65,7 +88,6 @@ fn load_joint_data(bvh: &bvh_anim::Bvh, joint: &bvh_anim::JointData, frame: usiz
     }
 
 
-
     let translation = na::Vector3::new(x,y,z);
 
     let rotation = na::UnitQuaternion::from_euler_angles(rx.to_radians(), ry.to_radians(), rz.to_radians());
@@ -79,15 +101,45 @@ fn load_joint_data(bvh: &bvh_anim::Bvh, joint: &bvh_anim::JointData, frame: usiz
 
 
 
+fn build_skeleton(root_name: &str, bvh: &bvh_anim::Bvh) -> Result<i32, Error> {
 
-pub fn key_frames_from_bvh(res: &Resources, joint_map: &std::collections::HashMap::<std::string::String, usize>) -> Result<Vec<KeyFrame>, failure::Error> {
+    let root = match bvh.joints().find_by_name(root_name) {
+        Some(root) => root,
+        _ => return Err( Error::NoRootFound)
+    };
+
+    for j in bvh.joints() {
+        let data = j.data();
+        //println!("{:#?}", data);
+    }
+
+
+    //for c in root.children().take(1) {
+    //println!("child {:#?}", c);
+    //}
+
+    Ok(1)
+}
+
+
+
+pub fn key_frames_from_bvh(res: &Resources, joint_map: &std::collections::HashMap::<std::string::String, usize>) -> Result<Vec<KeyFrame>, Error> {
+
     // some kind of joint name to index in result mapping
-
     let bvh = res.load_bvh("animations/test/knees.bvh")?;
-    //let bvh = res.load_bvh("animations/run/run.bvh")?;
+
     let mut res = Vec::new();
 
-    //TODO get frames from file??
+    // root is the name of joint_map[0]
+    let root_name =  match joint_map.iter().find(|(_,v)|**v == 0) {
+        Some((k,v)) => k,
+        _ => {
+            return Err(Error::NoRootFound);
+        }
+    };
+
+    build_skeleton(root_name, &bvh);
+
 
     for frame in 0..bvh.frames().len() {
 
@@ -101,16 +153,27 @@ pub fn key_frames_from_bvh(res: &Resources, joint_map: &std::collections::HashMa
 
             let index = match joint_map.get(&name) {
                 Some(i) => *i,
-                None => {continue}
+                None => { continue }
             };
 
             let transform = load_joint_data(&bvh, &data, frame);
+            /*
             println!("joint: {} transform\n {:#?}", name, transform);
             println!("Keyframe index {} {:#?}", i, name);
+            println!("index, transformLen {} {:#?}", index, transforms.len());
+             */
+
+
+            if index != transforms.len() {
+                panic!("Index into bones vec is {}, but we are inserting at {}", index, transforms.len());
+            }
+
             transforms.push(transform);
+
             i += 1;
         }
-        println!(" keyframe joints {:#?}", transforms.len());
+
+
         res.push( KeyFrame {
             joints: transforms
         });
@@ -156,6 +219,9 @@ impl KeyframeAnimation {
 
 
         let mut world_matrices = Vec::new();
+
+        //println!("Frame {:#?}", keyframe);
+
         for i in 0..self.skeleton.joints.len() {
 
 
@@ -177,19 +243,22 @@ impl KeyframeAnimation {
             };
 
 
+
             let target_joint = &self.key_frames[keyframe].joints[i];
 
 
             let rotation = current_transformation.rotation.slerp(&target_joint.rotation, t);
             let translation = current_transformation.translation * (1.0 - t) + target_joint.translation * t;
 
-            /*
+
             let rotation = current_transformation.rotation;
             let translation = current_transformation.translation;
 
+            /*
             let translation = self.skeleton.joints[i].translation;
             let rotation = self.skeleton.joints[i].rotation;
              */
+
             let local_matrix  = self.skeleton.joints[i].get_local_matrix_data(rotation, translation);
 
             let mut world_matrix = local_matrix;

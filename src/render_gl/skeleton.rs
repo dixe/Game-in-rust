@@ -35,6 +35,7 @@ impl Joint {
         let trans_mat = na::Matrix4::new_translation(&translation);
 
         trans_mat * rot_mat
+
     }
 
     pub fn transformation(&self) -> Transformation {
@@ -70,7 +71,7 @@ impl Skeleton {
             panic!("Bones are not in correct order. All children should be after parent current {}, parent {}", index, joint.parent_index);
         }
 
-        println!("Index: {} - name: {}", index, joint.name.clone());
+        //println!("Index: {} - name: {}", index, joint.name.clone());
         //println!("name: {} worldmat :{:#?}", joint.name.clone(), world_matrix);
         //println!("name: {} inver_inverseworldmat :{:#?}", joint.name.clone(), world_matrix);
 

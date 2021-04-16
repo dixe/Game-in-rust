@@ -56,6 +56,11 @@ fn vertex_debug_info(obj: &collada::Object, bind_info: &BindInfo) {
 
 impl SkinnedMesh {
 
+
+    pub fn from_gltf() {
+
+    }
+
     pub fn from_collada(doc: &collada::document::ColladaDocument, gl: &gl::Gl, name: &str) -> SkinnedMesh {
         let obj_set = doc.get_obj_set().unwrap();
 

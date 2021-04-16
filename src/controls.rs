@@ -24,8 +24,7 @@ pub struct Controls {
     pub keys: std::collections::HashMap<sdl2::keyboard::Keycode, bool>,
 
     pub mouse_move: na::Vector2::<f32>,
-
-
+    pub is_focus: bool
 
 }
 
@@ -61,6 +60,8 @@ impl Controls {
             keys: std::collections::HashMap::new(),
 
             mouse_move: na::Vector2::new(0.0, 0.0),
+
+            is_focus: true
         }
     }
 
@@ -94,6 +95,24 @@ impl Controls {
                     ctx.viewport.update_size(w,h);
                     ctx.viewport.set_used(&ctx.gl);
                 },
+
+
+
+
+
+
+                Event::Window {win_event, ..} => {
+                    match win_event {
+                        sdl2::event::WindowEvent::Exposed => {
+                            self.is_focus = true;
+                        },
+                        sdl2::event::WindowEvent::FocusLost => {
+                            self.is_focus = false;
+                        },
+                        _ => {}
+                    };
+                },
+
                 Event::KeyUp {keycode, ..} =>  {
                     match keycode {
                         Some(sdl2::keyboard::Keycode::A) =>  {
@@ -203,7 +222,7 @@ impl Controls {
                             self.keys.insert(key, true);
                         },
 
-                        _ => {}
+                        _ => {},
                     }
                 },
                 Event::ControllerAxisMotion {axis, value,..} => {
@@ -250,14 +269,15 @@ impl Controls {
                     ctx.set_controller(which);
                 },
                 Event::MouseMotion {xrel, yrel, x: _, y: _, ..} => {
-                    self.mouse_move.x = xrel as f32;
-                    self.mouse_move.y = yrel as f32;
+                    if self.is_focus {
+                        self.mouse_move.x = xrel as f32;
+                        self.mouse_move.y = yrel as f32;
+                    }
                 },
                 _ => {
-                    //println!("Pressed : {:#?} ", a);
+                    //println!("Event : {:#?} ", e);
                 }
             }
-
         }
 
         if self.a {

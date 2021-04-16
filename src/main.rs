@@ -12,6 +12,7 @@ extern crate walkdir;
 extern crate collada;
 extern crate image;
 extern crate bvh_anim;
+extern crate gltf;
 
 use notify::{Watcher, RecursiveMode, watcher};
 use std::sync::mpsc::channel;
@@ -153,6 +154,30 @@ struct MeshAndSkeleton {
 }
 
 
+fn load_gltf(gl: &gl::Gl) -> Result<(), failure::Error> {
+
+    let doc = gltf::Gltf::open("E:/repos/Game-in-rust/blender_models/player_04.glb")?;
+
+    for mesh in doc.meshes() {
+        for p in mesh.primitives() {
+            let positions = p.get(&gltf::mesh::Semantic::Positions).unwrap();
+
+
+
+            println!("Mesh {:?} {:#?} ", mesh.name(), positions.count());
+        }
+    }
+
+    for a in doc.animations() {
+
+        println!("Animation {:#?}", a.name());
+    }
+
+    Ok(())
+
+
+}
+
 fn load_collada(gl: &gl::Gl) -> Result<MeshAndSkeleton, failure::Error> {
 
     let path = std::path::Path::new("E:/repos/Game-in-rust/blender_models/player_04.dae");
@@ -170,6 +195,29 @@ fn load_collada(gl: &gl::Gl) -> Result<MeshAndSkeleton, failure::Error> {
 }
 
 
+static anim_time: f32 = 1.0;
+fn load_and_set_animation(ctx: &game::Context,
+                          animation_player: &mut render_gl::AnimationPlayer,
+                          skeleton: &render_gl::Skeleton,
+                          joint_map: &std::collections::HashMap::<String, usize> ) {
+
+    let walk_keyframes = match render_gl::key_frames_from_bvh(&ctx.render_context.res, &joint_map) {
+        Ok(key_frames) => key_frames,
+        Err(err) => {           //
+            println!("Error loading key_frames: {:#?}", err);
+            return; }
+    };
+
+    let animation = render_gl::KeyframeAnimation::new("test ani", anim_time, skeleton.clone(), walk_keyframes);
+
+    animation_player.set_current(animation);
+
+
+
+
+
+}
+
 fn run() -> Result<(), failure::Error> {
 
 
@@ -182,6 +230,9 @@ fn run() -> Result<(), failure::Error> {
     let mut mesh_shader = render_gl::Shader::new("mesh_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
 
     let mesh_and_skeleton = load_collada(&ctx.render_context.gl)?;
+
+
+    load_gltf(&ctx.render_context.gl)?;
 
     let mesh = mesh_and_skeleton.mesh;
 
@@ -207,13 +258,15 @@ fn run() -> Result<(), failure::Error> {
     }
 
 
+
+
+
     let walk_keyframes = render_gl::key_frames_from_bvh(&ctx.render_context.res, &joint_map)?;
 
-
-
-    let animation = render_gl::KeyframeAnimation::new("test ani", 2.0, skeleton.clone(), walk_keyframes);
+    let animation = render_gl::KeyframeAnimation::new("test ani", anim_time, skeleton.clone(), walk_keyframes);
 
     let mut animation_player = render_gl::AnimationPlayer::new(animation);
+
 
 
     let bone_cube = cube::Cube::new(na::Vector3::new(0.5, 0.5, 0.5), &ctx.render_context.gl);
@@ -229,10 +282,7 @@ fn run() -> Result<(), failure::Error> {
 
     let mut t_pose = false;
 
-
-    //println!("BONES: {:#?}", bones);
     println!("joints {:#?}", joint_count);
-    println!("hip joints {:#?}", skeleton.joints[0]);
 
     'main: loop{
         ctx.update_delta();
@@ -334,6 +384,7 @@ fn run() -> Result<(), failure::Error> {
                 let mut world_mats = Vec::new();
 
                 for i in 0..skeleton.joints.len() {
+
                     let local = skeleton.joints[i].get_local_matrix_data(key_frame[i].rotation, key_frame[i].translation);
                     let world_matrix;
 
@@ -341,7 +392,6 @@ fn run() -> Result<(), failure::Error> {
                         world_matrix = local;
                     }
                     else {
-
                         world_matrix = world_mats[skeleton.joints[i].parent_index] * local;
                     }
 
@@ -349,6 +399,7 @@ fn run() -> Result<(), failure::Error> {
 
 
                     bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, world_matrix * scale_mat);
+
                 }
 
 
@@ -385,6 +436,10 @@ fn run() -> Result<(), failure::Error> {
                             println!("Error loading mesh shader: {}",err);
                         }
                     };
+
+
+                    load_and_set_animation(&ctx, &mut animation_player, &skeleton, &joint_map);
+
 
                     ctx.load_model(ctx.player_weapon_id, na::Vector3::new(0.2, 0.2, 0.2), "models/sword.obj")?;
                 },

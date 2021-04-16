@@ -17,6 +17,11 @@ impl AnimationPlayer {
     }
 
 
+    pub fn set_current(&mut self, animation: KeyframeAnimation) {
+        self.current_animation = animation;
+        self.elapsed = 0.0;
+    }
+
     pub fn current_key_frame(&self) -> KeyFrame {
         let frame_time = self.current_animation.duration/ self.current_animation.key_frames.len() as f32;
         // find next frame id
