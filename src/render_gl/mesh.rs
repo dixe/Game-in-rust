@@ -1,10 +1,11 @@
+use crate::render_gl::{Transformation};
 use gl;
 use std::fmt;
 use crate::render_gl::{self, buffer};
-use collada;
 
 
 pub struct SkinnedMesh {
+    name: String,
     mesh: Mesh,
     pub joint_names: Vec::<String>,
     pub skeleton_name: String,
@@ -12,7 +13,6 @@ pub struct SkinnedMesh {
 }
 
 pub struct Mesh {
-    name: String,
     vao: buffer::VertexArray,
     _vbo: buffer::ArrayBuffer,
     _ebo: buffer::ElementArrayBuffer,
@@ -28,67 +28,95 @@ pub struct VertexWeights {
 }
 
 
-impl fmt::Display for Mesh {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Mesh: {}", self.name)?;
-        Ok(())
-    }
-}
-
-impl fmt::Debug for Mesh {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Mesh: {}", self.name)?;
-        Ok(())
-    }
-}
-
+/*
 fn vertex_debug_info(obj: &collada::Object, bind_info: &BindInfo) {
-    for i in 0..obj.vertices.len() {
+for i in 0..obj.vertices.len() {
 
-        let v = obj.vertices[i];
-        let vw = bind_info.vertex_weights[i];
+let v = obj.vertices[i];
+let vw = bind_info.vertex_weights[i];
 
-        println!("vertex ({:.3},{:.3},{:.3}), {:?}", v.x, v.y, v.z, vw);
+println!("vertex ({:.3},{:.3},{:.3}), {:?}", v.x, v.y, v.z, vw);
 
     }
-
 }
+
+*/
 
 impl SkinnedMesh {
 
 
-    pub fn from_gltf() {
-
-    }
-
-    pub fn from_collada(doc: &collada::document::ColladaDocument, gl: &gl::Gl, name: &str) -> SkinnedMesh {
-        let obj_set = doc.get_obj_set().unwrap();
-
-        println!("Materials {:#?}", obj_set.material_library);
-        println!("Objects {:#?}", obj_set.objects.len());
+    pub fn from_gltf(gl: &gl::Gl) -> Result<SkinnedMesh, failure::Error> {
+        let (gltf, buffers, _) = gltf::import("E:/repos/Game-in-rust/blender_models/player_05.glb")?;
 
 
-        // setup textures for mesh
+        for mesh in gltf.meshes() {
+            println!("Mesh #{}", mesh.index());
 
-        for obj in &obj_set.objects {
-            println!("Object Name = {:#?}", obj.name);
-            println!("veritces_count {:#?}", obj.vertices.len());
+            let mut vertex_data = Vec::new();
 
-            let bind_info = load_vertex_weights(doc, obj);
+            let mut normal_data = Vec::new();
 
-            let mesh = load_mesh(obj, &bind_info.vertex_weights, gl, name.to_string());
+            let mut tex_data = Vec::new();
 
-            //println!("{:#?}", bind_info.joint_names);
-            return SkinnedMesh {
+            let mut indices_data = Vec::new();
+
+
+            for primitive in mesh.primitives() {
+                println!("- Primitive #{}", primitive.index());
+                let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
+
+
+                if let Some(iter) = reader.read_positions() {
+                    for pos in iter {
+                        vertex_data.push(pos);
+                    }
+                }
+
+                if let Some(iter) = reader.read_normals() {
+                    for norm in iter {
+                        normal_data.push(norm);
+                    }
+                }
+
+                if let Some(reader) = reader.read_tex_coords(0) {
+                    for tex in reader.into_f32() {
+                        tex_data.push(tex);
+                    }
+                }
+
+                if let Some(reader) = reader.read_indices() {
+                    for tex in reader.into_u32() {
+                        indices_data.push(tex);
+                    }
+                }
+
+
+                if let Some(read_joints) = reader.read_joints(0) {
+                    //println!("{:#?}", read_joints.into_u16());
+                }
+
+
+                // Find the skins, fx Armature
+
+
+            }
+
+
+            println!("Vertices {:#?}, Normals {:?} tex {:?}, indices {}", vertex_data.len(), normal_data.len(), tex_data.len(), indices_data.len());
+
+            let mesh = load_mesh_gltf(gl, &vertex_data, &normal_data, &indices_data, &tex_data);
+
+            return Ok(SkinnedMesh {
                 mesh,
-                inverse_bind_poses: bind_info.inverse_bind_poses,
-                joint_names: bind_info.joint_names.clone(),
-                skeleton_name: bind_info.skeleton_name,
-            };
+                name: "test".to_string(),
+                inverse_bind_poses: Vec::<na::Matrix4::<f32>>::new(),
+                joint_names: Vec::new(),
+                skeleton_name: "tmp".to_string()
+            });
+
         }
 
-
-        panic!("No models what do to \n\n\n\n");
+        panic!("NO MESH LOADED EXITING");
     }
 
 
@@ -125,133 +153,52 @@ impl SkinnedMesh {
 }
 
 
-fn load_mesh(obj: &collada::Object, vert_joints: &Vec::<VertexWeights>, gl: &gl::Gl, name: String) -> Mesh {
+fn load_mesh_gltf(gl: &gl::Gl, pos_data: &Vec::<[f32; 3]>, norm_data: &Vec::<[f32; 3]>, ebo_data: &Vec::<u32>, tex_data: &Vec::<[f32; 2]>) -> Mesh {
 
     let vbo = buffer::ArrayBuffer::new(gl);
     let vao = buffer::VertexArray::new(gl);
 
     let mut vertex_data = Vec::<f32>::new();
 
-    let mut ebo_data = Vec::<u32>::new();
 
     let ebo = buffer::ElementArrayBuffer::new(gl);
 
-    let mut verts = Vec::new();
-    let mut vert_norms = Vec::new();
-    let mut vert_tex = Vec::new();
 
-    let mut vert_weights = Vec::new();
+    let indices_count = ebo_data.len();
 
-    // Fill EBO and vertex normals
-    for geo in &obj.geometry {
+    for i in 0..pos_data.len() {
 
-        println!("geo_count {:#?}", obj.geometry.len());
-
-        println!("smooth shading {:#?}", geo.smooth_shading_group);
-        for mesh in &geo.mesh {
-
-            println!("mesh_count {:#?}", geo.mesh.len());
-
-
-            match mesh {
-                collada::PrimitiveElement::Triangles(triangles) => {
-                    let tri_norms = triangles.normals.as_ref().unwrap();
-                    let tri_tex = triangles.tex_vertices.as_ref().unwrap();
-                    println!("obj normals {:#?}", tri_norms.len());
-
-                    for i in 0..triangles.vertices.len() {
-                        let (v_0, v_1, v_2) = triangles.vertices[i];
-                        let (n_0, n_1, n_2) = tri_norms[i];
-                        let (t_0, t_1, t_2) = tri_tex[i];
-
-                        if vert_joints.len() > 0 {
-                            vert_weights.push(vert_joints[v_0]);
-                            vert_weights.push(vert_joints[v_1]);
-                            vert_weights.push(vert_joints[v_2]);
-                        }
-                        else {
-                            let vw = VertexWeights {
-                                joints: [0, 0],
-                                weights: [ 1.0, 0.0]
-                            };
-                            vert_weights.push(vw);
-                            vert_weights.push(vw);
-                            vert_weights.push(vw);
-                        }
-
-                        ebo_data.push((i * 3) as u32);
-                        ebo_data.push((i * 3 + 1) as u32);
-                        ebo_data.push((i * 3 + 2) as u32);
-
-                        verts.push(obj.vertices[v_0]);
-                        verts.push(obj.vertices[v_1]);
-                        verts.push(obj.vertices[v_2]);
-
-                        vert_norms.push(obj.normals[n_0]);
-                        vert_norms.push(obj.normals[n_1]);
-                        vert_norms.push(obj.normals[n_2]);
-
-                        vert_tex.push(obj.tex_vertices[t_0]);
-                        vert_tex.push(obj.tex_vertices[t_1]);
-                        vert_tex.push(obj.tex_vertices[t_2]);
-
-                    }
-
-                    println!("triVerts: {:#?}", triangles.vertices.len());
-                },
-
-                _=> {
-                    panic!("Not triangles");
-                }
-            };
-        }
-    }
-
-
-
-    let indices_count = verts.len();
-
-    for i in 0..verts.len() {
-        // x y z
-
-        let vert = verts[i];
-
-        let norm = vert_norms[i];
-
-        let tex = vert_tex[i];
-
-        //println!("vertex ({:.3},{:.3},{:.3}), TEX {:.03},{:0.3}", vert.x, vert.y, vert.z, tex.x, tex.y);
-
-        vertex_data.push(vert.x as f32);
-        vertex_data.push(vert.y as f32);
-        vertex_data.push(vert.z as f32);
+        vertex_data.push(pos_data[i][0]);
+        vertex_data.push(pos_data[i][1]);
+        vertex_data.push(pos_data[i][2]);
 
         //NORMAL
-        vertex_data.push(norm.x as f32);
-        vertex_data.push(norm.y as f32);
-        vertex_data.push(norm.z as f32);
 
+        vertex_data.push(norm_data[i][0]);
+        vertex_data.push(norm_data[i][1]);
+        vertex_data.push(norm_data[i][2]);
 
         // BONE WEIGHTS
 
-        let joint_weights = vert_weights[i];
-
-        vertex_data.push(joint_weights.weights[0]);
-        vertex_data.push(joint_weights.weights[1]);
+        vertex_data.push(0.0);
+        vertex_data.push(0.0);
 
 
         // BONE INDICES
-        vertex_data.push(joint_weights.joints[0] as f32);
-        vertex_data.push(joint_weights.joints[1] as f32);
+        vertex_data.push(0.0);
+        vertex_data.push(0.0);
+
+        //vertex_data.push(joint_weights.joints[0] as f32);
+        //vertex_data.push(joint_weights.joints[1] as f32);
 
 
         // TEXTURE INFO
 
-        vertex_data.push(tex.x as f32);
-        vertex_data.push(tex.y as f32);
-
-
+        vertex_data.push(tex_data[i][0]);
+        vertex_data.push(tex_data[i][1]);
     }
+
+
 
     let stride = ((3 + 3 + 2 + 2 + 2) * std::mem::size_of::<f32>()) as gl::types::GLint;
     unsafe {
@@ -335,23 +282,18 @@ fn load_mesh(obj: &collada::Object, vert_joints: &Vec::<VertexWeights>, gl: &gl:
 
         gl.EnableVertexAttribArray(4);
 
-
-
-
     }
-
-    println!("indices count {:#?}", indices_count);
 
     let mesh = Mesh {
         vao,
         _vbo: vbo,
         _ebo: ebo,
         indices_count: indices_count as i32,
-        name
     };
 
     mesh
 }
+
 
 struct VWeights {
     joints: Vec::<usize>,
@@ -367,16 +309,16 @@ struct BindInfo {
 }
 
 
-
+/*
 fn load_vertex_weights(doc: &collada::document::ColladaDocument, obj: &collada::Object) -> BindInfo {
-    let mut vert_joints = Vec::<VWeights>::new();
+let mut vert_joints = Vec::<VWeights>::new();
 
-    let bind_data = doc.get_bind_data_set().unwrap();
+let bind_data = doc.get_bind_data_set().unwrap();
 
-    for i in 0..obj.vertices.len() {
-        vert_joints.push(VWeights {
-            joints: Vec::new(),
-            weights: Vec::new(),
+for i in 0..obj.vertices.len() {
+vert_joints.push(VWeights {
+joints: Vec::new(),
+weights: Vec::new(),
         });
     }
 
@@ -474,17 +416,4 @@ fn load_vertex_weights(doc: &collada::document::ColladaDocument, obj: &collada::
     }
 }
 
-
-fn map_mat4(col_mat: &collada::Matrix4<f32>) -> na::Matrix4::<f32> {
-
-    let mut res = na::Matrix4::<f32>::identity();
-
-    let mut index = 0;
-
-    for i in 0..4 {
-        for j in 0..4 {
-            res[j*4 + i] =col_mat[i][j];
-        }
-    }
-    res
-}
+ */

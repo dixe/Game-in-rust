@@ -23,7 +23,7 @@ impl Texture {
 
         let mut img = res.load_image_rgb8(&path)?;
 
-        img = image::imageops::flip_vertical(&img);
+        //img = image::imageops::flip_vertical(&img);
 
         let mut obj: gl::types::GLuint = 0;
         unsafe {

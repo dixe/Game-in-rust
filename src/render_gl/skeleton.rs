@@ -21,6 +21,17 @@ pub struct Joint {
 
 impl Joint {
 
+    pub fn empty() -> Joint {
+        Joint {
+            name: "Empty".to_string(),
+            parent_index: 0,
+            inverse_bind_pose: na::Matrix4::identity(),
+            world_matrix: na::Matrix4::identity(),
+            rotation: na::UnitQuaternion::identity(),
+            translation: na::Vector3::identity(),
+        }
+    }
+
     pub fn get_local_matrix(&self) -> na::Matrix4::<f32> {
         let rot_mat = self.rotation.to_homogeneous();
 
@@ -84,111 +95,103 @@ impl Skeleton {
     }
 
 
+    pub fn from_gltf(gl: &gl::Gl) -> Result<Skeleton, failure::Error> {
+        let (gltf, buffers, _) = gltf::import("E:/repos/Game-in-rust/blender_models/player_05.glb")?;
+
+        for skin in gltf.skins() {
+
+            let mut joints_data = Vec::new();
+            for _ in skin.joints() {
+                joints_data.push((Vec::new(), "", Transformation {
+                    translation: na::Vector3::new(0.0, 0.0, 0.0),
+                    rotation: na::UnitQuaternion::identity()
+                }));
+
+            }
 
 
-    pub fn from_collada(doc: &collada::document::ColladaDocument, name: &str) -> Skeleton {
+            // fill the array with joints data
 
-        let name = " test".to_string();
-        let mut joints = Vec::new();
+            let mut hip_index = 0;
+            for node in skin.joints() {
+                let index = node.index();
 
-        let skel_res = doc.get_skeletons();
+                let (translation, rotation) = match node.transform() {
+                    gltf::scene::Transform::Decomposed {translation, rotation, scale} => {
 
 
-        let skels = match skel_res {
-            Some(s) => s,
-            None => {
-                println!("Could not find skeleton");
-                return Skeleton {
-                    name,
-                    joints
+                        let q = na::Quaternion::from_vector(na::Vector4::new(rotation[0], rotation[1], rotation[2], rotation[3]));
+
+                        let rot = na::UnitQuaternion::from_quaternion(q);
+
+                        println!("ORIG {:#?}", rotation);
+
+                        println!("NEW {:#?}", rot);
+                        //let rot = na::UnitQuaternion::identity();
+                        (na::Vector3::new(translation[0], translation[1], translation[2]), rot)
+
+                    },
+                    _ => { panic!("Non decomposed joints info")}
+                };
+
+                if node.name().unwrap() == "hip" {
+                    hip_index = index;
                 }
 
-            }
-        };
+                let children: Vec::<usize> = node.children().map(|c| c.index()).collect();
 
-        for skel in skels {
-
-            let mut bind_poses = Vec::new();
-            for bind_pose in &skel.bind_poses {
-                bind_poses.push(map_mat4(bind_pose));
-            }
-
-
-            println!("poses: {:#?}", bind_poses.len());
-
-            println!("skel bones: {:#?}", skel.joints.len());
-
-            let mut index = 0;
-            for joint in &skel.joints {
-
-                let transform = bind_poses[index];
-                let translation = na::Vector3::new(transform[12], transform[13], transform[14]);
-
-                let mut rot_mat = na::Matrix3::identity();
-
-                // take bind pose and remove all translation, giving us rotation
-                rot_mat[0] = transform[0];
-                rot_mat[1] = transform[1];
-                rot_mat[2] = transform[2];
-
-                rot_mat[3] = transform[4];
-                rot_mat[4] = transform[5];
-                rot_mat[5] = transform[6];
-
-                rot_mat[6] = transform[8];
-                rot_mat[7] = transform[9];
-                rot_mat[8] = transform[10];
-
-                let rotation = na::UnitQuaternion::from_matrix(&rot_mat);
-
-
-                //println!("name = {} rotation = {:#?}", joint.name.clone(), rotation);
-
-                //println!("name = {} transform = {:#?}", joint.name.clone(), transform);
-
-
-                joints.push(Joint {
-                    world_matrix: na::Matrix4::identity(),
-                    name: joint.name.clone(),
-                    parent_index: joint.parent_index as usize,
-                    inverse_bind_pose: map_mat4(&joint.inverse_bind_pose),
-                    rotation,
+                joints_data[index] = (children, node.name().unwrap(), Transformation {
                     translation,
-
+                    rotation
                 });
-
-                index +=1;
             }
 
 
-            let mut skel =  Skeleton {
-                name,
-                joints
+            // start from hip index and create skeleton from there
+
+            let mut skeleton = Skeleton {
+                name: "test".to_string(),
+                joints: Vec::new(),
             };
 
-            skel.calc_t_pose();
+            load_joints(&mut skeleton, &joints_data, hip_index, 255);
 
-            return skel
+            skeleton.calc_t_pose();
+
+            //println!("{:#?}", skeleton.joints[1]);
+
+
+            return Ok(skeleton);
+
         }
 
-
-        panic!("No skeletons");
-
+        //panic!("NO SKELETON LOADED");
+        Ok(Skeleton {
+            name: "test".to_string(),
+            joints: Vec::new(),
+        })
     }
 }
 
 
-fn map_mat4(col_mat: &collada::Matrix4<f32>) -> na::Matrix4::<f32> {
+fn load_joints(skeleton: &mut Skeleton, joints: &[(Vec::<usize>, &str, Transformation)], index: usize, parent_index: usize) {
 
-    let mut res = na::Matrix4::<f32>::identity();
+    let mut joint = Joint::empty();
 
-    let mut index = 0;
+    joint.rotation = joints[index].2.rotation;
+    joint.translation = joints[index].2.translation;
+    joint.name = joints[index].1.to_string();
 
-    for i in 0..4 {
-        for j in 0..4 {
-            res[j*4 + i] = col_mat[i][j];
-        }
+
+    joint.parent_index = parent_index;
+
+    skeleton.joints.push(joint);
+
+    let this_idx = skeleton.joints.len() - 1;
+    for c in &joints[index].0 {
+        load_joints(skeleton, joints, *c, this_idx);
     }
 
-    res
+
+
 }
