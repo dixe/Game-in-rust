@@ -6,7 +6,6 @@ use std::ffi;
 use std::fs;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
-use bvh_anim;
 use walkdir::WalkDir;
 
 #[derive(Debug, Fail)]
@@ -23,18 +22,9 @@ pub enum Error {
     FileContainsNil,
     #[fail(display = "Was None")]
     NoneE,
-    #[fail(display = "Error loading Bvh")]
-    Bvh
-
 }
 
 
-
-impl From<bvh_anim::errors::LoadError> for Error {
-    fn from(other: bvh_anim::errors::LoadError) -> Self {
-        Error::Bvh
-    }
-}
 
 impl From<walkdir::Error> for Error {
     fn from(other: walkdir::Error) -> Self {
@@ -93,18 +83,6 @@ impl Resources {
         }
 
         Ok(res)
-    }
-
-
-    pub fn load_bvh(&self, name: &str) -> Result<bvh_anim::Bvh, Error> {
-
-        let data = self.load_string(name)?;
-
-        let str_reader = StringReader::new(&data);
-        let mut buf = BufReader::new(str_reader);
-        let bvh = bvh_anim::from_reader(buf)?;
-
-        Ok(bvh)
     }
 
 

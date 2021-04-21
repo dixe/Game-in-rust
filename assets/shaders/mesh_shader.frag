@@ -4,6 +4,7 @@ in VS_OUTPUT {
     vec3 Normal;
     vec3 FragPos;
     vec2 TexCord;
+    vec3 Color;
 } IN;
 
 
@@ -29,6 +30,6 @@ void main()
   vec3 color = texture(Texture, IN.TexCord).rgb;
   Color =  vec4( (ambient + diffuse) * color, 1.0f);
 
-  //Color =  vec4( IN.Color.xyz, 1.0f);
+  Color =  vec4( IN.Color.xyz, 1.0f);
 
  }

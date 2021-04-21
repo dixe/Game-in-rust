@@ -30,7 +30,10 @@ pub enum Error {
     #[fail(display = "No root found")]
     NoRootFound,
     #[fail(display = "Resource Error")]
-    ResourceError(resources::Error)
+    ResourceError(resources::Error),
+    #[fail(display = "gltf Error")]
+    GltfError(gltf::Error),
+
 }
 
 
@@ -42,145 +45,127 @@ impl From<resources::Error> for Error {
 }
 
 
-
-
-
-
-fn load_joint_data(bvh: &bvh_anim::Bvh, joint: &bvh_anim::JointData, frame: usize) -> Transformation {
-
-    let channels = joint.channels();
-
-
-    let offset = joint.offset();
-
-    let mut x = offset.x;
-    let mut y = offset.y;
-    let mut z = offset.z;
-
-    // should be the bones default
-    // which might not be 0
-    let mut rx = 0.0;
-    let mut ry = 0.0;
-    let mut rz = 0.0;
-
-    for c in joint.channels() {
-        match c.channel_type() {
-            bvh_anim::ChannelType::RotationX => {
-                rx = bvh.get_motion(frame, c);
-            },
-            bvh_anim::ChannelType::RotationY => {
-                ry = bvh.get_motion(frame, c);
-            },
-            bvh_anim::ChannelType::RotationZ => {
-                rz = bvh.get_motion(frame, c);
-            },
-
-            bvh_anim::ChannelType::PositionX => {
-                x = bvh.get_motion(frame, c);
-            },
-            bvh_anim::ChannelType::PositionY => {
-                y = bvh.get_motion(frame, c);
-            },
-            bvh_anim::ChannelType::PositionZ => {
-                z = bvh.get_motion(frame, c);
-            },
-        };
-    }
-
-
-    let translation = na::Vector3::new(x,y,z);
-
-    let rotation = na::UnitQuaternion::from_euler_angles(rx.to_radians(), ry.to_radians(), rz.to_radians());
-
-
-    Transformation {
-        translation,
-        rotation
+impl From<gltf::Error> for Error {
+    fn from(other: gltf::Error) -> Self {
+        Error::GltfError(other)
     }
 }
 
 
 
-fn build_skeleton(root_name: &str, bvh: &bvh_anim::Bvh) -> Result<i32, Error> {
 
-    let root = match bvh.joints().find_by_name(root_name) {
-        Some(root) => root,
-        _ => return Err( Error::NoRootFound)
-    };
 
-    for j in bvh.joints() {
-        let data = j.data();
-        //println!("{:#?}", data);
+
+pub fn key_frames_from_gltf(skeleton: &Skeleton) -> Result<Vec<KeyFrame>, Error> {
+    let (gltf, buffers, _) = gltf::import("E:/repos/Game-in-rust/blender_models/player_05.glb")?;
+
+
+    let mut joints_indexes: std::collections::HashMap::<String, usize> = std::collections::HashMap::new();
+
+    for i in 0..skeleton.joints.len() {
+        joints_indexes.insert(skeleton.joints[i].name.clone(), i);
     }
 
+    for ani in gltf.animations() {
+        println!("ANIMATION {:#?}", ani.name());
 
-    //for c in root.children().take(1) {
-    //println!("child {:#?}", c);
-    //}
+        let mut frames = Vec::new();
+        let mut max_frame_count = 0;
 
-    Ok(1)
-}
+        for channel in ani.channels() {
+            let reader = channel.reader(|buffer| Some(&buffers[buffer.index()]));
+            let mut frame_count = 0;
 
-
-
-pub fn key_frames_from_bvh(res: &Resources, joint_map: &std::collections::HashMap::<std::string::String, usize>) -> Result<Vec<KeyFrame>, Error> {
-
-    // some kind of joint name to index in result mapping
-    let bvh = res.load_bvh("animations/test/knees.bvh")?;
-
-    let mut res = Vec::new();
-
-    // root is the name of joint_map[0]
-    let root_name =  match joint_map.iter().find(|(_,v)|**v == 0) {
-        Some((k,v)) => k,
-        _ => {
-            return Err(Error::NoRootFound);
-        }
-    };
-
-    build_skeleton(root_name, &bvh);
+            for read_outputs in reader.read_outputs() {
+                match read_outputs {
+                    gltf::animation::util::ReadOutputs::Translations(ts) => {
+                        frame_count = ts.len();
+                    },
+                    _=> {}
 
 
-    for frame in 0..bvh.frames().len() {
-
-        let mut transforms = Vec::new();
-
-        let mut i = 0;
-        for j in bvh.joints() {
-
-            let data = j.data();
-            let name: String = data.name().to_string();
-
-            let index = match joint_map.get(&name) {
-                Some(i) => *i,
-                None => { continue }
-            };
-
-            let transform = load_joint_data(&bvh, &data, frame);
-            /*
-            println!("joint: {} transform\n {:#?}", name, transform);
-            println!("Keyframe index {} {:#?}", i, name);
-            println!("index, transformLen {} {:#?}", index, transforms.len());
-             */
-
-
-            if index != transforms.len() {
-                panic!("Index into bones vec is {}, but we are inserting at {}", index, transforms.len());
+                }
             }
 
-            transforms.push(transform);
-
-            i += 1;
+            max_frame_count = usize::max(max_frame_count, frame_count);
         }
 
 
-        res.push( KeyFrame {
-            joints: transforms
-        });
+        // fill frames with
+
+        for _ in 0..max_frame_count {
+
+            frames.push(KeyFrame {
+                joints: skeleton.joints.iter().map(|joint| {
+                    Transformation {
+                        translation: joint.translation,
+                        rotation: joint.rotation
+                    }
+                }).collect()
+            });
+        }
+
+        for channel in ani.channels() {
+            let reader = channel.reader(|buffer| Some(&buffers[buffer.index()]));
+            let target = channel.target();
+
+            let joints_index = match joints_indexes.get(target.node().name().unwrap()) {
+                Some(i) => *i,
+                _ => {
+                    //println!("Skipping joint {:#?}", target.node().name().unwrap());
+                    continue;
+                }
+            };
+
+
+            for read_outputs in reader.read_outputs() {
+                match read_outputs {
+                    gltf::animation::util::ReadOutputs::Translations(ts) => {
+                        let mut i = 0;
+                        for t in ts {
+                            frames[i].joints[joints_index].translation = na::Vector3::new(t[0], t[1], t[2]);
+                            i += 1;
+                        }
+                    },
+                    gltf::animation::util::ReadOutputs::Rotations(rs) => {
+                        let mut i = 0;
+                        for r in rs.into_f32() {
+
+                            let q = na::Quaternion::from_vector(na::Vector4::new(r[0], r[1], r[2], r[3]));
+
+                            frames[i].joints[joints_index].rotation = na::UnitQuaternion::from_quaternion(q);
+                            i += 1 ;
+                        }
+                    },
+                    gltf::animation::util::ReadOutputs::Scales(ss) => {
+                        for s in ss {
+                            let diff = f32::abs(3.0 - (s[0] + s[1] + s[2]));
+                            if diff > 0.01 {
+                                panic!("Scale was more that 0.01 it might be important\n scale was {}", diff)
+                            }
+                        }
+                    },
+                    gltf::animation::util::ReadOutputs::MorphTargetWeights(mtws) => {
+
+
+                        println!("{:#?}", mtws);
+                    }
+
+
+                }
+            }
+
+
+        }
+
+
+        return Ok(frames);
+
 
     }
 
-    Ok(res)
+    panic!("LOAD THE ANIMAITONS NOEW");
+
 }
 
 impl Transformation {
@@ -201,6 +186,18 @@ impl Transformation {
 }
 
 impl KeyframeAnimation {
+
+    pub fn empty() -> KeyframeAnimation {
+        KeyframeAnimation {
+            name: "Empty".to_string(),
+            duration: 1.0,
+            skeleton: Skeleton {
+                name: "Empty".to_string(),
+                joints: Vec::new()
+            },
+            key_frames: Vec::new(),
+        }
+    }
 
     pub fn new(name: &str, duration: f32, skeleton: Skeleton, key_frames: Vec<KeyFrame>) -> KeyframeAnimation {
 

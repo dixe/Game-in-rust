@@ -10,7 +10,6 @@ extern crate roxmltree;
 extern crate notify;
 extern crate walkdir;
 extern crate image;
-extern crate bvh_anim;
 extern crate gltf;
 
 use notify::{Watcher, RecursiveMode, watcher};
@@ -160,7 +159,7 @@ fn load_and_set_animation(ctx: &game::Context,
                           skeleton: &render_gl::Skeleton,
                           joint_map: &std::collections::HashMap::<String, usize> ) {
 
-    let walk_keyframes = match render_gl::key_frames_from_bvh(&ctx.render_context.res, &joint_map) {
+    let walk_keyframes = match render_gl::key_frames_from_gltf(&skeleton) {
         Ok(key_frames) => key_frames,
         Err(err) => {           //
             println!("Error loading key_frames: {:#?}", err);
@@ -184,9 +183,11 @@ fn run() -> Result<(), failure::Error> {
 
     let mut mesh_shader = render_gl::Shader::new("mesh_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
 
-    let mesh = render_gl::SkinnedMesh::from_gltf(&ctx.render_context.gl)?;
+    let (skeleton, index_map) = render_gl::Skeleton::from_gltf(&ctx.render_context.gl)?;
 
-    let skeleton = render_gl::Skeleton::from_gltf(&ctx.render_context.gl)?;
+    //println!("{:#?}", skeleton);
+
+    let mesh = render_gl::SkinnedMesh::from_gltf(&ctx.render_context.gl, &index_map)?;
 
 
     // setup texture
@@ -200,7 +201,7 @@ fn run() -> Result<(), failure::Error> {
     for i in 0..skeleton.joints.len() {
 
         let mut name = skeleton.joints[i].name.clone();
-
+        println!("{:#?} {}", name, i);
         name = name.replace("Armature_","");
 
         name = name.replace("_",".");
@@ -209,14 +210,9 @@ fn run() -> Result<(), failure::Error> {
     }
 
 
-    //let walk_keyframes = render_gl::key_frames_from_bvh(&ctx.render_context.res, &joint_map)?;
+    let mut animation_player = render_gl::AnimationPlayer::new(render_gl::KeyframeAnimation::empty());
 
-    /*
-    let animation = render_gl::KeyframeAnimation::new("test ani", anim_time, skeleton.clone(), walk_keyframes);
-
-    let mut animation_player = render_gl::AnimationPlayer::new(animation);
-     */
-
+    load_and_set_animation(&ctx, &mut animation_player, &skeleton, &joint_map);
 
     let bone_cube = cube::Cube::new(na::Vector3::new(0.5, 0.5, 0.5), &ctx.render_context.gl);
 
@@ -281,7 +277,7 @@ fn run() -> Result<(), failure::Error> {
             set_t_pose(&mut bones);
         }
         else{
-            //animation_player.set_frame_bones(&mut bones, ctx.get_delta_time());
+            animation_player.set_frame_bones(&mut bones, ctx.get_delta_time());
         }
 
         //PHYSICS TEST
@@ -319,7 +315,7 @@ fn run() -> Result<(), failure::Error> {
         match ctx.controls.keys.get(&sdl2::keyboard::Keycode::V) {
             Some(true) => {
 
-                //let key_frame = animation_player.current_key_frame().joints;
+                let key_frame = animation_player.current_key_frame().joints;
 
                 ctx.cube_shader.set_used();
 
@@ -333,9 +329,9 @@ fn run() -> Result<(), failure::Error> {
 
                 for i in 0..skeleton.joints.len() {
 
-                    //let local = skeleton.joints[i].get_local_matrix_data(key_frame[i].rotation, key_frame[i].translation);
+                    let local = skeleton.joints[i].get_local_matrix_data(key_frame[i].rotation, key_frame[i].translation);
 
-                    let local = skeleton.joints[i].get_local_matrix();
+                    //let local = skeleton.joints[i].get_local_matrix();
 
 
                     let world_matrix;
@@ -390,7 +386,7 @@ fn run() -> Result<(), failure::Error> {
                     };
 
 
-                    //load_and_set_animation(&ctx, &mut animation_player, &skeleton, &joint_map);
+                    load_and_set_animation(&ctx, &mut animation_player, &skeleton, &joint_map);
 
 
                     ctx.load_model(ctx.player_weapon_id, na::Vector3::new(0.2, 0.2, 0.2), "models/sword.obj")?;

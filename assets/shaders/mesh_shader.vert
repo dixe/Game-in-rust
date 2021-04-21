@@ -10,6 +10,7 @@ out VS_OUTPUT {
    vec3 Normal;
    vec3 FragPos;
    vec2 TexCord;
+   vec3 Color;
 } OUT;
 
 
@@ -46,15 +47,18 @@ void main()
 
     OUT.TexCord = TexCord;
 
-    int b = 4;
+    int b = 0;
 
-    //OUT.Color = vec3(1.0,1.0,1.0);
+
+    OUT.Color = vec3(1.0,1.0,1.0);
+
     if ( int(BoneIndices.x) == b || int(BoneIndices.y) == b)
     {
-      //OUT.Color = vec3(0.0, 0.0, 0.0);
+      OUT.Color = vec3(0.0, 0.0, 0.0);
     }
 
-    gl_Position =  projection * view * model  * vec4(Position, 1.0);
+
+    gl_Position =  projection * view * model  * bt * vec4(Position, 1.0);
 
 
 }

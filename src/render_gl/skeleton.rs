@@ -95,10 +95,15 @@ impl Skeleton {
     }
 
 
-    pub fn from_gltf(gl: &gl::Gl) -> Result<Skeleton, failure::Error> {
+    pub fn from_gltf(gl: &gl::Gl) -> Result<(Skeleton, std::collections::HashMap<u16,usize>), failure::Error> {
         let (gltf, buffers, _) = gltf::import("E:/repos/Game-in-rust/blender_models/player_05.glb")?;
-
+        /*
+        println!("{:#?}", gltf);
+        panic!();
+         */
         for skin in gltf.skins() {
+
+            println!("SKING {:#?}", skin.name());
 
             let mut joints_data = Vec::new();
             for _ in skin.joints() {
@@ -118,16 +123,9 @@ impl Skeleton {
 
                 let (translation, rotation) = match node.transform() {
                     gltf::scene::Transform::Decomposed {translation, rotation, scale} => {
-
-
-                        let q = na::Quaternion::from_vector(na::Vector4::new(rotation[0], rotation[1], rotation[2], rotation[3]));
-
+                        let q = na::Quaternion::from_vector(
+                            na::Vector4::new(rotation[0], rotation[1], rotation[2], rotation[3]));
                         let rot = na::UnitQuaternion::from_quaternion(q);
-
-                        println!("ORIG {:#?}", rotation);
-
-                        println!("NEW {:#?}", rot);
-                        //let rot = na::UnitQuaternion::identity();
                         (na::Vector3::new(translation[0], translation[1], translation[2]), rot)
 
                     },
@@ -140,6 +138,7 @@ impl Skeleton {
 
                 let children: Vec::<usize> = node.children().map(|c| c.index()).collect();
 
+                println!(" {:#?} {}", node.name().unwrap(), index);
                 joints_data[index] = (children, node.name().unwrap(), Transformation {
                     translation,
                     rotation
@@ -154,27 +153,32 @@ impl Skeleton {
                 joints: Vec::new(),
             };
 
-            load_joints(&mut skeleton, &joints_data, hip_index, 255);
+            let mut index_map = std::collections::HashMap::<u16,usize>::new();
+            load_joints(&mut skeleton, &joints_data, hip_index, 255, &mut index_map);
+
+            if !index_map.contains_key(&0) {
+                index_map.insert(0, 0);
+            }
 
             skeleton.calc_t_pose();
 
             //println!("{:#?}", skeleton.joints[1]);
 
 
-            return Ok(skeleton);
+            return Ok((skeleton, index_map));
 
         }
 
-        //panic!("NO SKELETON LOADED");
-        Ok(Skeleton {
+        panic!("NO SKELETON LOADED");
+        Ok((Skeleton {
             name: "test".to_string(),
             joints: Vec::new(),
-        })
+        }, std::collections::HashMap::<u16,usize>::new()))
     }
 }
 
 
-fn load_joints(skeleton: &mut Skeleton, joints: &[(Vec::<usize>, &str, Transformation)], index: usize, parent_index: usize) {
+fn load_joints(skeleton: &mut Skeleton, joints: &[(Vec::<usize>, &str, Transformation)], index: usize, parent_index: usize, index_map: &mut std::collections::HashMap<u16,usize>) {
 
     let mut joint = Joint::empty();
 
@@ -182,16 +186,14 @@ fn load_joints(skeleton: &mut Skeleton, joints: &[(Vec::<usize>, &str, Transform
     joint.translation = joints[index].2.translation;
     joint.name = joints[index].1.to_string();
 
-
     joint.parent_index = parent_index;
 
     skeleton.joints.push(joint);
 
     let this_idx = skeleton.joints.len() - 1;
-    for c in &joints[index].0 {
-        load_joints(skeleton, joints, *c, this_idx);
+    index_map.insert(index as u16, this_idx);
+    for child_index in &joints[index].0 {
+        load_joints(skeleton, joints, *child_index, this_idx, index_map);
     }
-
-
 
 }
