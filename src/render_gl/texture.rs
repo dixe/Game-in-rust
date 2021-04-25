@@ -1,10 +1,10 @@
-use image;
+
 use std::os::raw;
 use failure;
 use gl;
 
 use crate::resources::Resources;
-use crate::render_gl;
+
 
 
 
@@ -21,7 +21,7 @@ impl Texture {
         let prefix = "palettes/".to_owned();
         let path = prefix + name;
 
-        let mut img = res.load_image_rgb8(&path)?;
+        let img = res.load_image_rgb8(&path)?;
 
         //img = image::imageops::flip_vertical(&img);
 

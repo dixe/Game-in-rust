@@ -1,8 +1,8 @@
 use nalgebra as na;
 use std::collections::{HashMap};
 
-use crate::render_gl::{Mesh, Skeleton, Joint};
-use crate::resources::Resources;
+use crate::render_gl::{Skeleton, Joint};
+
 use crate::resources;
 
 
@@ -279,15 +279,6 @@ impl KeyframeAnimation {
             let rotation = current_transformation.rotation.slerp(&target_joint.rotation, t);
             let translation = current_transformation.translation * (1.0 - t) + target_joint.translation * t;
 
-
-            let rotation = current_transformation.rotation;
-            let translation = current_transformation.translation;
-
-            /*
-            let translation = self.skeleton.joints[i].translation;
-            let rotation = self.skeleton.joints[i].rotation;
-             */
-
             let local_matrix  = self.skeleton.joints[i].get_local_matrix_data(rotation, translation);
 
             let mut world_matrix = local_matrix;
@@ -299,7 +290,7 @@ impl KeyframeAnimation {
 
             world_matrices.push(world_matrix);
 
-            //self.skeleton.joints[i].world_matrix = world_matrix;
+            self.skeleton.joints[i].world_matrix = world_matrix;
             bones[i] = world_matrix * self.skeleton.joints[i].inverse_bind_pose;
 
         }

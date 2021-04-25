@@ -1,7 +1,7 @@
-use crate::render_gl::{Skeleton, Transformation};
+
 use crate::render_gl::{self, buffer};
 use gl;
-use std::fmt;
+
 
 pub struct SkinnedMesh {
     name: String,
@@ -25,34 +25,15 @@ pub struct VertexWeights {
     weights: [f32; 2],
 }
 
-/*
-fn vertex_debug_info(obj: &collada::Object, bind_info: &BindInfo) {
-for i in 0..obj.vertices.len() {
-
-let v = obj.vertices[i];
-let vw = bind_info.vertex_weights[i];
-
-println!("vertex ({:.3},{:.3},{:.3}), {:?}", v.x, v.y, v.z, vw);
-
-    }
-}
-
-*/
-
 impl SkinnedMesh {
     pub fn from_gltf(gl: &gl::Gl, index_map: &std::collections::HashMap<u16,usize>) -> Result<SkinnedMesh, failure::Error> {
 
         let (gltf, buffers, _) =
             gltf::import("E:/repos/Game-in-rust/blender_models/player_05.glb")?;
 
-        /*
-        println!("{:#?}", gltf.into_json());
-        panic!("");
-         */
-
 
         let mut inter_joint_index: Vec::<u16> = Vec::new();
-        let mut a = 0;
+
         for skin in gltf.skins() {
             for node in skin.joints() {
                 let index = node.index();
@@ -132,39 +113,12 @@ impl SkinnedMesh {
                             };
                         }
 
-
-                        if j[0] as usize != data[0] ||
-                            j[1] as usize != data[1] ||
-                            j[2] as usize != data[2] ||
-                            j[3] as usize != data[3]  {
-                            panic!("JJJJ");
-                        }
-
-                        let target = 0;
-
-                        if j[2] == target && weights_data[with_i][1] > 0.0 {
-                            let tmp = with_i;
-                            with_i = 144;
-                            //println!("{:?} {:?} {:?}", j, weights_data[with_i], vertex_data[with_i]);
-                            with_i = tmp;
-                            //println!("{:?} {:?}", j, weights_data[with_i]);
-                        }
-
-
                         with_i += 1;
                         joints_data.push(data);
                     }
                 }
 
-                //panic!();
-
-                //for index in with_0 {
-                    //println!("INDEX INFO {}:\n{:#?}\n{:#?}\n{:#?}\n{:#?}\n\n\n", index, joints_data[index], weights_data[index], vertex_data[index], pure_j[index])
-//                }
-
-
-
-           }
+            }
 
             println!("{:#?}", index_map);
 
@@ -422,11 +376,11 @@ fn reduce_to_2_joints(joints_data: &Vec<[usize; 4]>, weights_data: &Vec<[f32; 4]
 
 
         let sum = max1 + max2;
-        let mut max1 = max1 / sum;
-        let mut max2 = max2 / sum;
+        let max1 = max1 / sum;
+        let max2 = max2 / sum;
 
-        let mut joint_1 = joints_data[j_index][max1_i];
-        let mut joint_2 = joints_data[j_index][max2_i];
+        let joint_1 = joints_data[j_index][max1_i];
+        let joint_2 = joints_data[j_index][max2_i];
 
 
         res.push(VertexWeights {

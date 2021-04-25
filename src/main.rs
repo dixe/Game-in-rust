@@ -100,7 +100,7 @@ fn start_notify_thread() {
 
         loop {
             match rx.recv() {
-                Ok(_event) => {
+                Ok(_) => {
                     println!("Updated on disk copy assets");
                     copy_assets();
                     unsafe {
@@ -145,15 +145,7 @@ fn copy_assets() {
 
 }
 
-struct MeshAndSkeleton {
 
-    mesh: render_gl::SkinnedMesh,
-    skeleton: render_gl::Skeleton,
-}
-
-
-
-static anim_time: f32 = 1.0;
 fn load_player_animations(skeleton: &render_gl::Skeleton) -> Option<render_gl::PlayerAnimations>{
 
     let player_animations = match render_gl::load_player_animations(&skeleton) {
@@ -178,18 +170,13 @@ fn run() -> Result<(), failure::Error> {
 
     let mut mesh_shader = render_gl::Shader::new("mesh_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
 
-    let (skeleton, index_map) = render_gl::Skeleton::from_gltf(&ctx.render_context.gl)?;
-
-    //println!("{:#?}", skeleton);
+    let (skeleton, index_map) = render_gl::Skeleton::from_gltf()?;
 
     let mesh = render_gl::SkinnedMesh::from_gltf(&ctx.render_context.gl, &index_map)?;
 
 
     // setup texture
-    let texture = render_gl::Texture::new("low_poly.png", &ctx.render_context.res, &ctx.render_context.gl)?;
-
-    let mut keyframe = render_gl::KeyFrame { joints: Vec::new()};
-
+    render_gl::Texture::new("low_poly.png", &ctx.render_context.res, &ctx.render_context.gl)?;
 
     let mut joint_map = std::collections::HashMap::new();
 
@@ -212,7 +199,7 @@ fn run() -> Result<(), failure::Error> {
 
     let mut bones = Vec::new();
     let joint_count = skeleton.joints.len();
-    for i in 0..joint_count {
+    for _ in 0..joint_count {
         bones.push(na::Matrix4::identity());
     }
 
@@ -394,7 +381,7 @@ fn run() -> Result<(), failure::Error> {
                     match load_player_animations(&skeleton) {
                         Some(anis) => {
                             // TODO Update animations in  animation_players
-                            //player_animations = anis;
+                            animation_player.set_player_animations(anis);
                         },
                         None => {}
                     };

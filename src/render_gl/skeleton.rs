@@ -82,25 +82,15 @@ impl Skeleton {
             panic!("Bones are not in correct order. All children should be after parent current {}, parent {}", index, joint.parent_index);
         }
 
-        //println!("Index: {} - name: {}", index, joint.name.clone());
-        //println!("name: {} worldmat :{:#?}", joint.name.clone(), world_matrix);
-        //println!("name: {} inver_inverseworldmat :{:#?}", joint.name.clone(), world_matrix);
-
-        let name = joint.name.clone();
-
-
         self.joints[index].world_matrix = world_matrix;
         self.joints[index].inverse_bind_pose = world_matrix.try_inverse().unwrap();
 
     }
 
 
-    pub fn from_gltf(gl: &gl::Gl) -> Result<(Skeleton, std::collections::HashMap<u16,usize>), failure::Error> {
-        let (gltf, buffers, _) = gltf::import("E:/repos/Game-in-rust/blender_models/player_05.glb")?;
-        /*
-        println!("{:#?}", gltf);
-        panic!();
-         */
+    pub fn from_gltf() -> Result<(Skeleton, std::collections::HashMap<u16,usize>), failure::Error> {
+        let (gltf, _, _) = gltf::import("E:/repos/Game-in-rust/blender_models/player_05.glb")?;
+
         for skin in gltf.skins() {
 
             println!("SKING {:#?}", skin.name());
@@ -114,15 +104,13 @@ impl Skeleton {
 
             }
 
-
             // fill the array with joints data
-
             let mut hip_index = 0;
             for node in skin.joints() {
                 let index = node.index();
 
                 let (translation, rotation) = match node.transform() {
-                    gltf::scene::Transform::Decomposed {translation, rotation, scale} => {
+                    gltf::scene::Transform::Decomposed {translation, rotation, .. } => {
                         let q = na::Quaternion::from_vector(
                             na::Vector4::new(rotation[0], rotation[1], rotation[2], rotation[3]));
                         let rot = na::UnitQuaternion::from_quaternion(q);

@@ -1,5 +1,5 @@
-use stringreader::StringReader;
-use std::io::BufReader;
+
+
 use image::io::Reader as ImageReader;
 use image;
 use std::ffi;

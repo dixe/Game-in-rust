@@ -61,7 +61,9 @@ impl AnimationPlayer {
 
         current_animation.key_frames[frame_index].clone()
     }
-
+    pub fn set_player_animations(&mut self, animations: PlayerAnimations) {
+        self.player_animations = animations;
+    }
 
     pub fn set_frame_bones(&mut self, bones: &mut [na::Matrix4::<f32>], delta: f32) {
         // find let t =
