@@ -23,7 +23,7 @@ impl FollowCamera {
 
 
         let pos = na::Vector3::new(-5.0, 0.0, 5.0);
-        let target = na::Vector3::new(0.0, 0.0, 3.0);
+        let target = na::Vector3::new(0.0, 0.0, 2.0);
         let look_dir = na::Vector3::new(0.0, 0.0, 0.0);
         let up = na::Vector3::new(0.0, 0.0, 1.0);
         let right = na::Vector3::new(1.0, 0.0, 0.0);
@@ -38,7 +38,7 @@ impl FollowCamera {
             width: 900.0,
             height: 700.0,
             fov: 60.0,
-            max_dist: 12.0,
+            max_dist: 7.0,
             max_pitch: 80.0_f32.to_radians(),
         }
     }
@@ -128,105 +128,4 @@ impl Camera for FollowCamera {
         self.up
     }
 
-
-
 }
-
-/*
-pub fn set_target(&mut self, target: na::Vector3::<f32>) {
-
-self.cam_target = target;
-self.cam_pos = target + (self.follow_dir * self.follow_distance);
-}
-
-
-    pub fn follow_dir_xy(&self) -> na::Vector3::<f32> {
-    na::Vector3::new(self.follow_dir.x, self.follow_dir.y,  1.0).normalize()
-}
-
-    pub fn z_rotation(&self) -> f32 {
-    f32::atan2(self.follow_dir.y, self.follow_dir.x)
-}
-
-    pub fn y_rotation(&self) -> f32 {
-
-    f32::atan2(self.follow_dir.y, self.follow_dir.z)
-}
-
-    pub fn change_follow_dir(&mut self, change: na::Vector3::<f32>) {
-
-    // TODO also take Delta to make 0.1 depend on delta
-    self.follow_yaw -= change.x * 0.05;
-    self.follow_pitch += change.y * 0.05;
-    self.follow_pitch = f32::max(self.follow_pitch, 0.0);
-    self.follow_pitch = f32::min(std::f32::consts::PI/2.0, self.follow_pitch);
-
-    if self.follow_yaw > std::f32::consts::PI * 2.0 {
-    self.follow_yaw -= std::f32::consts::PI * 2.0;
-}
-
-    if self.follow_yaw < 0.0 {
-    self.follow_yaw += std::f32::consts::PI * 2.0;
-}
-
-
-    self.follow_dir.x = self.follow_yaw.cos() * f32::max(self.follow_pitch.cos(), 0.01);
-    self.follow_dir.y = self.follow_yaw.sin() * f32::max(self.follow_pitch.cos(), 0.01);
-    self.follow_dir.z = self.follow_pitch.sin();
-
-
-    self.follow_dir.normalize();
-
-    // println!("{} {}", self.follow_yaw, self.follow_pitch);
-    // println!("{:#?}", self.follow_dir);
-
-}
-
-    pub fn set_top_down_cam(&mut self) {
-
-    let cam_pos = na::Vector3::new(0.0, -10.5, 20.0);
-
-    let up = na::Vector3::new(0.0, 0.0, 1.0);
-
-    let yaw: f32 = -90.0_f32.to_radians();
-    let pitch: f32 = 20.0_f32.to_radians();
-
-    let look_dir = na::Vector3::new(
-    yaw.cos() * pitch.cos(),
-    pitch.sin(),
-    yaw.sin() * pitch.cos()
-);
-
-    self.cam_target = cam_pos + look_dir;
-
-}
-
-    pub fn update_target(&mut self) {
-    let look_dir = na::Vector3::new(
-    self.follow_yaw.cos() * self.follow_pitch.cos(),
-    self.follow_pitch.sin(),
-    self.follow_yaw.sin() * self.follow_pitch.cos()
-);
-
-    self.cam_target = self.cam_pos + look_dir;
-
-}
-
-    pub fn projection(self) -> na::Matrix4::<f32> {
-
-    self.projection
-}
-
-    pub fn view(self) -> na::Matrix4::<f32> {
-
-
-    let t = self.cam_target;
-
-    let target = na::Point3::new(t.x, t.y, t.z);
-
-    let p = na::Point3::new(self.cam_pos.x, self.cam_pos.y, self.cam_pos.z);
-
-    na::Matrix::look_at_rh(&p, &target, &self.up)
-}
-}
-     */

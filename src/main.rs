@@ -146,19 +146,6 @@ fn copy_assets() {
 }
 
 
-fn load_player_animations(skeleton: &render_gl::Skeleton) -> Option<render_gl::PlayerAnimations>{
-
-    let player_animations = match render_gl::load_player_animations(&skeleton) {
-        Ok(key_frames) => key_frames,
-        Err(err) => {           //
-            println!("Error loading key_frames: {:#?}", err);
-            return None; }
-    };
-
-    Some(player_animations)
-}
-
-
 
 fn run() -> Result<(), failure::Error> {
 
@@ -168,46 +155,10 @@ fn run() -> Result<(), failure::Error> {
 
     let collision_shader = render_gl::Shader::new("collision_test_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
 
-    let mut mesh_shader = render_gl::Shader::new("mesh_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
-
-    let (skeleton, index_map) = render_gl::Skeleton::from_gltf()?;
-
-    let mesh = render_gl::SkinnedMesh::from_gltf(&ctx.render_context.gl, &index_map)?;
-
-
     // setup texture
     render_gl::texture::load_and_set("low_poly.png", &ctx.render_context.res, &ctx.render_context.gl)?;
 
-    let mut joint_map = std::collections::HashMap::new();
-
-    for i in 0..skeleton.joints.len() {
-
-        let mut name = skeleton.joints[i].name.clone();
-        println!("{:#?} {}", name, i);
-        name = name.replace("Armature_","");
-
-        name = name.replace("_",".");
-
-        joint_map.insert(name, i);
-    }
-
-
-    let player_animations = load_player_animations(&skeleton).unwrap();
-    let mut animation_player = render_gl::AnimationPlayer::new(render_gl::PlayerAnimation::Walk, player_animations);
-
     let bone_cube = cube::Cube::new(na::Vector3::new(0.5, 0.5, 0.5), &ctx.render_context.gl);
-
-    let mut bones = Vec::new();
-    let joint_count = skeleton.joints.len();
-    for _ in 0..joint_count {
-        bones.push(na::Matrix4::identity());
-    }
-
-    set_t_pose(&mut bones);
-
-    let mut t_pose = false;
-
-    println!("joints {:#?}", joint_count);
 
     'main: loop{
         ctx.update_delta();
@@ -219,8 +170,8 @@ fn run() -> Result<(), failure::Error> {
         }
 
         if ctx.controls.reset {
-            let physics = entity::Physics::new(ctx.player_id);
-            ctx.ecs.set_physics(ctx.player_id, physics);
+            //let physics = entity::Physics::new(ctx.player_id);
+            //ctx.ecs.set_physics(ctx.player_id, physics);
         }
 
         unsafe {
@@ -251,110 +202,19 @@ fn run() -> Result<(), failure::Error> {
 
 
 
-        // ANIMATION TEST
-
-        if t_pose {
-            set_t_pose(&mut bones);
-        }
-        else{
-            animation_player.set_frame_bones(&mut bones, ctx.get_delta_time());
-        }
-
         //PHYSICS TEST
         physics_test.update(&ctx.controls, ctx.get_delta_time());
-
         physics_test.render(&ctx, &collision_shader);
 
 
 
+        // DEBUG
+        debug_keys(&mut ctx, &bone_cube);
+
+        // ANIMATIONS UPDATE
+        ctx.update_animations();
         // RENDERING
         ctx.render();
-
-        match ctx.controls.keys.get(&sdl2::keyboard::Keycode::B) {
-            Some(true) => {
-
-                println!("BONES");
-                println!("there are {:#?} bones", bones.len());
-                println!("there are {:#?} skel joints", skeleton.joints.len());
-                for i in 0..bones.len() {
-                    println!("i = {} {:#?}", skeleton.joints[i].name.clone(), bones[i]);
-                }
-            },
-            _ => {}
-        }
-
-        match ctx.controls.keys.get(&sdl2::keyboard::Keycode::T) {
-            Some(true) => {
-                animation_player.set_current(render_gl::PlayerAnimation::TPose);
-                t_pose = true;
-            },
-            _ => {
-                t_pose = false;
-            }
-        };
-
-        match ctx.controls.keys.get(&sdl2::keyboard::Keycode::K) {
-            Some(true) => {
-                println!("Setting to waalk");
-                animation_player.set_current(render_gl::PlayerAnimation::Walk);
-            },
-            _ => {
-            }
-
-        };
-
-        match ctx.controls.keys.get(&sdl2::keyboard::Keycode::V) {
-            Some(true) => {
-
-                let key_frame = animation_player.current_key_frame().joints;
-
-                ctx.cube_shader.set_used();
-
-                ctx.cube_shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera().projection(), ctx.camera().view());
-                let mut scale_mat = na::Matrix4::identity();
-                scale_mat = scale_mat * 0.2;
-                scale_mat[15] = 1.0;
-
-
-                let mut world_mats = Vec::new();
-
-                for i in 0..skeleton.joints.len() {
-
-                    let local = skeleton.joints[i].get_local_matrix_data(key_frame[i].rotation, key_frame[i].translation);
-
-                    //let local = skeleton.joints[i].get_local_matrix();
-
-
-                    let world_matrix;
-
-                    if i == 0 {
-                        world_matrix = local;
-                    }
-                    else {
-                        world_matrix = world_mats[skeleton.joints[i].parent_index] * local;
-                    }
-
-                    world_mats.push(world_matrix);
-
-
-                    bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, world_matrix * scale_mat);
-
-                }
-
-
-            },
-            _ => {}
-        };
-
-
-        mesh_shader.set_used();
-
-        mesh_shader.set_vec3(&ctx.render_context.gl, "lightPos", na::Vector3::new(1.0, 0.0, 7.0)); //
-
-        mesh_shader.set_vec3(&ctx.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
-
-        mesh_shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera().projection(), ctx.camera().view());
-        mesh.render(&ctx.render_context.gl, &mesh_shader, na::Matrix4::identity(), &bones);
 
         ctx.render_context.gl_swap_window();
 
@@ -368,25 +228,16 @@ fn run() -> Result<(), failure::Error> {
 
                     match render_gl::Shader::new("mesh_shader", &ctx.render_context.res, &ctx.render_context.gl) {
                         Ok(shader) => {
+
                             println!("Reloaded mesh shader");
-                            mesh_shader = shader;
+                            ctx.mesh_shader = shader;
                         },
                         Err(err) => {
                             println!("Error loading mesh shader: {}",err);
                         }
                     };
 
-
-                    match load_player_animations(&skeleton) {
-                        Some(anis) => {
-                            // TODO Update animations in  animation_players
-                            animation_player.set_player_animations(anis);
-                        },
-                        None => {}
-                    };
-
-
-                    ctx.load_model(ctx.player_weapon_id, na::Vector3::new(0.2, 0.2, 0.2), "models/sword.obj")?;
+                    //TODO load using the context
 
                 },
                 Command::SwitchRenderMode => {
@@ -403,25 +254,113 @@ fn run() -> Result<(), failure::Error> {
 }
 
 
+fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
+
+    let mut player: entity::Entity = ctx.entities.player().clone();
+
+    let mut animation_player = player.animation_player;
+
+    let bones = animation_player.bones.clone();
+
+
+    let skeleton = animation_player.player_animations.t_pose.skeleton.clone();
+
+
+
+    match ctx.controls.keys.get(&sdl2::keyboard::Keycode::B) {
+        Some(true) => {
+            println!("BONES");
+            println!("there are {:#?} bones", bones.len());
+            println!("there are {:#?} skel joints", skeleton.joints.len());
+            for i in 0..bones.len() {
+                println!("i = {} {:#?}", skeleton.joints[i].name.clone(), bones[i]);
+            }
+        },
+        _ => {}
+    }
+
+    match ctx.controls.keys.get(&sdl2::keyboard::Keycode::T) {
+        Some(true) => {
+            animation_player.set_current(render_gl::PlayerAnimation::TPose);
+            println!("{:#?}", player.physics.rotation);
+
+        },
+        _ => {}
+    };
+
+    match ctx.controls.keys.get(&sdl2::keyboard::Keycode::K) {
+        Some(true) => {
+            println!("Setting to waalk");
+            animation_player.set_current(render_gl::PlayerAnimation::Walk);
+        },
+        _ => {
+        }
+
+    };
+
+    match ctx.controls.keys.get(&sdl2::keyboard::Keycode::V) {
+        Some(true) => {
+
+            let key_frame = animation_player.current_key_frame().joints;
+
+            ctx.cube_shader.set_used();
+
+            let proj = ctx.camera().projection();
+            let view = ctx.camera().view();
+            ctx.cube_shader.set_projection_and_view(&ctx.render_context.gl, proj, view);
+            let mut scale_mat = na::Matrix4::identity();
+            scale_mat = scale_mat * 0.2;
+            scale_mat[15] = 1.0;
+
+
+            let mut world_mats = Vec::new();
+
+
+
+            for i in 0..skeleton.joints.len() {
+
+                //let local = skeleton.joints[i].get_local_matrix_data(key_frame[i].rotation, key_frame[i].translation);
+                let local = skeleton.joints[i].get_local_matrix();
+
+                let world_matrix;
+
+                if i == 0 {
+                    world_matrix = local;
+                }
+                else {
+                    world_matrix = world_mats[skeleton.joints[i].parent_index] * local;
+                }
+
+                world_mats.push(world_matrix);
+
+
+                bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, world_matrix * scale_mat);
+
+            }
+
+
+        },
+        _ => {}
+    };
+
+}
+
 fn set_t_pose(bones: &mut [na::Matrix4::<f32>]) {
     for i in 0..bones.len() {
         bones[i] = na::Matrix4::identity();
     }
 }
+
 fn update_follow_camera(ctx: &mut game::Context) {
 
+    let player = ctx.entities.player_mut();
 
-    let mut player = match ctx.ecs.get_physics(ctx.player_id) {
-        Some(e) => *e,
-        None => return, // No player no follow
-    };
+    let mut physics = player.physics;
 
     // pos.z bottom of player model
-    player.pos.z += 1.6;
+    physics.pos.z += 1.6;
 
-    ctx.camera_mut().update_target(player.pos);
-
-
+    ctx.camera_mut().update_target(physics.pos);
 
     ctx.controls.right_stick.map(|right_stick| {
         ctx.camera_mut().update_movement(right_stick.x, right_stick.y);

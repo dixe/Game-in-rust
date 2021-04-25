@@ -9,10 +9,12 @@ pub enum PlayerAnimation {
 }
 
 
+#[derive(Clone)]
 pub struct AnimationPlayer {
     current_animation: PlayerAnimation,
     elapsed: f32,
-    player_animations: PlayerAnimations
+    pub player_animations: PlayerAnimations,
+    pub bones: Vec::<na::Matrix4::<f32>>,
 }
 
 impl AnimationPlayer {
@@ -23,7 +25,12 @@ impl AnimationPlayer {
             current_animation,
             elapsed: 0.0,
             player_animations,
+            bones: Vec::new(),
         }
+    }
+
+    pub fn set_bones(&mut self, bones: Vec::<na::Matrix4::<f32>> ) {
+        self.bones = bones;
     }
 
     pub fn set_current(&mut self, animation: PlayerAnimation) {
@@ -62,7 +69,7 @@ impl AnimationPlayer {
         self.player_animations = animations;
     }
 
-    pub fn set_frame_bones(&mut self, bones: &mut [na::Matrix4::<f32>], delta: f32) {
+    pub fn set_frame_bones(&mut self, delta: f32) {
         // find let t =
         let current_animation = match self.current_animation {
             PlayerAnimation::TPose => {
@@ -90,7 +97,7 @@ impl AnimationPlayer {
 
 
 
-        current_animation.move_to_key_frame(bones, frame_index, t);
+        current_animation.move_to_key_frame(&mut self.bones, frame_index, t);
 
         self.elapsed += delta;
 

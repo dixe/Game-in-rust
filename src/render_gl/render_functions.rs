@@ -28,21 +28,26 @@ fn calculate_model_mat(physics: &entity::Physics) -> na::Matrix4::<f32> {
 
 
 
-pub fn render(ecs: &entity::EntityComponentSystem, entity_id: usize, gl: &gl::Gl, shader: &render_gl::Shader) {
+pub fn render_entity(entity: &entity::Entity, entities: &entity::Entities, model: &entity::Model, gl: &gl::Gl, shader: &render_gl::Shader) {
 
-    let physics = match game::get_absoulte_physics(entity_id, ecs) {
+    let physics = match game::get_absoulte_physics(entity.physics.entity_id, entities) {
         Some(physics) => physics,
         _ => return,
     };
 
     let model_mat = calculate_model_mat(&physics);
-    match ecs.get_model(physics.entity_id) {
-        Some(m) => {
-            let model_mat = calculate_model_mat(&physics);
-            m.render_from_model_mat(gl, shader, model_mat);
-        },
-        _ => {
 
-        }
-    }
+
+    model.render_from_model_mat(gl, shader, model_mat, &entity.animation_player.bones);
+}
+
+pub fn render(entities: &entity::Entities, models: Vec::<entity::Model>, entity_id: usize, gl: &gl::Gl, shader: &render_gl::Shader) {
+
+    let entity = match entities.get(entity_id) {
+        Some(e) => e,
+        None => return,
+    };
+
+    render_entity(entity, entities, &models[entity.model_id], gl, shader);
+
 }

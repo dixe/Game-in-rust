@@ -7,7 +7,8 @@ use crate::render_gl;
 enum ModelType {
 
     Cube(cube::Cube),
-    WaveModel(render_gl::Model)
+    WaveModel(render_gl::Model),
+    Skinned(render_gl::SkinnedMesh)
 }
 
 pub struct Model {
@@ -31,13 +32,24 @@ impl Model {
         }
     }
 
-    pub fn render_from_model_mat(&self, gl: &gl::Gl, shader: &render_gl::Shader, model_mat: na::Matrix4::<f32>) {
+    pub fn skinned_model(skinned: render_gl::SkinnedMesh) -> Self {
+        let model = ModelType::Skinned(skinned);
+        Model {
+            model
+        }
+    }
+
+
+    pub fn render_from_model_mat(&self, gl: &gl::Gl, shader: &render_gl::Shader, model_mat: na::Matrix4::<f32>, bones: &Vec::<na::Matrix4::<f32>>) {
         match &self.model {
             ModelType::Cube(c) => {
                 c.render(gl, shader,  model_mat);
             },
             ModelType::WaveModel(wm) => {
                 wm.render(gl, shader, model_mat);
+            },
+            ModelType::Skinned(mesh) => {
+                mesh.render(gl, shader, model_mat, bones);
             }
         }
     }

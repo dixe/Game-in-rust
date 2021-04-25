@@ -6,10 +6,6 @@ pub fn idle_bob_z(time_passed: f32, physics: &mut entity::Physics, _ : &entity::
     physics.pos.z = (time_passed * std::f32::consts::PI).sin();
 }
 
-pub fn set_player_moving(state: &mut game::State) {
-    state.player_state = game::PlayerState::Moving;
-}
-
 
 
 pub fn bezier_linear(t: f32, p0: na::Vector3<f32>, p1: na::Vector3<f32>) -> na::Vector3<f32> {

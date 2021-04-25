@@ -10,8 +10,6 @@ pub fn update_velocity(entity: &mut entity::Physics, velocity_change: na::Vector
         return;
     }
 
-
-
     entity.velocity = velocity_change + entity.velocity;
 
     let speed = entity.velocity.magnitude();
@@ -32,7 +30,6 @@ pub fn update_rotation(entity: &mut entity::Physics, look_dir: na::Vector3::<f32
     // TODO maybe have a cap on rotation. so entities cannot turn around in 1 frame, but need like X frame for 1 full rotation
     // Just define a rotation_speed on entity
 
-
     // TODO kinda broken with physics, maybe the normals are getting wrong, or we rotate wrong direction? right vs left hand coordinate system ect.
 
     let rotation = get_rotation(&look_dir);
@@ -46,82 +43,17 @@ pub fn update_rotation(entity: &mut entity::Physics, look_dir: na::Vector3::<f32
 
 
 pub fn update_velocity_and_rotation(entity: &mut entity::Physics, velocity_change: na::Vector3::<f32>,)  {
-
     update_velocity(entity, velocity_change);
     update_rotation(entity, entity.velocity);
 }
 
 
-pub fn get_absoulte_physics(entity_id: usize, ecs: &entity::EntityComponentSystem) -> Option<entity::Physics> {
-
-    let mut physics = match ecs.get_physics(entity_id) {
-        Some(physics) => *physics,
-        None => return None,
-    };
-
-
-    let anchor_physics = match physics.anchor_id {
-        Some(anchor_id) => {
-            match get_absoulte_physics(anchor_id, ecs) {
-                Some(p) => p,
-                None => return None
-            }
-        },
-        None => {
-            return Some(physics);
-        }
-    };
-
-    let mut anchor_point = match ecs.get_anchor_point(entity_id) {
-        Some(anchor) => *anchor,
-        None => entity::AnchorPoint::default()
-    };
-
-
-
-
-    //let rot_mat = na::Matrix3::<f32>::new_rotation(anchor_physics.rotation.z);
-
-    let rot_mat = na::Rotation3::from_euler_angles(anchor_physics.rotation.x, anchor_physics.rotation.y, anchor_physics.rotation.z);
-
-    anchor_point.pos = rot_mat * anchor_point.pos;
-    let rotated_pos = rot_mat * physics.pos;
-
-
-
-
-    physics.rotation += anchor_physics.rotation;
-
-    while physics.rotation.z > std::f32::consts::PI {
-        physics.rotation.z -= std::f32::consts::PI * 2.0 ;
+pub fn get_absoulte_physics(entity_id: usize, entities: &entity::Entities) -> Option<entity::Physics> {
+    match entities.get(entity_id) {
+        None => None,
+        Some(e) => Some(e.physics),
     }
 
-    while physics.rotation.x > std::f32::consts::PI {
-        physics.rotation.x -= std::f32::consts::PI * 2.0 ;
-    }
-
-    while physics.rotation.y > std::f32::consts::PI * 2.0 {
-        physics.rotation.y -= std::f32::consts::PI * 2.0 ;
-    }
-
-
-
-    while physics.rotation.z < -std::f32::consts::PI {
-        physics.rotation.z += std::f32::consts::PI * 2.0 ;
-    }
-
-    while physics.rotation.x < -std::f32::consts::PI {
-        physics.rotation.x += std::f32::consts::PI * 2.0 ;
-    }
-
-    while physics.rotation.y < -std::f32::consts::PI {
-        physics.rotation.y += std::f32::consts::PI * 2.0 ;
-    }
-
-
-
-    physics.pos = rotated_pos + anchor_physics.pos + anchor_point.pos;
-    Some(physics)
 }
 
 

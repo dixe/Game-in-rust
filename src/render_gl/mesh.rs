@@ -57,13 +57,19 @@ impl SkinnedMesh {
 
 
             let set = 0;
+
+            let base_rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0 , -90.0_f32.to_radians()).to_homogeneous();
+
             for primitive in mesh.primitives() {
 
                 let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
 
                 if let Some(iter) = reader.read_positions() {
                     for pos in iter {
-                        vertex_data.push(pos);
+                        let p = base_rot * na::Vector4::new(pos[0], pos[1], pos[2], 1.0);
+
+                        let p1 = na::Vector3::new(p.x, p.y, p.z);
+                        vertex_data.push(p1);
                     }
                 }
 
@@ -189,7 +195,7 @@ impl SkinnedMesh {
 
 fn load_mesh_gltf(
     gl: &gl::Gl,
-    pos_data: &Vec<[f32; 3]>,
+    pos_data: &Vec<na::Vector3::<f32>>,
     norm_data: &Vec<[f32; 3]>,
     ebo_data: &Vec<u32>,
     tex_data: &Vec<[f32; 2]>,
@@ -206,9 +212,9 @@ fn load_mesh_gltf(
 
     //println!("{:#?}", skinning_data);
     for i in 0..pos_data.len() {
-        vertex_data.push(pos_data[i][0]);
-        vertex_data.push(pos_data[i][1]);
-        vertex_data.push(pos_data[i][2]);
+        vertex_data.push(pos_data[i].x);
+        vertex_data.push(pos_data[i].y);
+        vertex_data.push(pos_data[i].z);
 
         //NORMAL
 

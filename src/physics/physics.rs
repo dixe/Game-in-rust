@@ -22,17 +22,18 @@ pub fn process(ctx: &mut game::Context) -> Vec<EntityCollision> {
 
     //NON IMPULSE COLLISION
 
+    /*
     let weapon_col_shape = create_entity_collision_shape(ctx.player_weapon_id, ctx);
 
     let mut enemies = Vec::<(usize, ConvexCollisionShape)>::new();
     for enemy_id in &ctx.state.enemies {
-        match create_entity_collision_shape(*enemy_id, ctx) {
-            Some(col_shape) => {
-                enemies.push((*enemy_id, col_shape));
-            },
-            None => continue
-        };
-    }
+    match create_entity_collision_shape(*enemy_id, ctx) {
+    Some(col_shape) => {
+    enemies.push((*enemy_id, col_shape));
+},
+    None => continue
+};
+}
 
 
     // ONLY DO WHEN PLAYER IS ATTACKING
@@ -40,15 +41,13 @@ pub fn process(ctx: &mut game::Context) -> Vec<EntityCollision> {
     // HAVE IT HERE SINCE NO PHYSICS IS GOING ON
     // ALSO WHEN PLAYER ATTACKING IS NOT A PHYSICS CONCERN
     match weapon_col_shape {
-        Some(weapon) => {
-            weapon_collision(&weapon, enemies);
-        },
-        _ => {}
-    };
+    Some(weapon) => {
+    weapon_collision(&weapon, enemies);
+},
+    _ => {}
+};
 
-
-
-
+     */
 
     impulse_collisions
 
@@ -68,18 +67,26 @@ fn weapon_collision(weapon: &ConvexCollisionShape, enemies: Vec::<(usize, Convex
 
 
 fn update_entities_position(ctx: &mut game::Context) {
+    // Should this maybe be done more explicity
+    // Maybe with a list of physics entities or something like that, or just go over all of them
+    // and take the ones where we want physics
     let delta = ctx.get_delta_time();
 
-    for physics in ctx.ecs.physics.values_mut() {
-        physics.pos += physics.velocity * delta;
+
+    for entity in ctx.entities.values_mut() {
+        entity.physics.pos += entity.physics.velocity * delta;
     }
+
 }
 
 
 fn update_entities_rotation (ctx: &mut game::Context) {
     let delta = ctx.get_delta_time();
 
-    for physics in ctx.ecs.physics.values_mut() {
+
+    for entity in ctx.entities.values_mut() {
+
+        let mut physics = entity.physics;
         let target_r = f32::atan2(physics.target_dir.y, physics.target_dir.x);
         let mut diff = target_r - physics.rotation.z;
 
@@ -104,13 +111,22 @@ fn update_entities_rotation (ctx: &mut game::Context) {
 
             physics.rotation.z += rot;
         }
+
+        entity.physics = physics;
     }
+
+
 }
 
 
 
 fn create_entity_collision_shape(entity_id: usize, ctx: &game::Context) -> Option<ConvexCollisionShape> {
-    game::get_absoulte_physics(entity_id, &ctx.ecs).map(|physics| {
+
+    //TODO get an entity and thus we have physics, or take entities map
+    None
+    /*
+        game::get_absoulte_physics(entity_id, &ctx.ecs).map(|physics| {
         ConvexCollisionShape::rectangle(&physics.pos, 1.0, 1.0, &physics)
-    })
+})
+     */
 }

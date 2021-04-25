@@ -6,7 +6,7 @@ use crate::render_gl::{Skeleton, Joint};
 use crate::resources;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct KeyframeAnimation {
     pub name: String,
     pub duration: f32,
@@ -52,6 +52,7 @@ impl From<gltf::Error> for Error {
     }
 }
 
+#[derive(Clone)]
 pub struct PlayerAnimations {
     pub walk: KeyframeAnimation,
     pub t_pose: KeyframeAnimation,
@@ -151,6 +152,14 @@ fn key_frames_from_gltf(skeleton: &Skeleton) -> Result<HashMap<String,Vec<KeyFra
                 }
             };
 
+            let mut base_rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0, 0.0);
+            if target.node().name().unwrap() == "hip" {
+                println!("{:#?}", target.node().name());
+                base_rot = na::UnitQuaternion::from_euler_angles(0.0, -90.0_f32.to_radians(), 0.0);
+            }
+
+
+            println!("{:#?}", target.node().name());
 
             for read_outputs in reader.read_outputs() {
                 match read_outputs {
@@ -167,7 +176,7 @@ fn key_frames_from_gltf(skeleton: &Skeleton) -> Result<HashMap<String,Vec<KeyFra
 
                             let q = na::Quaternion::from(na::Vector4::new(r[0], r[1], r[2], r[3]));
 
-                            frames[i].joints[joints_index].rotation = na::UnitQuaternion::from_quaternion(q);
+                            frames[i].joints[joints_index].rotation = na::UnitQuaternion::from_quaternion(q) * base_rot;
                             i += 1 ;
                         }
                     },

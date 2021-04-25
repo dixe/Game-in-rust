@@ -148,6 +148,13 @@ impl Skeleton {
                 index_map.insert(0, 0);
             }
 
+
+            let rot_90 = na::UnitQuaternion::from_euler_angles(0.0, -90.0_f32.to_radians(), 0.0, );
+            let new = skeleton.joints[0].rotation * rot_90;
+
+            skeleton.joints[0].rotation = new;
+
+
             skeleton.calc_t_pose();
 
             //println!("{:#?}", skeleton.joints[1]);

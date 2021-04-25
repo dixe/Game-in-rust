@@ -24,7 +24,7 @@ impl ActionsInfo {
         }
     }
 
-    fn next(&mut self,  state: &mut game::State, physics: &mut entity::Physics,) {
+    fn next(&mut self, physics: &mut entity::Physics,) {
         match self.active {
             Some(data) => {
                 if data.time_passed <= data.total_time {
@@ -33,7 +33,7 @@ impl ActionsInfo {
                 else {
                     // reset to init physics
                     data.reset(physics);
-                    data.expired(state);
+                    data.expired();
                 }
             },
             None => {}
@@ -47,7 +47,7 @@ impl ActionsInfo {
         };
     }
 
-    pub fn update(&mut self, physics: &mut entity::Physics, state: &mut game::State, delta: f32, impls: &action_system::ActionsImpl) {
+    pub fn update(&mut self, physics: &mut entity::Physics, delta: f32, impls: &action_system::ActionsImpl) {
 
         match self.active {
             Some(mut data) => {
@@ -57,7 +57,7 @@ impl ActionsInfo {
             _ => {},
         }
 
-        self.next(state, physics);
+        self.next(physics);
     }
 
 }
@@ -68,7 +68,7 @@ pub struct ActionData {
     pub total_time: f32,
     init: entity::Physics,
     action: action_system::Actions, //usizefn(time_passed: f32, physics: &mut entity::Physics, init: &entity::Physics),
-    done_fn: Option<fn(state: &mut game::State)>,
+    done_fn: Option<fn()>,
 }
 
 
@@ -84,7 +84,7 @@ impl Debug for ActionData {
 
 impl ActionData {
 
-    pub fn new(action: action_system::Actions, done_fn: Option<fn( state: &mut game::State)>, init: entity::Physics) -> ActionData {
+    pub fn new(action: action_system::Actions, done_fn: Option<fn()>, init: entity::Physics) -> ActionData {
 
         ActionData {
             time_passed: 0.0,
@@ -105,7 +105,6 @@ impl ActionData {
         physics.pos = self.init.pos;
         physics.rotation = self.init.rotation;
         physics.scale = self.init.scale;
-
     }
 
 
@@ -119,10 +118,10 @@ impl ActionData {
     }
 
 
-    pub fn expired(&self, state: &mut game::State) {
+    pub fn expired(&self) {
         match self.done_fn {
             Some(func) => {
-                (func)(state);
+                (func)();
             },
             _ => {}
         };

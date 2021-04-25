@@ -4,66 +4,44 @@ use crate::entity;
 use nalgebra_glm as glm;
 
 pub fn run_ai(ctx: &mut game::Context) {
-
+    /*
     let player = match ctx.ecs.get_physics(ctx.player_id) {
-        Some(e) => *e,
-        None => return, // Dead player, don't care about ai update
-    };
+    Some(e) => *e,
+    None => return, // Dead player, don't care about ai update
+};
 
 
     for e_id in &ctx.state.enemies {
-        let mut enemy = match ctx.ecs.get_physics(*e_id) {
-            Some(e) => *e,
-            None => continue, // Dead player, don't care about ai update
-        };
+    let mut enemy = match ctx.ecs.get_physics(*e_id) {
+    Some(e) => *e,
+    None => continue, // Dead player, don't care about ai update
+};
 
 
-        if e_id % 2 == 0 || true{
-            distance_ai(&mut enemy, player);
-            let shooter = match ctx.ecs.get_shooter(enemy.entity_id) {
-                Some(s) => Some(*s),
-                None => None
-            };
-            match shooter {
-                Some(shooter) =>{
-                    shot_ai(&enemy, &shooter, &player, &mut ctx.state.enemy_shots, &mut ctx.ecs, ctx.projectile_model_id);
-                },
-                _ => {}
-            }
-
-
-        }
-        else{
-            collision_ai(&mut enemy, player);
-        }
-
-        ctx.ecs.set_physics(*e_id, enemy);
-
-    }
-
+    if e_id % 2 == 0 || true{
+    distance_ai(&mut enemy, player);
+    let shooter = match ctx.ecs.get_shooter(enemy.entity_id) {
+    Some(s) => Some(*s),
+    None => None
+};
+    match shooter {
+    Some(shooter) =>{
+    //shot_ai(&enemy, &shooter, &player, &mut ctx.state.enemy_shots, &mut ctx.ecs, ctx.projectile_model_id);
+},
+    _ => {}
 }
 
 
-fn shot_ai(entity: &entity::Physics,
-           shooter: &entity::Shooter,
-           player_physics: &entity::Physics,
-           projectiles: &mut std::collections::HashSet<usize>,
-           ecs: &mut entity::EntityComponentSystem,
-           shot_model_id: usize) {
-
-    if ! shooter.can_shoot() {
-        return;
-    }
-
-    let to_player_vec = player_physics.pos - entity.pos;
-    let dist = to_player_vec.magnitude();
-
-    //TODO check if we can see, take that as ai input
-    if dist < 7.0 {
-        game::add_projectile(projectiles, ecs, &shooter, to_player_vec, entity.entity_id, shot_model_id);
-    }
+}
+    else{
+    collision_ai(&mut enemy, player);
 }
 
+    ctx.ecs.set_physics(*e_id, enemy);
+
+}
+     */
+}
 
 
 //maybe make this a trait that enemies can have, then have an AI component that implements this trait, or look it up

@@ -11,10 +11,6 @@ use crate::controls;
 use crate::deltatime;
 use crate::action_system;
 
-struct NewModel {
-    entity_id: usize,
-    init_physics: entity::Physics,
-}
 
 pub struct Cameras {
     free_camera: camera::FreeCamera,
@@ -24,14 +20,6 @@ pub struct Cameras {
 
 
 pub struct Context {
-
-    // should be in ecs
-    //GAME STATE SHOULD MOVE INTO STRUCT/MODULE
-    pub state: game::State,
-    pub player_id: usize,
-    pub player_weapon_id: usize,
-    pub animation_player: render_gl::AnimationPlayer,
-
 
     // STUFF WE NEED
     pub controls: controls::Controls,
@@ -43,17 +31,16 @@ pub struct Context {
     // CAMERAS
     cameras: Cameras,
 
+    pub entities: entity::Entities,
 
-    pub ecs: entity::EntityComponentSystem,
-
-    pub projectile_model_id: usize,
-
-    pub enemy_model_id: usize,
 
     pub cube_shader: render_gl::Shader,
+    pub mesh_shader: render_gl::Shader,
+
 
     pub actions: action_system::ActionsImpl,
 
+    pub models: Vec::<entity::Model>,
 
 
     delta_time: deltatime::Deltatime,
@@ -68,170 +55,139 @@ impl Context {
 
         ctx.setup_player()?;
 
-        ctx.setup_enemy_models()?;
+        //ctx.setup_enemy_models()?;
 
         //ctx.add_enemy();
 
         Ok(ctx)
     }
 
-
+    /*
     fn setup_enemy_models(&mut self) -> Result<(), failure::Error> {
 
-        let enemy_color = na::Vector3::new(0.3, 0.0, 0.0);
+    let enemy_color = na::Vector3::new(0.3, 0.0, 0.0);
 
-        let enemy_cube = cube::Cube::new(enemy_color, &self.render_context.gl);
+    let enemy_cube = cube::Cube::new(enemy_color, &self.render_context.gl);
 
-        let e_model = entity::Model::cube(enemy_cube);
+    let e_model = entity::Model::cube(enemy_cube);
 
-        self.enemy_model_id = self.ecs.add_model(e_model);
+    self.enemy_model_id = self.ecs.add_model(e_model);
 
-        println!("Enemy model id: {}", self.enemy_model_id);
-        Ok(())
+    println!("Enemy model id: {}", self.enemy_model_id);
+    Ok(())
 
-    }
-
-
-
-    pub fn load_model(&mut self, entity_id: usize,  clr: na::Vector3::<f32>, model_path: &str) ->  Result<(), failure::Error> {
-
-        // RELOADING MODELS WITH THIS WILL LEAK THE DATA, SINCE IT WILL ONLY ADD TO MODELS VEC
-        // BUT NOT REMOVE THE OLD UNUSED ONES. FINE FOR DEBUGGING
-        let (model, _anchors) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
-
-        let model_entity = entity::Model::wave_model(model);
-        let model_id = self.ecs.add_model(model_entity);
-
-        self.ecs.set_model(entity_id, model_id);
-        Ok(())
-    }
-
-
+}
+     */
 
 
     fn setup_player(&mut self) -> Result<(), failure::Error>  {
-        let player_id = self.ecs.add_entity();
 
-        // MODEL
-        let player_color = na::Vector3::new(0.0, 1.0, 1.0);
+        let (skeleton, index_map) = render_gl::Skeleton::from_gltf()?;
 
-        let (loaded_model, weapon_anchor) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, player_color, "models/player.obj", &self.render_context.res)?;
+        let player_animations = load_player_animations(&skeleton).unwrap();
 
-
-
-        let player_model = entity::Model::wave_model(loaded_model);
-        let player_model_id = self.ecs.add_model(player_model);
-        self.ecs.set_model(player_id, player_model_id);
+        let mut animation_player = render_gl::AnimationPlayer::new(render_gl::PlayerAnimation::Walk, player_animations);
+        let mesh = render_gl::SkinnedMesh::from_gltf(&self.render_context.gl, &index_map)?;
 
 
-        // SHOOTER
-        let player_shooter = entity::Shooter::default_player();
-        self.ecs.set_shooter(player_id, player_shooter);
+        let mut bones = Vec::new();
+        let joint_count = skeleton.joints.len();
+        for _ in 0..joint_count {
+            bones.push(na::Matrix4::identity());
+        }
+        animation_player.set_bones(bones);
 
+        let player_model = entity::Model::skinned_model(mesh);
 
-        // PHYSICS
-        let mut physics = entity::Physics::new(player_id);
-        physics.pos.x -= 2.0;
+        self.models.push(player_model);
 
-        self.ecs.set_physics(player_id, physics);
+        let model_id = self.models.len() - 1;
+        let id = self.entities.next_id;
+        let physics = entity::Physics::new(id);
 
-        self.player_id = player_id;
 
         let health = entity::Health::new(100.0);
-        self.ecs.set_health(player_id, health);
 
+        let player = entity::Entity {
+            physics,
+            animation_player,
+            health,
+            model_id
+        };
 
+        self.entities.add(player);
+        self.entities.player_id = id;
 
-        //SWORD
-        let sword = self.add_model_with_physics(na::Vector3::new(0.2, 0.2, 0.2), 1.0, Some(player_id), "models/sword.obj")?;
-
-        self.player_weapon_id = sword.entity_id;
-
-        // SWORD ACTION
-
-        let actions_info = entity::ActionsInfo::new(sword.entity_id, None);
-
-        self.ecs.set_actions_info(sword.entity_id, actions_info);
-
-
-        // PLAYER PROJECTILE
-        let player_projectile_color = na::Vector3::new(0.2,  1.0, 0.2);
-
-        let player_projectile_cube = cube::Cube::new(player_projectile_color, &self.render_context.gl);
-
-        let proj_model = entity::Model::cube(player_projectile_cube);
-
-        let projectile_model_id = self.ecs.add_model(proj_model);
-
-        self.projectile_model_id = projectile_model_id;
-
-        println!("Player id = {}", player_id);
-        println!("Player_weapon id = {}", self.player_weapon_id);
 
         Ok(())
     }
 
 
+    /*
+    fn setup_player(&mut self) -> Result<(), failure::Error>  {
+    let player_id = self.ecs.add_entity();
+
+    // MODEL
+    let player_color = na::Vector3::new(0.0, 1.0, 1.0);
+
+    let (loaded_model, weapon_anchor) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, player_color, "models/player.obj", &self.render_context.res)?;
 
 
-    fn add_model_with_physics(&mut self, clr: na::Vector3::<f32>, scale: f32, anchor_id: Option<usize>, model_path: &str) -> Result<NewModel, failure::Error>  {
+
+    let player_model = entity::Model::wave_model(loaded_model);
+    let player_model_id = self.ecs.add_model(player_model);
+    self.ecs.set_model(player_id, player_model_id);
 
 
-        let (model, _anchors) = render_gl::Model::load_from_path_tobj(&self.render_context.gl, clr, model_path, &self.render_context.res)?;
-        let model_entity = entity::Model::wave_model(model);
-        let model_id = self.ecs.add_model(model_entity);
-        let entity_id = self.ecs.add_entity();
-
-        self.ecs.set_model(entity_id, model_id);
-
-        let mut physics = entity::Physics::new(entity_id);
-        physics.scale = scale;
-        physics.inverse_mass = 0.0;
-
-        physics.anchor_id = anchor_id;
-
-        self.ecs.set_physics(entity_id, physics);
-
-        Ok(NewModel {
-            entity_id,
-            init_physics: physics,
-        })
+    // SHOOTER
+    let player_shooter = entity::Shooter::default_player();
+    self.ecs.set_shooter(player_id, player_shooter);
 
 
-    }
+    // PHYSICS
+    let mut physics = entity::Physics::new(player_id);
+    physics.pos.x -= 2.0;
 
-    fn add_enemy(&mut self) {
-        // ENEMY
-        let enemy_id = self.ecs.add_entity();
+    self.ecs.set_physics(player_id, physics);
 
-        self.state.enemies.insert(enemy_id);
+    self.player_id = player_id;
 
-        let health = entity::Health::new(100.0);
-
-        let mut physics = entity::Physics::new(enemy_id);
-        physics.pos = na::Vector3::new(0.0, -3.0, 4.5);
-
-        self.ecs.set_model(enemy_id, self.enemy_model_id);
-
-        // SHOOTER
-        let shooter = entity::Shooter::default_enemy();
-
-        self.ecs.set_shooter(enemy_id, shooter);
-
-        self.ecs.set_physics(enemy_id, physics);
-
-        self.ecs.set_health(enemy_id, health);
+    let health = entity::Health::new(100.0);
+    self.ecs.set_health(player_id, health);
 
 
-        match self.ecs.get_physics(enemy_id) {
-            Some(e) => {
-                let mut enemy_physics = *e;
-                enemy_physics.max_speed = 8.0;
-                self.ecs.set_physics(enemy_id, enemy_physics);
-            },
-            None => {}
-        };
-    }
+
+    //SWORD
+    let sword = self.add_model_with_physics(na::Vector3::new(0.2, 0.2, 0.2), 1.0, Some(player_id), "models/sword.obj")?;
+
+    self.player_weapon_id = sword.entity_id;
+
+    // SWORD ACTION
+
+    let actions_info = entity::ActionsInfo::new(sword.entity_id, None);
+
+    self.ecs.set_actions_info(sword.entity_id, actions_info);
+
+
+    // PLAYER PROJECTILE
+    let player_projectile_color = na::Vector3::new(0.2,  1.0, 0.2);
+
+    let player_projectile_cube = cube::Cube::new(player_projectile_color, &self.render_context.gl);
+
+    let proj_model = entity::Model::cube(player_projectile_cube);
+
+    let projectile_model_id = self.ecs.add_model(proj_model);
+
+    self.projectile_model_id = projectile_model_id;
+
+    println!("Player id = {}", player_id);
+    println!("Player_weapon id = {}", self.player_weapon_id);
+
+    Ok(())
+}
+
+     */
+
 
 
     pub fn camera(&self) -> &dyn camera::Camera {
@@ -269,10 +225,22 @@ impl Context {
         let action = self.controls.handle_inputs(&mut self.render_context, &mut self.cameras);
 
         match action {
-            controls::Action::AddEnemy => self.add_enemy(),
+            controls::Action::AddEnemy => {},
             controls::Action::NoAction => { },
         };
     }
+
+
+    pub fn update_animations(&mut self) {
+        let delta = self.get_delta_time();
+
+        let mut animation_player = &mut self.entities.player_mut().animation_player;
+
+        animation_player.set_frame_bones(delta);
+
+
+    }
+
 
 
 
@@ -283,7 +251,7 @@ impl Context {
         self.cube_shader.set_used();
 
         // CAN BE MOVED OUTSIDE THE LOOP
-        self.cube_shader.set_vec3(&self.render_context.gl, "lightPos", na::Vector3::new(0.0, 0.0, 5.0)); //
+        self.cube_shader.set_vec3(&self.render_context.gl, "lightPos", na::Vector3::new(0.0, 0.0, 5.0));
         self.cube_shader.set_vec3(&self.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
 
         self.cube_shader.set_projection_and_view(&self.render_context.gl, self.camera().projection(), self.camera().view());
@@ -291,27 +259,23 @@ impl Context {
         self.scene.render(&self.render_context.gl, &self.cube_shader);
 
 
-        // player
-        match &self.state.player_state {
-            game::PlayerState::Attacking => {
+        // RENDER WITH MESH SHADER
 
-                let percent = self.ecs.get_actions_info(self.player_weapon_id).and_then(|info| info.active.map(|a| a.percent_done())).unwrap_or_default();
+        self.mesh_shader.set_used();
 
-                render_gl::render(&self.ecs, self.player_id, &self.render_context.gl, &self.cube_shader);
-            },
-            _ => {
-                render_gl::render(&self.ecs, self.player_id, &self.render_context.gl, &self.cube_shader);
-            }
-        };
+        self.mesh_shader.set_vec3(&self.render_context.gl, "lightPos", na::Vector3::new(1.0, 0.0, 7.0));
+        self.mesh_shader.set_vec3(&self.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
 
-        render_gl::render(&self.ecs, self.player_weapon_id, &self.render_context.gl, &self.cube_shader);
+        self.mesh_shader.set_projection_and_view(&self.render_context.gl, self.camera().projection(), self.camera().view());
 
 
-        // all in state
-        self.state.render(&self.ecs, &self.render_context.gl, &self.cube_shader);
+        let player = self.entities.player();
+
+        let player_model = &self.models[player.model_id];
+
+        render_gl::render_entity(&player, &self.entities, player_model, &self.render_context.gl, &self.mesh_shader);
 
     }
-
 }
 
 
@@ -326,7 +290,7 @@ fn empty() -> Result<Context, failure::Error> {
 
     let background_color_buffer = render_gl::ColorBuffer::from_color(na::Vector3::new(0.3, 0.3, 0.5));
 
-    let ecs = entity::EntityComponentSystem::new();
+    let entities = entity::Entities::new();
 
     background_color_buffer.set_used(&render_context.gl);
 
@@ -340,7 +304,12 @@ fn empty() -> Result<Context, failure::Error> {
 
     let level = level::Level::load(&render_context.res,"levels/debugLevel1.txt")?;
 
+
+
     let cube_shader = render_gl::Shader::new("light_color_shader", &render_context.res, &render_context.gl)?;
+    let mut mesh_shader = render_gl::Shader::new("mesh_shader", &render_context.res, &render_context.gl)?;
+
+
 
     let mut scene = scene::Scene::new(&level, &render_context)?;
 
@@ -363,29 +332,19 @@ fn empty() -> Result<Context, failure::Error> {
     };
 
 
-    let (skeleton, index_map) = render_gl::Skeleton::from_gltf()?;
-
-    let player_animations = load_player_animations(&skeleton).unwrap();
-
-    let mut animation_player = render_gl::AnimationPlayer::new(render_gl::PlayerAnimation::Walk, player_animations);
-
 
     Ok(Context {
-        player_id: 9999,
         scene,
         controls,
         render_context,
+        mesh_shader,
         level,
         delta_time,
-        ecs,
         actions,
-        projectile_model_id: 9999,
-        enemy_model_id: 9999,
         cube_shader,
-        state: game::State::new(),
-        player_weapon_id: 9999,
-        animation_player,
+        entities,
         cameras,
+        models: Vec::new(),
     })
 }
 
