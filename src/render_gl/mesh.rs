@@ -4,10 +4,8 @@ use gl;
 
 
 pub struct SkinnedMesh {
-    name: String,
     mesh: Mesh,
     pub joint_names: Vec<String>,
-    pub skeleton_name: String,
     pub inverse_bind_poses: Vec<na::Matrix4<f32>>,
 }
 
@@ -94,8 +92,6 @@ impl SkinnedMesh {
                 }
 
 
-
-                let mut with_i = 0;
                 if let Some(reader) = reader.read_joints(set) {
                     for j in reader.into_u16() {
                         let mut data: [usize; 4] = [0; 4];
@@ -113,7 +109,6 @@ impl SkinnedMesh {
                             };
                         }
 
-                        with_i += 1;
                         joints_data.push(data);
                     }
                 }
@@ -148,10 +143,8 @@ impl SkinnedMesh {
 
             return Ok(SkinnedMesh {
                 mesh,
-                name: "test".to_string(),
                 inverse_bind_poses: Vec::<na::Matrix4<f32>>::new(),
                 joint_names: Vec::new(),
-                skeleton_name: "tmp".to_string(),
             });
         }
 
@@ -325,20 +318,6 @@ fn load_mesh_gltf(
 
     mesh
 }
-
-struct VWeights {
-    joints: Vec<usize>,
-    weights: Vec<f32>,
-}
-
-struct BindInfo {
-    vertex_weights: Vec<VertexWeights>,
-    joint_names: Vec<String>,
-    skeleton_name: String,
-    inverse_bind_poses: Vec<na::Matrix4<f32>>,
-}
-
-
 
 fn reduce_to_2_joints(joints_data: &Vec<[usize; 4]>, weights_data: &Vec<[f32; 4]>) -> Vec<VertexWeights> {
     // find the two largest weights and use them also normalize the two weights sum to 1

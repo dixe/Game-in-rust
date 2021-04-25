@@ -8,8 +8,7 @@ mod renderable;
 pub use self::renderable::{Renderable};
 
 
-mod texture;
-pub use self::texture::{Texture};
+pub mod texture;
 
 mod shader_program;
 pub use self::shader_program::{Program, Error};

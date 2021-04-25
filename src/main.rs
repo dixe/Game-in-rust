@@ -176,7 +176,7 @@ fn run() -> Result<(), failure::Error> {
 
 
     // setup texture
-    render_gl::Texture::new("low_poly.png", &ctx.render_context.res, &ctx.render_context.gl)?;
+    render_gl::texture::load_and_set("low_poly.png", &ctx.render_context.res, &ctx.render_context.gl)?;
 
     let mut joint_map = std::collections::HashMap::new();
 
@@ -286,7 +286,7 @@ fn run() -> Result<(), failure::Error> {
 
         match ctx.controls.keys.get(&sdl2::keyboard::Keycode::T) {
             Some(true) => {
-                animation_player.set_current(render_gl::PlayerAnimation::T_POSE);
+                animation_player.set_current(render_gl::PlayerAnimation::TPose);
                 t_pose = true;
             },
             _ => {

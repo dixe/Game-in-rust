@@ -14,7 +14,6 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
     update_projectiles(ctx, delta);
     update_shooters(ctx, delta);
     update_enemies_death(ctx);
-    //update_player_shooting(ctx);
     update_player_swing(ctx);
 
     // also "action" system update fx sword arc ect
@@ -168,22 +167,5 @@ fn update_player_swing(ctx: &mut game::Context) {
     action_info.queue.push_back(swing_action);
     ctx.state.player_state = game::PlayerState::Attacking;
 
-
-}
-
-fn update_player_shooting(ctx: &mut game::Context) {
-
-    let player_id = ctx.player_id;
-    let shoot_dir = ctx.controls.right_stick;
-    let shooter_op = ctx.ecs.get_shooter(ctx.player_id);
-    match (shoot_dir, shooter_op) {
-        (Some(dir), Some(s)) =>
-        {
-            let shooter = *s;
-            game::add_projectile(&mut ctx.state.player_shots, &mut ctx.ecs, &shooter, dir, player_id, ctx.projectile_model_id);
-
-        },
-        _ => {}
-    };
 
 }

@@ -89,9 +89,7 @@ impl Camera for FreeCamera {
             self.yaw.cos() * self.pitch.cos(),
             self.yaw.sin() * self.pitch.cos(),
             self.pitch.sin(),
-        );
-
-        self.front.normalize();
+        ).normalize();
 
         self.right = self.front.cross(&self.world_up).normalize();
 

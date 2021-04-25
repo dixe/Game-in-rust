@@ -165,7 +165,7 @@ fn key_frames_from_gltf(skeleton: &Skeleton) -> Result<HashMap<String,Vec<KeyFra
                         let mut i = 0;
                         for r in rs.into_f32() {
 
-                            let q = na::Quaternion::from_vector(na::Vector4::new(r[0], r[1], r[2], r[3]));
+                            let q = na::Quaternion::from(na::Vector4::new(r[0], r[1], r[2], r[3]));
 
                             frames[i].joints[joints_index].rotation = na::UnitQuaternion::from_quaternion(q);
                             i += 1 ;

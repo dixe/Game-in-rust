@@ -4,7 +4,7 @@ use crate::render_gl::{KeyframeAnimation, KeyFrame, PlayerAnimations};
 
 #[derive(Debug, Copy, Clone)]
 pub enum PlayerAnimation {
-    T_POSE,
+    TPose,
     RUN
 }
 
@@ -32,16 +32,11 @@ impl AnimationPlayer {
     }
 
 
-    fn current_key_frames_count(&self) -> usize {
-
-        self.get_current_animation().key_frames.len()
-    }
-
     fn get_current_animation(&self) -> &KeyframeAnimation {
 
         match &self.current_animation {
-            PlayerAnimation::T_POSE => {
-                println!("loading T_POSE");
+            PlayerAnimation::TPose => {
+                println!("loading TPose");
                 &self.player_animations.t_pose
             },
             PlayerAnimation::RUN => {
@@ -61,6 +56,8 @@ impl AnimationPlayer {
 
         current_animation.key_frames[frame_index].clone()
     }
+
+
     pub fn set_player_animations(&mut self, animations: PlayerAnimations) {
         self.player_animations = animations;
     }
@@ -68,7 +65,7 @@ impl AnimationPlayer {
     pub fn set_frame_bones(&mut self, bones: &mut [na::Matrix4::<f32>], delta: f32) {
         // find let t =
         let current_animation = match self.current_animation {
-            PlayerAnimation::T_POSE => {
+            PlayerAnimation::TPose => {
                 &mut self.player_animations.t_pose
             },
             PlayerAnimation::RUN => {

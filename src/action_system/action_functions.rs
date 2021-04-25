@@ -6,10 +6,6 @@ pub fn idle_bob_z(time_passed: f32, physics: &mut entity::Physics, _ : &entity::
     physics.pos.z = (time_passed * std::f32::consts::PI).sin();
 }
 
-pub fn empty(_time_passed: f32, _physics: &mut entity::Physics, _ : &entity::Physics) {
-}
-
-
 pub fn set_player_moving(state: &mut game::State) {
     state.player_state = game::PlayerState::Moving;
 }

@@ -111,7 +111,7 @@ impl Skeleton {
 
                 let (translation, rotation) = match node.transform() {
                     gltf::scene::Transform::Decomposed {translation, rotation, .. } => {
-                        let q = na::Quaternion::from_vector(
+                        let q = na::Quaternion::from(
                             na::Vector4::new(rotation[0], rotation[1], rotation[2], rotation[3]));
                         let rot = na::UnitQuaternion::from_quaternion(q);
                         (na::Vector3::new(translation[0], translation[1], translation[2]), rot)
@@ -158,10 +158,6 @@ impl Skeleton {
         }
 
         panic!("NO SKELETON LOADED");
-        Ok((Skeleton {
-            name: "test".to_string(),
-            joints: Vec::new(),
-        }, std::collections::HashMap::<u16,usize>::new()))
     }
 }
 
