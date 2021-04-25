@@ -154,21 +154,16 @@ struct MeshAndSkeleton {
 
 
 static anim_time: f32 = 1.0;
-fn load_and_set_animation(ctx: &game::Context,
-                          animation_player: &mut render_gl::AnimationPlayer,
-                          skeleton: &render_gl::Skeleton,
-                          joint_map: &std::collections::HashMap::<String, usize> ) {
+fn load_player_animations(skeleton: &render_gl::Skeleton) -> Option<render_gl::PlayerAnimations>{
 
-    let walk_keyframes = match render_gl::key_frames_from_gltf(&skeleton) {
+    let player_animations = match render_gl::load_player_animations(&skeleton) {
         Ok(key_frames) => key_frames,
         Err(err) => {           //
             println!("Error loading key_frames: {:#?}", err);
-            return; }
+            return None; }
     };
 
-    let animation = render_gl::KeyframeAnimation::new("test ani", anim_time, skeleton.clone(), walk_keyframes);
-
-    animation_player.set_current(animation);
+    Some(player_animations)
 }
 
 
@@ -210,9 +205,8 @@ fn run() -> Result<(), failure::Error> {
     }
 
 
-    let mut animation_player = render_gl::AnimationPlayer::new(render_gl::KeyframeAnimation::empty());
-
-    load_and_set_animation(&ctx, &mut animation_player, &skeleton, &joint_map);
+    let player_animations = load_player_animations(&skeleton).unwrap();
+    let mut animation_player = render_gl::AnimationPlayer::new(render_gl::PlayerAnimation::RUN, player_animations);
 
     let bone_cube = cube::Cube::new(na::Vector3::new(0.5, 0.5, 0.5), &ctx.render_context.gl);
 
@@ -305,11 +299,22 @@ fn run() -> Result<(), failure::Error> {
 
         match ctx.controls.keys.get(&sdl2::keyboard::Keycode::T) {
             Some(true) => {
+                animation_player.set_current(render_gl::PlayerAnimation::T_POSE);
                 t_pose = true;
             },
             _ => {
                 t_pose = false;
             }
+        };
+
+        match ctx.controls.keys.get(&sdl2::keyboard::Keycode::K) {
+            Some(true) => {
+                println!("Setting to run");
+                animation_player.set_current(render_gl::PlayerAnimation::RUN);
+            },
+            _ => {
+            }
+
         };
 
         match ctx.controls.keys.get(&sdl2::keyboard::Keycode::V) {
@@ -386,10 +391,17 @@ fn run() -> Result<(), failure::Error> {
                     };
 
 
-                    load_and_set_animation(&ctx, &mut animation_player, &skeleton, &joint_map);
+                    match load_player_animations(&skeleton) {
+                        Some(anis) => {
+                            // TODO Update animations in  animation_players
+                            //player_animations = anis;
+                        },
+                        None => {}
+                    };
 
 
                     ctx.load_model(ctx.player_weapon_id, na::Vector3::new(0.2, 0.2, 0.2), "models/sword.obj")?;
+
                 },
                 Command::SwitchRenderMode => {
                     ctx.render_context.switch_mode();

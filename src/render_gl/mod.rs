@@ -35,11 +35,11 @@ pub use self::render_functions::{render};
 
 
 mod keyframe_animation;
-pub use self::keyframe_animation::{KeyframeAnimation,Transformation, KeyFrame, key_frames_from_gltf};
+pub use self::keyframe_animation::{KeyframeAnimation, PlayerAnimations, Transformation, KeyFrame, load_player_animations};
 
 
 mod animation_player;
-pub use self::animation_player::{AnimationPlayer};
+pub use self::animation_player::{AnimationPlayer, PlayerAnimation};
 
 mod mesh;
 pub use self::mesh::{Mesh, VertexWeights, SkinnedMesh};

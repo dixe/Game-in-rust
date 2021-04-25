@@ -1,8 +1,10 @@
 use nalgebra as na;
+use std::collections::{HashMap};
 
 use crate::render_gl::{Mesh, Skeleton, Joint};
 use crate::resources::Resources;
 use crate::resources;
+
 
 #[derive(Debug)]
 pub struct KeyframeAnimation {
@@ -33,7 +35,6 @@ pub enum Error {
     ResourceError(resources::Error),
     #[fail(display = "gltf Error")]
     GltfError(gltf::Error),
-
 }
 
 
@@ -51,12 +52,35 @@ impl From<gltf::Error> for Error {
     }
 }
 
+pub struct PlayerAnimations {
+    pub run: KeyframeAnimation,
+    pub t_pose: KeyframeAnimation,
+}
 
 
 
+pub fn load_player_animations(skeleton: &Skeleton) -> Result<PlayerAnimations, Error> {
+
+    let animations = key_frames_from_gltf(skeleton)?;
 
 
-pub fn key_frames_from_gltf(skeleton: &Skeleton) -> Result<Vec<KeyFrame>, Error> {
+    let t_pose_frames = animations.get("t_pose").unwrap();
+
+    let run_frames = animations.get("run").unwrap();
+
+    let t_pose = KeyframeAnimation::new("t_pose", 1.0, skeleton.clone(), t_pose_frames.clone());
+
+    let run = KeyframeAnimation::new("run", 1.0, skeleton.clone(), run_frames.clone());
+
+
+    Ok(PlayerAnimations {
+        t_pose,
+        run
+    })
+}
+
+
+fn key_frames_from_gltf(skeleton: &Skeleton) -> Result<HashMap<String,Vec<KeyFrame>>, Error> {
     let (gltf, buffers, _) = gltf::import("E:/repos/Game-in-rust/blender_models/player_05.glb")?;
 
 
@@ -68,6 +92,16 @@ pub fn key_frames_from_gltf(skeleton: &Skeleton) -> Result<Vec<KeyFrame>, Error>
 
     for ani in gltf.animations() {
         println!("ANIMATION {:#?}", ani.name());
+    }
+
+    let mut res = HashMap::<String, Vec<KeyFrame>>::new();
+
+    for ani in gltf.animations() {
+
+        let name = match ani.name() {
+            Some(n) => n.to_string(),
+            _ => continue
+        };
 
         let mut frames = Vec::new();
         let mut max_frame_count = 0;
@@ -154,18 +188,16 @@ pub fn key_frames_from_gltf(skeleton: &Skeleton) -> Result<Vec<KeyFrame>, Error>
 
                 }
             }
-
-
         }
 
-
-        return Ok(frames);
-
-
+        res.insert(name, frames);
     }
 
-    panic!("LOAD THE ANIMAITONS NOEW");
+    println!("Animations loaded:\n{:#?}", res.keys());
 
+
+
+    Ok(res)
 }
 
 impl Transformation {
