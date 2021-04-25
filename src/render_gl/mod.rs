@@ -16,9 +16,6 @@ pub use self::shader_program::{Program, Error};
 mod viewport;
 pub use self::viewport::Viewport;
 
-mod animation;
-pub use self::animation::Animation;
-
 mod color_buffer;
 pub use self::color_buffer::ColorBuffer;
 

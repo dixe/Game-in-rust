@@ -28,7 +28,7 @@ fn calculate_model_mat(physics: &entity::Physics) -> na::Matrix4::<f32> {
 
 
 
-pub fn render(ecs: &entity::EntityComponentSystem, entity_id: usize, gl: &gl::Gl, shader: &render_gl::Shader, animation: Option<(&render_gl::Animation, f32)>) {
+pub fn render(ecs: &entity::EntityComponentSystem, entity_id: usize, gl: &gl::Gl, shader: &render_gl::Shader) {
 
     let physics = match game::get_absoulte_physics(entity_id, ecs) {
         Some(physics) => physics,
@@ -36,22 +36,13 @@ pub fn render(ecs: &entity::EntityComponentSystem, entity_id: usize, gl: &gl::Gl
     };
 
     let model_mat = calculate_model_mat(&physics);
-
-    match animation {
-        Some((ani, percent)) => {
-            ani.render(gl, shader, model_mat, percent);
+    match ecs.get_model(physics.entity_id) {
+        Some(m) => {
+            let model_mat = calculate_model_mat(&physics);
+            m.render_from_model_mat(gl, shader, model_mat);
         },
-        None => {
-            match ecs.get_model(physics.entity_id) {
-                Some(m) => {
-                    let model_mat = calculate_model_mat(&physics);
-                    m.render_from_model_mat(gl, shader, model_mat);
-                },
-                _ => {
+        _ => {
 
-
-                }
-            }
         }
     }
 }

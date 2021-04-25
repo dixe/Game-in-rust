@@ -108,7 +108,7 @@ impl Skeleton {
             let mut hip_index = 0;
             for node in skin.joints() {
                 let index = node.index();
-
+                println!(" {:#?} {}", node.name().unwrap(), index);
                 let (translation, rotation) = match node.transform() {
                     gltf::scene::Transform::Decomposed {translation, rotation, .. } => {
                         let q = na::Quaternion::from(
@@ -126,7 +126,7 @@ impl Skeleton {
 
                 let children: Vec::<usize> = node.children().map(|c| c.index()).collect();
 
-                println!(" {:#?} {}", node.name().unwrap(), index);
+
                 joints_data[index] = (children, node.name().unwrap(), Transformation {
                     translation,
                     rotation
@@ -137,7 +137,7 @@ impl Skeleton {
             // start from hip index and create skeleton from there
 
             let mut skeleton = Skeleton {
-                name: "test".to_string(),
+                name: skin.name().unwrap().to_string(),
                 joints: Vec::new(),
             };
 

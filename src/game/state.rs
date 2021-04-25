@@ -44,15 +44,15 @@ impl State {
     pub fn render(&self, ecs: &entity::EntityComponentSystem,  gl: &gl::Gl, shader: &render_gl::Shader) {
 
         for id in &self.enemies {
-            render_gl::render(ecs, *id, gl, shader, None)
+            render_gl::render(ecs, *id, gl, shader)
         }
 
         for id in &self.player_shots {
-            render_gl::render(ecs, *id, gl,shader, None);
+            render_gl::render(ecs, *id, gl,shader);
         }
 
         for id in &self.enemy_shots {
-            render_gl::render(ecs, *id, gl,shader, None);
+            render_gl::render(ecs, *id, gl,shader);
         }
     }
 }

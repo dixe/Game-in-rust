@@ -30,6 +30,7 @@ impl SkinnedMesh {
             gltf::import("E:/repos/Game-in-rust/blender_models/player_05.glb")?;
 
 
+
         let mut inter_joint_index: Vec::<u16> = Vec::new();
 
         for skin in gltf.skins() {
@@ -93,22 +94,25 @@ impl SkinnedMesh {
 
 
                 if let Some(reader) = reader.read_joints(set) {
+                    let mut c = 0;
                     for j in reader.into_u16() {
                         let mut data: [usize; 4] = [0; 4];
                         for (i, index) in j.iter().enumerate() {
 
                             // little convoluted and is end up being that j == data
-                            // but that i only because we construct the skeleton the same way
+                            // but that is only because we construct the skeleton the same way
                             // maybe remove this and just use j as it would make it a lot cleaner
 
                             data[i] = match index_map.get(&inter_joint_index[*index as usize]) {
                                 Some(mapping) => *mapping, //*index as usize,//*mapping,
                                 None => {
-                                    panic!("");
+                                    println!("{}, {:?}\n{:?}", c, j, weights_data[c]);
+                                    panic!("Non mapped bone has weights. Check weight paint for {}", *index)
                                 }
                             };
                         }
 
+                        c += 1;
                         joints_data.push(data);
                     }
                 }
@@ -131,8 +135,6 @@ impl SkinnedMesh {
 
 
             let vertex_weights = reduce_to_2_joints(&joints_data, &weights_data);
-
-            println!("{:#?} {:#?}", vertex_weights[144], vertex_data[144]);
 
             println!("{:#?}", indices_data.len());
 

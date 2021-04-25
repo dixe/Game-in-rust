@@ -53,7 +53,7 @@ impl From<gltf::Error> for Error {
 }
 
 pub struct PlayerAnimations {
-    pub run: KeyframeAnimation,
+    pub walk: KeyframeAnimation,
     pub t_pose: KeyframeAnimation,
 }
 
@@ -66,16 +66,16 @@ pub fn load_player_animations(skeleton: &Skeleton) -> Result<PlayerAnimations, E
 
     let t_pose_frames = animations.get("t_pose").unwrap();
 
-    let run_frames = animations.get("run").unwrap();
+    let walk_frames = animations.get("walk").unwrap();
 
     let t_pose = KeyframeAnimation::new("t_pose", 1.0, skeleton.clone(), t_pose_frames.clone());
 
-    let run = KeyframeAnimation::new("run", 1.0, skeleton.clone(), run_frames.clone());
+    let walk = KeyframeAnimation::new("walk", 1.0, skeleton.clone(), walk_frames.clone());
 
 
     Ok(PlayerAnimations {
         t_pose,
-        run
+        walk
     })
 }
 

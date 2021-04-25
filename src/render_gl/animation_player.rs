@@ -5,7 +5,7 @@ use crate::render_gl::{KeyframeAnimation, KeyFrame, PlayerAnimations};
 #[derive(Debug, Copy, Clone)]
 pub enum PlayerAnimation {
     TPose,
-    RUN
+    Walk
 }
 
 
@@ -39,9 +39,9 @@ impl AnimationPlayer {
                 println!("loading TPose");
                 &self.player_animations.t_pose
             },
-            PlayerAnimation::RUN => {
-                println!("loading RUN");
-                &self.player_animations.run
+            PlayerAnimation::Walk => {
+                println!("loading Walk");
+                &self.player_animations.walk
             },
         }
     }
@@ -68,8 +68,8 @@ impl AnimationPlayer {
             PlayerAnimation::TPose => {
                 &mut self.player_animations.t_pose
             },
-            PlayerAnimation::RUN => {
-                &mut self.player_animations.run
+            PlayerAnimation::Walk => {
+                &mut self.player_animations.walk
             },
         };
 

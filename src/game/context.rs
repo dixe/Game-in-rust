@@ -30,6 +30,7 @@ pub struct Context {
     pub state: game::State,
     pub player_id: usize,
     pub player_weapon_id: usize,
+    pub animation_player: render_gl::AnimationPlayer,
 
 
     // STUFF WE NEED
@@ -50,8 +51,6 @@ pub struct Context {
     pub enemy_model_id: usize,
 
     pub cube_shader: render_gl::Shader,
-
-    pub swing_animation: Option<render_gl::Animation>,
 
     pub actions: action_system::ActionsImpl,
 
@@ -146,22 +145,10 @@ impl Context {
         //SWORD
         let sword = self.add_model_with_physics(na::Vector3::new(0.2, 0.2, 0.2), 1.0, Some(player_id), "models/sword.obj")?;
 
-
-        weapon_anchor.map(|anchor| {
-            self.ecs.set_anchor_point(sword.entity_id, anchor);
-            match self.swing_animation  {
-                Some(ref ani) => {
-                    self.actions.swing = action_system::from_anchor_points(&ani.frame_anchors, anchor );
-                }, _ => {}
-            };
-        });
-
-
-
         self.player_weapon_id = sword.entity_id;
 
         // SWORD ACTION
-        let _sword_idle = entity::ActionData::new(action_system::Actions::Idle, None, sword.init_physics);
+
         let actions_info = entity::ActionsInfo::new(sword.entity_id, None);
 
         self.ecs.set_actions_info(sword.entity_id, actions_info);
@@ -305,22 +292,19 @@ impl Context {
 
 
         // player
-        match (&self.state.player_state, &self.swing_animation) {
-            (game::PlayerState::Attacking, Some(ref swing)) => {
-                // get player action and how far we are in it
-
-                let _info = self.ecs.get_actions_info(self.player_weapon_id);
+        match &self.state.player_state {
+            game::PlayerState::Attacking => {
 
                 let percent = self.ecs.get_actions_info(self.player_weapon_id).and_then(|info| info.active.map(|a| a.percent_done())).unwrap_or_default();
 
-                render_gl::render(&self.ecs, self.player_id, &self.render_context.gl, &self.cube_shader, Some((&swing, percent)));
+                render_gl::render(&self.ecs, self.player_id, &self.render_context.gl, &self.cube_shader);
             },
             _ => {
-                render_gl::render(&self.ecs, self.player_id, &self.render_context.gl, &self.cube_shader, None);
+                render_gl::render(&self.ecs, self.player_id, &self.render_context.gl, &self.cube_shader);
             }
         };
 
-        render_gl::render(&self.ecs, self.player_weapon_id, &self.render_context.gl, &self.cube_shader, None);
+        render_gl::render(&self.ecs, self.player_weapon_id, &self.render_context.gl, &self.cube_shader);
 
 
         // all in state
@@ -368,9 +352,8 @@ fn empty() -> Result<Context, failure::Error> {
 
     let actions = action_system::load_player_actions(&render_context.res)?;
 
-    let _player_color = na::Vector3::new(0.0, 1.0, 1.0);
-    let swing_animation = None;
-    //swing_animation = Some(render_gl::Animation::load_from_path(&render_context.gl, player_color, "animations/slap/", &render_context.res)?);
+
+
 
 
     let cameras = Cameras {
@@ -379,6 +362,12 @@ fn empty() -> Result<Context, failure::Error> {
         mode: camera::CameraMode::Free
     };
 
+
+    let (skeleton, index_map) = render_gl::Skeleton::from_gltf()?;
+
+    let player_animations = load_player_animations(&skeleton).unwrap();
+
+    let mut animation_player = render_gl::AnimationPlayer::new(render_gl::PlayerAnimation::Walk, player_animations);
 
 
     Ok(Context {
@@ -395,7 +384,19 @@ fn empty() -> Result<Context, failure::Error> {
         cube_shader,
         state: game::State::new(),
         player_weapon_id: 9999,
-        swing_animation,
+        animation_player,
         cameras,
     })
+}
+
+fn load_player_animations(skeleton: &render_gl::Skeleton) -> Option<render_gl::PlayerAnimations>{
+
+    let player_animations = match render_gl::load_player_animations(&skeleton) {
+        Ok(key_frames) => key_frames,
+        Err(err) => {           //
+            println!("Error loading key_frames: {:#?}", err);
+            return None; }
+    };
+
+    Some(player_animations)
 }

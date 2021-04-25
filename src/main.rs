@@ -193,7 +193,7 @@ fn run() -> Result<(), failure::Error> {
 
 
     let player_animations = load_player_animations(&skeleton).unwrap();
-    let mut animation_player = render_gl::AnimationPlayer::new(render_gl::PlayerAnimation::RUN, player_animations);
+    let mut animation_player = render_gl::AnimationPlayer::new(render_gl::PlayerAnimation::Walk, player_animations);
 
     let bone_cube = cube::Cube::new(na::Vector3::new(0.5, 0.5, 0.5), &ctx.render_context.gl);
 
@@ -202,7 +202,6 @@ fn run() -> Result<(), failure::Error> {
     for _ in 0..joint_count {
         bones.push(na::Matrix4::identity());
     }
-
 
     set_t_pose(&mut bones);
 
@@ -296,8 +295,8 @@ fn run() -> Result<(), failure::Error> {
 
         match ctx.controls.keys.get(&sdl2::keyboard::Keycode::K) {
             Some(true) => {
-                println!("Setting to run");
-                animation_player.set_current(render_gl::PlayerAnimation::RUN);
+                println!("Setting to waalk");
+                animation_player.set_current(render_gl::PlayerAnimation::Walk);
             },
             _ => {
             }
