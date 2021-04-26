@@ -125,8 +125,6 @@ impl SkinnedMesh {
 
             }
 
-            println!("{:#?}", index_map);
-
             println!("{:#?}\n{:#?}", joints_data.len(), weights_data.len());
 
             println!(

@@ -31,7 +31,7 @@ pub use self::render_functions::{render, render_entity};
 
 
 mod keyframe_animation;
-pub use self::keyframe_animation::{KeyframeAnimation, PlayerAnimations, Transformation, KeyFrame, load_player_animations};
+pub use self::keyframe_animation::{KeyframeAnimation, PlayerAnimations, Transformation, KeyFrame, load_animations};
 
 
 mod animation_player;

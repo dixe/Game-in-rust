@@ -10,7 +10,7 @@ use crate::resources;
 pub struct KeyframeAnimation {
     pub name: String,
     pub duration: f32,
-    pub skeleton: Skeleton,
+    //pub skeleton: Skeleton,
     pub key_frames: Vec<KeyFrame>,
     pub cyclic: bool,
 }
@@ -57,11 +57,12 @@ impl From<gltf::Error> for Error {
 pub struct PlayerAnimations {
     pub walk: KeyframeAnimation,
     pub t_pose: KeyframeAnimation,
+    pub idle: KeyframeAnimation,
 }
 
 
 
-pub fn load_player_animations(skeleton: &Skeleton) -> Result<PlayerAnimations, Error> {
+pub fn load_animations(skeleton: &Skeleton) -> Result<PlayerAnimations, Error> {
 
     let animations = key_frames_from_gltf(skeleton)?;
 
@@ -70,14 +71,19 @@ pub fn load_player_animations(skeleton: &Skeleton) -> Result<PlayerAnimations, E
 
     let walk_frames = animations.get("walk").unwrap();
 
-    let t_pose = KeyframeAnimation::new("t_pose", 1.0, skeleton.clone(), t_pose_frames.clone(), true);
+    let idle_frames = animations.get("idle").unwrap();
 
-    let walk = KeyframeAnimation::new("walk", 1.0, skeleton.clone(), walk_frames.clone(), true);
+    let t_pose = KeyframeAnimation::new("t_pose", 1.0, t_pose_frames.clone(), true);
+
+    let walk = KeyframeAnimation::new("walk", 0.7, walk_frames.clone(), true);
+
+    let idle = KeyframeAnimation::new("idle", 2.0, idle_frames.clone(), true);
 
 
     Ok(PlayerAnimations {
         t_pose,
-        walk
+        walk,
+        idle,
     })
 }
 
@@ -155,12 +161,8 @@ fn key_frames_from_gltf(skeleton: &Skeleton) -> Result<HashMap<String,Vec<KeyFra
 
             let mut base_rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0, 0.0);
             if target.node().name().unwrap() == "hip" {
-                println!("{:#?}", target.node().name());
                 base_rot = na::UnitQuaternion::from_euler_angles(0.0, -90.0_f32.to_radians(), 0.0);
             }
-
-
-            println!("{:#?}", target.node().name());
 
             for read_outputs in reader.read_outputs() {
                 match read_outputs {
@@ -233,48 +235,29 @@ impl KeyframeAnimation {
         KeyframeAnimation {
             name: "Empty".to_string(),
             duration: 1.0,
-            skeleton: Skeleton {
-                name: "Empty".to_string(),
-                joints: Vec::new()
-            },
             key_frames: Vec::new(),
             cyclic: true,
         }
     }
 
-    pub fn new(name: &str, duration: f32, skeleton: Skeleton, key_frames: Vec<KeyFrame>, cyclic: bool) -> KeyframeAnimation {
+    pub fn new(name: &str, duration: f32,  key_frames: Vec<KeyFrame>, cyclic: bool) -> KeyframeAnimation {
 
         KeyframeAnimation {
             name: name.to_string(),
             duration,
-            skeleton,
             key_frames,
             cyclic,
         }
     }
 
+    pub fn keyframe_from_t(&self, skeleton: &Skeleton, next_keyframe: usize, t: f32) -> KeyFrame {
 
-    pub fn move_to_key_frame(&mut self, bones: &mut [na::Matrix4::<f32>], next_keyframe: usize, t: f32) {
+        let mut joints = Vec::new();
 
-        // interpolate joints new transformation
-
-
-        let mut world_matrices = Vec::new();
-
-        //println!("Frame {:#?}", keyframe);
-
-        for i in 0..self.skeleton.joints.len() {
+        for i in 0..skeleton.joints.len() {
 
             let current_transformation = match next_keyframe {
                 0 => {
-
-                    /*
-                    println!("joint {:#?}", self.skeleton.joints[i].name);
-                    println!("Skel transform {:#?}", self.skeleton.joints[i].transformation());
-
-                    println!("target {:#?}", &self.key_frames[keyframe].joints[i]);
-                     */
-
                     self.key_frames[0].joints[i]
 
                 },
@@ -283,28 +266,64 @@ impl KeyframeAnimation {
                 }
             };
 
+            let target_joint = &self.key_frames[next_keyframe].joints[i];
 
+            let rotation = current_transformation.rotation.slerp(&target_joint.rotation, t);
+
+            let translation = current_transformation.translation * (1.0 - t) + target_joint.translation * t;
+
+
+            joints.push(Transformation {
+                translation,
+                rotation
+            });
+        }
+
+        KeyFrame {
+            joints,
+        }
+    }
+
+
+    pub fn move_to_key_frame(&mut self, bones: &mut [na::Matrix4::<f32>], skeleton: &mut Skeleton, next_keyframe: usize, t: f32) {
+
+        // interpolate joints new transformation
+
+        let mut world_matrices = Vec::new();
+
+        //println!("Frame {:#?}", keyframe);
+
+        for i in 0..skeleton.joints.len() {
+
+            let current_transformation = match next_keyframe {
+                0 => {
+                    self.key_frames[0].joints[i]
+
+                },
+                n => {
+                    self.key_frames[n - 1].joints[i]
+                }
+            };
 
             let target_joint = &self.key_frames[next_keyframe].joints[i];
 
-
-
             let rotation = current_transformation.rotation.slerp(&target_joint.rotation, t);
+
             let translation = current_transformation.translation * (1.0 - t) + target_joint.translation * t;
 
-            let local_matrix  = self.skeleton.joints[i].get_local_matrix_data(rotation, translation);
+            let local_matrix  = skeleton.joints[i].get_local_matrix_data(rotation, translation);
 
             let mut world_matrix = local_matrix;
 
-            let parent_index = self.skeleton.joints[i].parent_index;
+            let parent_index = skeleton.joints[i].parent_index;
             if parent_index  != 255 {
                 world_matrix = world_matrices[parent_index] * local_matrix;
             }
 
             world_matrices.push(world_matrix);
 
-            self.skeleton.joints[i].world_matrix = world_matrix;
-            bones[i] = world_matrix * self.skeleton.joints[i].inverse_bind_pose;
+            skeleton.joints[i].world_matrix = world_matrix;
+            bones[i] = world_matrix * skeleton.joints[i].inverse_bind_pose;
 
         }
     }

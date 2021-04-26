@@ -45,7 +45,9 @@ enum Command {
     Nop,
     SwitchRenderMode,
     ReloadActions,
-    Quit
+    Quit,
+    DecrementWalkTime,
+    IncrementWalkTime,
 }
 
 
@@ -75,6 +77,8 @@ fn start_cmd_thread() {
                     ,
                     "m" => Command::SwitchRenderMode,
                     "q" => Command::Quit,
+                    "d" => Command::DecrementWalkTime,
+                    "w" => Command::IncrementWalkTime,
                     _ => Command::Nop,
                 };
 
@@ -243,6 +247,16 @@ fn run() -> Result<(), failure::Error> {
                 Command::SwitchRenderMode => {
                     ctx.render_context.switch_mode();
                 },
+                Command::DecrementWalkTime => {
+                    let player = ctx.entities.player_mut();
+                    player.animation_player.animations.walk.duration -= 0.1;
+                    println!("{:#?}", player.animation_player.animations.walk.duration);
+                },
+                Command::IncrementWalkTime => {
+                    let player = ctx.entities.player_mut();
+                    player.animation_player.animations.walk.duration += 0.1;
+                    println!("{:#?}", player.animation_player.animations.walk.duration);
+                },
 
             }
             CMD = Command::Nop;
@@ -263,7 +277,7 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
     let bones = animation_player.bones.clone();
 
 
-    let skeleton = animation_player.player_animations.t_pose.skeleton.clone();
+    let skeleton = animation_player.skeleton.clone();
 
 
 
@@ -301,8 +315,6 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::V) {
         Some(true) => {
 
-            let key_frame = animation_player.current_key_frame().joints;
-
             ctx.cube_shader.set_used();
 
             let proj = ctx.camera().projection();
@@ -318,8 +330,6 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
 
 
             for i in 0..skeleton.joints.len() {
-
-                //let local = skeleton.joints[i].get_local_matrix_data(key_frame[i].rotation, key_frame[i].translation);
                 let local = skeleton.joints[i].get_local_matrix();
 
                 let world_matrix;

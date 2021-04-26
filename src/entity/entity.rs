@@ -32,7 +32,7 @@ impl Entity {
 
         match state {
             EntityState::Moving => self.animation_player.set_current(render_gl::PlayerAnimation::Walk),
-            EntityState::Idle =>  self.animation_player.set_current(render_gl::PlayerAnimation::TPose),
+            EntityState::Idle =>  self.animation_player.set_current(render_gl::PlayerAnimation::Idle),
         };
     }
 }
