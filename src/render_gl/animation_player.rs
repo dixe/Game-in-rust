@@ -40,25 +40,25 @@ impl AnimationPlayer {
     }
 
     pub fn set_current(&mut self, animation: PlayerAnimation) {
-        let key_frame_end = (match animation {
+        let key_frame_end = match animation {
             PlayerAnimation::TPose => self.animations.t_pose.key_frames[0].clone(),
             PlayerAnimation::Idle => self.animations.idle.key_frames[0].clone(),
             PlayerAnimation::Walk => self.animations.walk.key_frames[0].clone(),
             PlayerAnimation::Transition(ref anim) => anim.key_frames[0].clone(),
-        });
+        };
 
         self.next_animation = Some(animation);
 
 
-        // create transition animation
-
+        // create transition animation from current frame state
         let transition_time = 0.2;
 
         let keyFrames = vec![self.current_frame(), key_frame_end];
 
+        // important that this is after we call current_frame, since that uses the elapsed time
         self.elapsed = 0.0;
 
-        self.current_animation = PlayerAnimation::Transition( KeyframeAnimation::new("transition", transition_time, keyFrames, false));
+        self.current_animation = PlayerAnimation::Transition(KeyframeAnimation::new(transition_time, keyFrames));
 
     }
 

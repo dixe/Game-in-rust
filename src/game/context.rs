@@ -175,7 +175,7 @@ impl Context {
     pub fn update_animations(&mut self) {
         let delta = self.get_delta_time();
 
-        let mut animation_player = &mut self.entities.player_mut().animation_player;
+        let animation_player = &mut self.entities.player_mut().animation_player;
 
         animation_player.set_frame_bones(delta);
     }

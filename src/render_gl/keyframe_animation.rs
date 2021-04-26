@@ -8,11 +8,8 @@ use crate::resources;
 
 #[derive(Debug, Clone)]
 pub struct KeyframeAnimation {
-    pub name: String,
     pub duration: f32,
-    //pub skeleton: Skeleton,
     pub key_frames: Vec<KeyFrame>,
-    pub cyclic: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -73,11 +70,11 @@ pub fn load_animations(skeleton: &Skeleton) -> Result<PlayerAnimations, Error> {
 
     let idle_frames = animations.get("idle").unwrap();
 
-    let t_pose = KeyframeAnimation::new("t_pose", 1.0, t_pose_frames.clone(), true);
+    let t_pose = KeyframeAnimation::new(1.0, t_pose_frames.clone());
 
-    let walk = KeyframeAnimation::new("walk", 0.7, walk_frames.clone(), true);
+    let walk = KeyframeAnimation::new(0.7, walk_frames.clone());
 
-    let idle = KeyframeAnimation::new("idle", 2.0, idle_frames.clone(), true);
+    let idle = KeyframeAnimation::new(2.0, idle_frames.clone());
 
 
     Ok(PlayerAnimations {
@@ -233,20 +230,15 @@ impl KeyframeAnimation {
 
     pub fn empty() -> KeyframeAnimation {
         KeyframeAnimation {
-            name: "Empty".to_string(),
             duration: 1.0,
             key_frames: Vec::new(),
-            cyclic: true,
         }
     }
 
-    pub fn new(name: &str, duration: f32,  key_frames: Vec<KeyFrame>, cyclic: bool) -> KeyframeAnimation {
-
+    pub fn new(duration: f32,  key_frames: Vec<KeyFrame>) -> KeyframeAnimation {
         KeyframeAnimation {
-            name: name.to_string(),
             duration,
             key_frames,
-            cyclic,
         }
     }
 

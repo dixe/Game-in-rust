@@ -103,8 +103,8 @@ fn update_player_movement(camera: &dyn camera::Camera, controls: &controls::Cont
 
 fn can_move(state: entity::EntityState) -> bool {
     match state {
-        Idle => true,
-        Moving => true,
+        entity::EntityState::Idle => true,
+        entity::EntityState::Moving => true,
         // Attacking - false
     }
 }
