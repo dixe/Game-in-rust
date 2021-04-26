@@ -32,8 +32,9 @@ A game in rust to learn rust and some opengl
 - [x] load collada with textures
 - [ ] Run animation
 - [ ] Idle animation
-- [ ] blender model as player model
-- [ ] Play run when moving and idle when not
+- [x] blender model as player model
+- [x] Play run when moving and idle when not
+- [x] Smooth transition between animations
 
 
 

@@ -2,7 +2,7 @@ use crate::game;
 use crate::physics;
 use crate::entity;
 use crate::action_system;
-
+use crate::controls;
 use crate::camera;
 
 
@@ -23,12 +23,9 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 
     // PLAYER MOVEMENT
 
-    let mut player_p = ctx.entities.player().physics;
-
-    update_player_movement(ctx, &mut player_p, delta);
+    update_player_movement(ctx.cameras.current(), &ctx.controls, ctx.entities.player_mut(), delta);
 
 
-    ctx.entities.set_physics(player_p.entity_id, player_p);
 
     /*
     for c in collisions {
@@ -61,32 +58,57 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 }
 
 
-fn update_player_movement(ctx: &mut game::Context, player: &mut entity::Physics, _delta:  f32) {
-    /*if ctx.state.player_state != game::PlayerState::Moving {
-    game::update_velocity(player, na::Vector3::new(0.0, 0.0, 0.0));
-    return;
-}
-     */
+fn update_player_movement(camera: &dyn camera::Camera, controls: &controls::Controls, player: &mut entity::Entity,  _delta:  f32) {
+    if ! can_move(player.get_state()) {
+        game::update_velocity(&mut player.physics, na::Vector3::new(0.0, 0.0, 0.0));
+        return;
+    }
 
-    match ctx.camera().mode() {
+
+    match camera.mode() {
         camera::CameraMode::Follow => {
-            let z_rot = ctx.camera().z_rotation();
+            let z_rot = camera.z_rotation();
 
             let rot_mat = na::Matrix3::new_rotation(z_rot);
-            let player_move_dir = rot_mat * na::Vector3::new(-ctx.controls.movement_dir.y, ctx.controls.movement_dir.x, 0.0);
+            let player_move_dir = rot_mat * na::Vector3::new(-controls.movement_dir.y, controls.movement_dir.x, 0.0);
 
-            game::update_velocity(player, player_move_dir);
+            game::update_velocity(&mut player.physics, player_move_dir);
 
             if player_move_dir.magnitude() > 0.0 {
-                player.target_dir = player_move_dir.normalize();
+                player.physics.target_dir = player_move_dir.normalize();
             }
+
+            let mut target_state = entity::EntityState::Idle;
+
+
+            if player.physics.velocity.magnitude() > 0.0 {
+
+                target_state = entity::EntityState::Moving;
+            }
+
+
+
+            if player.get_state() != target_state {
+
+                player.update_state(target_state);
+            }
+
+
 
         },
 
         camera::CameraMode::Free => {},
     }
-
 }
+
+fn can_move(state: entity::EntityState) -> bool {
+    match state {
+        Idle => true,
+        Moving => true,
+        // Attacking - false
+    }
+}
+
 
 fn update_enemies_death(ctx: &mut game::Context) {
     /*

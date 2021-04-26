@@ -1,22 +1,53 @@
 use crate::render_gl;
 use crate::entity::*;
 
-
-
 #[derive(Clone)]
 pub struct Entity {
     pub physics: Physics,
     pub health: Health,
     pub model_id: usize,
-    pub animation_player: render_gl::AnimationPlayer
+    pub animation_player: render_gl::AnimationPlayer,
+    state: EntityState,
 }
 
+
+impl Entity {
+
+    pub fn new(physics: Physics, health: Health, animation_player:render_gl::AnimationPlayer, model_id: usize) -> Self {
+        Entity {
+            physics,
+            health,
+            model_id,
+            animation_player,
+            state: EntityState::Idle,
+        }
+    }
+
+    pub fn get_state(&self) -> EntityState {
+        self.state
+    }
+
+    pub fn update_state(&mut self, state: EntityState) {
+        self.state = state;
+
+        match state {
+            EntityState::Moving => self.animation_player.set_current(render_gl::PlayerAnimation::Walk),
+            EntityState::Idle =>  self.animation_player.set_current(render_gl::PlayerAnimation::TPose),
+        };
+    }
+}
 
 pub struct Entities {
     pub next_id: usize,
     pub player_id: usize,
     pub entities_map: std::collections::HashMap::<usize, Entity>,
 
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum EntityState {
+    Idle,
+    Moving,
 }
 
 impl Entities {
@@ -71,4 +102,5 @@ impl Entities {
             _ => {}
         };
     }
+
 }

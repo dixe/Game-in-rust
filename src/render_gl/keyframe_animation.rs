@@ -12,6 +12,7 @@ pub struct KeyframeAnimation {
     pub duration: f32,
     pub skeleton: Skeleton,
     pub key_frames: Vec<KeyFrame>,
+    pub cyclic: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -69,9 +70,9 @@ pub fn load_player_animations(skeleton: &Skeleton) -> Result<PlayerAnimations, E
 
     let walk_frames = animations.get("walk").unwrap();
 
-    let t_pose = KeyframeAnimation::new("t_pose", 1.0, skeleton.clone(), t_pose_frames.clone());
+    let t_pose = KeyframeAnimation::new("t_pose", 1.0, skeleton.clone(), t_pose_frames.clone(), true);
 
-    let walk = KeyframeAnimation::new("walk", 1.0, skeleton.clone(), walk_frames.clone());
+    let walk = KeyframeAnimation::new("walk", 1.0, skeleton.clone(), walk_frames.clone(), true);
 
 
     Ok(PlayerAnimations {
@@ -237,21 +238,23 @@ impl KeyframeAnimation {
                 joints: Vec::new()
             },
             key_frames: Vec::new(),
+            cyclic: true,
         }
     }
 
-    pub fn new(name: &str, duration: f32, skeleton: Skeleton, key_frames: Vec<KeyFrame>) -> KeyframeAnimation {
+    pub fn new(name: &str, duration: f32, skeleton: Skeleton, key_frames: Vec<KeyFrame>, cyclic: bool) -> KeyframeAnimation {
 
         KeyframeAnimation {
             name: name.to_string(),
             duration,
             skeleton,
             key_frames,
+            cyclic,
         }
     }
 
 
-    pub fn move_to_key_frame(&mut self, bones: &mut [na::Matrix4::<f32>], keyframe: usize, t: f32) {
+    pub fn move_to_key_frame(&mut self, bones: &mut [na::Matrix4::<f32>], next_keyframe: usize, t: f32) {
 
         // interpolate joints new transformation
 
@@ -262,8 +265,7 @@ impl KeyframeAnimation {
 
         for i in 0..self.skeleton.joints.len() {
 
-
-            let current_transformation = match keyframe {
+            let current_transformation = match next_keyframe {
                 0 => {
 
                     /*
@@ -272,7 +274,8 @@ impl KeyframeAnimation {
 
                     println!("target {:#?}", &self.key_frames[keyframe].joints[i]);
                      */
-                    self.key_frames[self.key_frames.len() - 1].joints[i]
+
+                    self.key_frames[0].joints[i]
 
                 },
                 n => {
@@ -282,7 +285,8 @@ impl KeyframeAnimation {
 
 
 
-            let target_joint = &self.key_frames[keyframe].joints[i];
+            let target_joint = &self.key_frames[next_keyframe].joints[i];
+
 
 
             let rotation = current_transformation.rotation.slerp(&target_joint.rotation, t);

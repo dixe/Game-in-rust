@@ -22,8 +22,7 @@ impl Physics {
             pos: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             target_dir: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
-            max_speed: 10.0,
-            //TODO remove from phyiscs
+            max_speed: 5.0,
             inverse_mass: 1.0,
             scale: 1.0,
             anchor_id: None

@@ -18,6 +18,18 @@ pub struct Cameras {
     pub mode: camera::CameraMode,
 }
 
+impl Cameras {
+
+    pub fn current(&self) -> &dyn camera::Camera {
+        match self.mode {
+            camera::CameraMode::Free =>
+                &self.free_camera,
+            camera::CameraMode::Follow =>
+                &self.follow_camera,
+        }
+    }
+}
+
 
 pub struct Context {
 
@@ -29,7 +41,7 @@ pub struct Context {
 
 
     // CAMERAS
-    cameras: Cameras,
+    pub cameras: Cameras,
 
     pub entities: entity::Entities,
 
@@ -86,7 +98,7 @@ impl Context {
 
         let player_animations = load_player_animations(&skeleton).unwrap();
 
-        let mut animation_player = render_gl::AnimationPlayer::new(render_gl::PlayerAnimation::Walk, player_animations);
+        let mut animation_player = render_gl::AnimationPlayer::new(render_gl::PlayerAnimation::TPose, player_animations);
         let mesh = render_gl::SkinnedMesh::from_gltf(&self.render_context.gl, &index_map)?;
 
 
@@ -108,12 +120,7 @@ impl Context {
 
         let health = entity::Health::new(100.0);
 
-        let player = entity::Entity {
-            physics,
-            animation_player,
-            health,
-            model_id
-        };
+        let player = entity::Entity::new(physics, health, animation_player, model_id);
 
         self.entities.add(player);
         self.entities.player_id = id;
@@ -188,8 +195,6 @@ impl Context {
 
      */
 
-
-
     pub fn camera(&self) -> &dyn camera::Camera {
         match self.cameras.mode {
             camera::CameraMode::Free =>
@@ -237,8 +242,6 @@ impl Context {
         let mut animation_player = &mut self.entities.player_mut().animation_player;
 
         animation_player.set_frame_bones(delta);
-
-
     }
 
 
@@ -328,7 +331,7 @@ fn empty() -> Result<Context, failure::Error> {
     let cameras = Cameras {
         free_camera,
         follow_camera,
-        mode: camera::CameraMode::Free
+        mode: camera::CameraMode::Follow
     };
 
 
