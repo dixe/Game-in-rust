@@ -101,8 +101,9 @@ impl Context {
         let animations = load_animations(&player_glb_path, &skeleton).unwrap();
 
         let mut animation_player = render_gl::AnimationPlayer::new(render_gl::PlayerAnimation::Idle, &skeleton, animations);
-        let mesh = render_gl::SkinnedMesh::from_gltf(&player_glb_path, &self.render_context.gl, &index_map)?;
+        let gltf_meshes = render_gl::meshes_from_gltf(&player_glb_path, &self.render_context.gl, &index_map)?;
 
+        let model_mesh = render_gl::SkinnedMesh::new(&self.render_context.gl, &gltf_meshes.meshes["model"]);
 
         let mut bones = Vec::new();
         let joint_count = skeleton.joints.len();
@@ -112,7 +113,7 @@ impl Context {
 
         animation_player.set_bones(bones);
 
-        let player_model = entity::Model::skinned_model(mesh);
+        let player_model = entity::Model::skinned_model(model_mesh);
 
         self.models.push(player_model);
 

@@ -38,7 +38,7 @@ mod animation_player;
 pub use self::animation_player::{AnimationPlayer, PlayerAnimation};
 
 mod mesh;
-pub use self::mesh::{Mesh, VertexWeights, SkinnedMesh};
+pub use self::mesh::{Mesh, SkinnedMesh, meshes_from_gltf};
 
 mod skeleton;
 pub use self::skeleton::{Skeleton, Joint};

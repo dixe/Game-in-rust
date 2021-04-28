@@ -2,12 +2,11 @@
 use crate::render_gl::{self, buffer};
 use gl;
 
-
 pub struct SkinnedMesh {
     mesh: Mesh,
-    pub joint_names: Vec<String>,
     pub inverse_bind_poses: Vec<na::Matrix4<f32>>,
 }
+
 
 pub struct Mesh {
     vao: buffer::VertexArray,
@@ -17,153 +16,26 @@ pub struct Mesh {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct VertexWeights {
+struct VertexWeights {
     // maybe keep the actual vertex index instead of having it just as the index in the vec this is stored in
     joints: [usize; 2],
     weights: [f32; 2],
 }
 
 impl SkinnedMesh {
-    pub fn from_gltf(file_path: &str, gl: &gl::Gl, index_map: &std::collections::HashMap<u16,usize>) -> Result<SkinnedMesh, failure::Error> {
-
-        let (gltf, buffers, _) = gltf::import(file_path)?;
-
-        //println!("{:#?}", gltf);
-        //panic!("");
 
 
-        let mut inter_joint_index: Vec::<u16> = Vec::new();
+    pub fn new(gl: &gl::Gl, gltf_mesh: &GltfMesh) -> Self {
 
-        for skin in gltf.skins() {
-            for node in skin.joints() {
-                let index = node.index();
-                inter_joint_index.push(index as u16);
-            }
+        let mesh = load_mesh_gltf(gl, &gltf_mesh.pos_data, &gltf_mesh.normal_data, &gltf_mesh.indices_data, &gltf_mesh.tex_data, &gltf_mesh.vertex_weights);
+
+
+        SkinnedMesh {
+            mesh,
+            inverse_bind_poses: Vec::<na::Matrix4<f32>>::new(),
         }
 
-        for mesh in gltf.meshes() {
-            println!("Meshes");
-            println!("{:#?}", mesh.name());
-        }
-
-        for mesh in gltf.meshes() {
-            println!("Loading Mesh index = {:#?} name = {:#?}", mesh.index(), mesh.name());
-
-            let mut vertex_data = Vec::new();
-
-            let mut normal_data = Vec::new();
-
-            let mut tex_data = Vec::new();
-
-            let mut indices_data = Vec::new();
-
-            let mut joints_data = Vec::new();
-
-            let mut weights_data = Vec::new();
-
-
-            let set = 0;
-
-            let base_rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0 , -90.0_f32.to_radians()).to_homogeneous();
-
-            for primitive in mesh.primitives() {
-
-                let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
-
-                if let Some(iter) = reader.read_positions() {
-                    for pos in iter {
-                        let p = base_rot * na::Vector4::new(pos[0], pos[1], pos[2], 1.0);
-
-                        let p1 = na::Vector3::new(p.x, p.y, p.z);
-                        vertex_data.push(p1);
-                    }
-                }
-
-                if let Some(iter) = reader.read_normals() {
-                    for norm in iter {
-                        normal_data.push(norm);
-                    }
-                }
-
-                if let Some(reader) = reader.read_tex_coords(set) {
-                    for tex in reader.into_f32() {
-                        tex_data.push(tex);
-                    }
-                }
-
-                if let Some(reader) = reader.read_indices() {
-                    for tex in reader.into_u32() {
-                        indices_data.push(tex);
-                    }
-                }
-
-
-                if let Some(reader) = reader.read_weights(set) {
-                    for w in  reader.into_f32() {
-                        weights_data.push(w);
-                    }
-                }
-
-
-                println!("{:#?}", index_map);
-                if let Some(reader) = reader.read_joints(set) {
-                    let mut c = 0;
-                    for j in reader.into_u16() {
-                        let mut data: [usize; 4] = [0; 4];
-                        for (i, index) in j.iter().enumerate() {
-
-                            // index is into the skins.joints array, which has a list of node indexes
-                            // so we have to map from index into joints to
-                            data[i] = match index_map.get(&inter_joint_index[*index as usize]) {
-                                Some(mapping) => *mapping,
-                                None => {
-                                    println!("{}, {:?}\n{:?}", c, j, weights_data[c]);
-                                    panic!("Non mapped bone has weights. Check weight paint for {}", *index)
-                                }
-                            };
-                        }
-
-                        c += 1;
-                        joints_data.push(data);
-                    }
-                }
-                //panic!("");
-
-            }
-
-            println!("{:#?}\n{:#?}", joints_data.len(), weights_data.len());
-
-            println!(
-                "Vertices {:#?}, Normals {:?} tex {:?}, indices {}, joints {}, weights {}",
-                vertex_data.len(),
-                normal_data.len(),
-                tex_data.len(),
-                indices_data.len(),
-                joints_data.len(),
-                weights_data.len(),
-            );
-
-
-            let vertex_weights = reduce_to_2_joints(&joints_data, &weights_data);
-
-            println!("{:#?}", indices_data.len());
-
-
-
-
-            let mesh = load_mesh_gltf(gl, &vertex_data, &normal_data, &indices_data, &tex_data, &vertex_weights);
-
-            return Ok(SkinnedMesh {
-                mesh,
-                inverse_bind_poses: Vec::<na::Matrix4<f32>>::new(),
-                joint_names: Vec::new(),
-            });
-        }
-
-        panic!("NO MESH LOADED EXITING");
     }
-
-
 
     pub fn render(
         &self,
@@ -196,6 +68,172 @@ impl SkinnedMesh {
         }
     }
 }
+
+
+
+// alternative just load the data. and then we can instanciate it if needed
+
+pub struct GltfMesh {
+    pos_data: Vec<na::Vector3::<f32>>,
+    normal_data: Vec<[f32; 3]>,
+    indices_data: Vec<u32>,
+    tex_data: Vec<[f32; 2]>,
+    vertex_weights: Vec<VertexWeights>
+}
+
+pub struct GltfMeshes {
+    pub meshes: std::collections::HashMap::<String, GltfMesh>
+}
+
+
+pub fn meshes_from_gltf(file_path: &str, gl: &gl::Gl, index_map: &std::collections::HashMap<u16,usize>) -> Result<GltfMeshes, failure::Error> {
+
+    let (gltf, buffers, _) = gltf::import(file_path)?;
+
+    //println!("{:#?}", gltf);
+    //panic!("");
+
+
+    let mut inter_joint_index: Vec::<u16> = Vec::new();
+
+    for skin in gltf.skins() {
+        for node in skin.joints() {
+            let index = node.index();
+            inter_joint_index.push(index as u16);
+        }
+    }
+
+    let mut res = GltfMeshes {
+        meshes: std::collections::HashMap::new()
+    };
+
+
+    for node in gltf.nodes() {
+        match node.mesh() {
+            Some(m) => {
+                res.meshes.insert(node.name().unwrap().to_string(), load_gltf_mesh_data(&m, &buffers, &index_map, &inter_joint_index)?);
+            },
+            _ => {}
+        };
+    }
+
+    println!("Meshes loaded {:#?}", res.meshes.keys());
+
+    Ok(res)
+
+}
+
+
+fn load_gltf_mesh_data(mesh: &gltf::mesh::Mesh, buffers: &Vec<gltf::buffer::Data>, index_map: &std::collections::HashMap<u16,usize>, inter_joint_index: &Vec::<u16>) -> Result<GltfMesh, failure::Error> {
+
+    let name = mesh.name().unwrap().to_string();
+
+    let mut pos_data = Vec::new();
+
+    let mut normal_data = Vec::new();
+
+    let mut tex_data = Vec::new();
+
+    let mut indices_data = Vec::new();
+
+    let mut joints_data = Vec::new();
+
+    let mut weights_data = Vec::new();
+
+    let set = 0;
+
+    let base_rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0 , -90.0_f32.to_radians()).to_homogeneous();
+
+    for primitive in mesh.primitives() {
+
+        let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
+
+        if let Some(iter) = reader.read_positions() {
+            for pos in iter {
+                let p = base_rot * na::Vector4::new(pos[0], pos[1], pos[2], 1.0);
+
+                let p1 = na::Vector3::new(p.x, p.y, p.z);
+                pos_data.push(p1);
+            }
+        }
+
+        if let Some(iter) = reader.read_normals() {
+            for norm in iter {
+                normal_data.push(norm);
+            }
+        }
+
+        if let Some(reader) = reader.read_tex_coords(set) {
+            for tex in reader.into_f32() {
+                tex_data.push(tex);
+            }
+        }
+
+        if let Some(reader) = reader.read_indices() {
+            for tex in reader.into_u32() {
+                indices_data.push(tex);
+            }
+        }
+
+
+        if let Some(reader) = reader.read_weights(set) {
+            for w in  reader.into_f32() {
+                weights_data.push(w);
+            }
+        }
+
+
+        if let Some(reader) = reader.read_joints(set) {
+            let mut c = 0;
+            for j in reader.into_u16() {
+                let mut data: [usize; 4] = [0; 4];
+                for (i, index) in j.iter().enumerate() {
+
+                    // index is into the skins.joints array, which has a list of node indexes
+                    // so we have to map from index into joints to
+                    data[i] = match index_map.get(&inter_joint_index[*index as usize]) {
+                        Some(mapping) => *mapping,
+                        None => {
+                            println!("{}, {:?}\n{:?}", c, j, weights_data[c]);
+                            panic!("Non mapped bone has weights. Check weight paint for {}", *index)
+                        }
+                    };
+                }
+
+                c += 1;
+                joints_data.push(data);
+            }
+        }
+        //panic!("");
+
+    }
+
+    /*
+    println!(
+    "Vertices {:#?}, Normals {:?} tex {:?}, indices {}, joints {}, weights {}",
+    pos_data.len(),
+    normal_data.len(),
+    tex_data.len(),
+    indices_data.len(),
+    joints_data.len(),
+    weights_data.len(),
+);
+     */
+
+
+    let vertex_weights = reduce_to_2_joints(&joints_data, &weights_data);
+
+    Ok(GltfMesh {
+        pos_data,
+        normal_data,
+        indices_data,
+        tex_data, vertex_weights
+    })
+
+}
+
+
+
 
 fn load_mesh_gltf(
     gl: &gl::Gl,
