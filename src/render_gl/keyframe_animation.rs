@@ -59,10 +59,9 @@ pub struct PlayerAnimations {
 
 
 
-pub fn load_animations(skeleton: &Skeleton) -> Result<PlayerAnimations, Error> {
+pub fn load_animations(file_path: &str, skeleton: &Skeleton) -> Result<PlayerAnimations, Error> {
 
-    let animations = key_frames_from_gltf(skeleton)?;
-
+    let animations = key_frames_from_gltf(file_path, skeleton)?;
 
     let t_pose_frames = animations.get("t_pose").unwrap();
 
@@ -85,18 +84,15 @@ pub fn load_animations(skeleton: &Skeleton) -> Result<PlayerAnimations, Error> {
 }
 
 
-fn key_frames_from_gltf(skeleton: &Skeleton) -> Result<HashMap<String,Vec<KeyFrame>>, Error> {
-    let (gltf, buffers, _) = gltf::import("E:/repos/Game-in-rust/blender_models/player_05.glb")?;
+fn key_frames_from_gltf(file_path: &str, skeleton: &Skeleton) -> Result<HashMap<String,Vec<KeyFrame>>, Error> {
+    // should be in resources, but atm the file is not in resources
+    let (gltf, buffers, _) = gltf::import(file_path)?;
 
 
     let mut joints_indexes: std::collections::HashMap::<String, usize> = std::collections::HashMap::new();
 
     for i in 0..skeleton.joints.len() {
         joints_indexes.insert(skeleton.joints[i].name.clone(), i);
-    }
-
-    for ani in gltf.animations() {
-        println!("ANIMATION {:#?}", ani.name());
     }
 
     let mut res = HashMap::<String, Vec<KeyFrame>>::new();

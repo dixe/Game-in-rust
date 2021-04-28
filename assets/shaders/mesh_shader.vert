@@ -47,7 +47,7 @@ void main()
 
     OUT.TexCord = TexCord;
 
-    int b = 0;
+    int b = 16;
 
 
     OUT.Color = vec3(1.0,1.0,1.0);

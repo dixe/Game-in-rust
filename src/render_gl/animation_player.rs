@@ -145,6 +145,7 @@ impl AnimationPlayer {
             PlayerAnimation::Transition(ref mut anim) => anim
         };
 
+
         current_animation.move_to_key_frame(&mut self.bones, &mut self.skeleton, next_frame_index, t);
 
         if self.elapsed > current_animation.duration {

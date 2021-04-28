@@ -24,11 +24,12 @@ pub struct VertexWeights {
 }
 
 impl SkinnedMesh {
-    pub fn from_gltf(gl: &gl::Gl, index_map: &std::collections::HashMap<u16,usize>) -> Result<SkinnedMesh, failure::Error> {
+    pub fn from_gltf(file_path: &str, gl: &gl::Gl, index_map: &std::collections::HashMap<u16,usize>) -> Result<SkinnedMesh, failure::Error> {
 
-        let (gltf, buffers, _) =
-            gltf::import("E:/repos/Game-in-rust/blender_models/player_05.glb")?;
+        let (gltf, buffers, _) = gltf::import(file_path)?;
 
+        //println!("{:#?}", gltf);
+        //panic!("");
 
 
         let mut inter_joint_index: Vec::<u16> = Vec::new();
@@ -41,7 +42,12 @@ impl SkinnedMesh {
         }
 
         for mesh in gltf.meshes() {
-            println!("Mesh index = {:#?} name = {:#?}", mesh.index(), mesh.name());
+            println!("Meshes");
+            println!("{:#?}", mesh.name());
+        }
+
+        for mesh in gltf.meshes() {
+            println!("Loading Mesh index = {:#?} name = {:#?}", mesh.index(), mesh.name());
 
             let mut vertex_data = Vec::new();
 
@@ -99,18 +105,17 @@ impl SkinnedMesh {
                 }
 
 
+                println!("{:#?}", index_map);
                 if let Some(reader) = reader.read_joints(set) {
                     let mut c = 0;
                     for j in reader.into_u16() {
                         let mut data: [usize; 4] = [0; 4];
                         for (i, index) in j.iter().enumerate() {
 
-                            // little convoluted and is end up being that j == data
-                            // but that is only because we construct the skeleton the same way
-                            // maybe remove this and just use j as it would make it a lot cleaner
-
+                            // index is into the skins.joints array, which has a list of node indexes
+                            // so we have to map from index into joints to
                             data[i] = match index_map.get(&inter_joint_index[*index as usize]) {
-                                Some(mapping) => *mapping, //*index as usize,//*mapping,
+                                Some(mapping) => *mapping,
                                 None => {
                                     println!("{}, {:?}\n{:?}", c, j, weights_data[c]);
                                     panic!("Non mapped bone has weights. Check weight paint for {}", *index)
@@ -122,6 +127,7 @@ impl SkinnedMesh {
                         joints_data.push(data);
                     }
                 }
+                //panic!("");
 
             }
 

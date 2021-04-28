@@ -30,6 +30,8 @@ void main()
   vec3 color = texture(Texture, IN.TexCord).rgb;
   Color =  vec4( (ambient + diffuse) * color, 1.0f);
 
+
+  // dispplay the bones influences
   //Color =  vec4( IN.Color.xyz, 1.0f);
 
  }

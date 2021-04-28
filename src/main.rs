@@ -270,16 +270,14 @@ fn run() -> Result<(), failure::Error> {
 
 fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
 
-    let mut player: entity::Entity = ctx.entities.player().clone();
+    let mut player = ctx.entities.player_mut();
 
-    let mut animation_player = player.animation_player;
+    let mut animation_player = &mut player.animation_player;
 
     let bones = animation_player.bones.clone();
 
 
     let skeleton = animation_player.skeleton.clone();
-
-
 
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::B) {
         Some(true) => {
@@ -296,7 +294,6 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::T) {
         Some(true) => {
             animation_player.set_current(render_gl::PlayerAnimation::TPose);
-            println!("{:#?}", player.physics.rotation);
 
         },
         _ => {}
@@ -317,6 +314,7 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
 
             ctx.cube_shader.set_used();
 
+            let bones = animation_player.bones.clone();
             let proj = ctx.camera().projection();
             let view = ctx.camera().view();
             ctx.cube_shader.set_projection_and_view(&ctx.render_context.gl, proj, view);
@@ -325,27 +323,8 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
             scale_mat[15] = 1.0;
 
 
-            let mut world_mats = Vec::new();
-
-
-
-            for i in 0..skeleton.joints.len() {
-                let local = skeleton.joints[i].get_local_matrix();
-
-                let world_matrix;
-
-                if i == 0 {
-                    world_matrix = local;
-                }
-                else {
-                    world_matrix = world_mats[skeleton.joints[i].parent_index] * local;
-                }
-
-                world_mats.push(world_matrix);
-
-
-                bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, world_matrix * scale_mat);
-
+            for joint in &skeleton.joints {
+                bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, joint.world_matrix * scale_mat);
             }
 
 

@@ -94,12 +94,14 @@ impl Context {
 
     fn setup_player(&mut self) -> Result<(), failure::Error>  {
 
-        let (skeleton, index_map) = render_gl::Skeleton::from_gltf()?;
+        let player_glb_path = "E:/repos/Game-in-rust/blender_models/player.glb";
 
-        let animations = load_animations(&skeleton).unwrap();
+        let (skeleton, index_map) = render_gl::Skeleton::from_gltf(&player_glb_path)?;
+
+        let animations = load_animations(&player_glb_path, &skeleton).unwrap();
 
         let mut animation_player = render_gl::AnimationPlayer::new(render_gl::PlayerAnimation::Idle, &skeleton, animations);
-        let mesh = render_gl::SkinnedMesh::from_gltf(&self.render_context.gl, &index_map)?;
+        let mesh = render_gl::SkinnedMesh::from_gltf(&player_glb_path, &self.render_context.gl, &index_map)?;
 
 
         let mut bones = Vec::new();
@@ -288,9 +290,9 @@ fn empty() -> Result<Context, failure::Error> {
     })
 }
 
-fn load_animations(skeleton: &render_gl::Skeleton) -> Option<render_gl::PlayerAnimations>{
+fn load_animations(file_path: &str, skeleton: &render_gl::Skeleton) -> Option<render_gl::PlayerAnimations>{
 
-    let animations = match render_gl::load_animations(&skeleton) {
+    let animations = match render_gl::load_animations(file_path, &skeleton) {
         Ok(key_frames) => key_frames,
         Err(err) => {           //
             println!("Error loading key_frames: {:#?}", err);

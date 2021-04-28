@@ -88,8 +88,8 @@ impl Skeleton {
     }
 
 
-    pub fn from_gltf() -> Result<(Skeleton, std::collections::HashMap<u16,usize>), failure::Error> {
-        let (gltf, _, _) = gltf::import("E:/repos/Game-in-rust/blender_models/player_05.glb")?;
+    pub fn from_gltf(file_path: &str) -> Result<(Skeleton, std::collections::HashMap<u16,usize>), failure::Error> {
+        let (gltf, _, _) = gltf::import(file_path)?;
 
         for skin in gltf.skins() {
 
@@ -156,9 +156,6 @@ impl Skeleton {
 
 
             skeleton.calc_t_pose();
-
-            //println!("{:#?}", skeleton.joints[1]);
-
 
             return Ok((skeleton, index_map));
 
