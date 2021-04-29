@@ -15,6 +15,41 @@ pub struct Mesh {
     pub indices_count: i32,
 }
 
+impl Mesh {
+
+    pub fn new(gl: &gl::Gl, gltf_mesh: &GltfMesh) -> Self {
+        load_mesh_gltf(
+            gl,
+            &gltf_mesh.pos_data,
+            &gltf_mesh.normal_data,
+            &gltf_mesh.indices_data,
+            &gltf_mesh.tex_data,
+            None
+        )
+    }
+
+    pub fn render(
+        &self,
+        gl: &gl::Gl,
+        shader: &render_gl::Shader,
+        model: na::Matrix4<f32>,
+    ) {
+
+        unsafe {
+            shader.set_model(gl, model);
+
+            self.vao.bind();
+
+            gl.DrawElements(
+                gl::TRIANGLES,
+                self.indices_count,
+                gl::UNSIGNED_INT,
+                0 as *const gl::types::GLvoid,
+            );
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 struct VertexWeights {
     // maybe keep the actual vertex index instead of having it just as the index in the vec this is stored in
@@ -23,12 +58,18 @@ struct VertexWeights {
 }
 
 impl SkinnedMesh {
-
-
     pub fn new(gl: &gl::Gl, gltf_mesh: &GltfMesh) -> Self {
 
-        let mesh = load_mesh_gltf(gl, &gltf_mesh.pos_data, &gltf_mesh.normal_data, &gltf_mesh.indices_data, &gltf_mesh.tex_data, &gltf_mesh.vertex_weights);
+        println!("{:#?}", gltf_mesh.name);
 
+        let mesh = load_mesh_gltf(
+            gl,
+            &gltf_mesh.pos_data,
+            &gltf_mesh.normal_data,
+            &gltf_mesh.indices_data,
+            &gltf_mesh.tex_data,
+            Some(&gltf_mesh.vertex_weights)
+        );
 
         SkinnedMesh {
             mesh,
@@ -55,16 +96,7 @@ impl SkinnedMesh {
 
             gl.UniformMatrix4fv(bones_loc, len, gl::FALSE, bones.as_ptr() as *const f32);
 
-            shader.set_model(gl, model);
-
-            self.mesh.vao.bind();
-
-            gl.DrawElements(
-                gl::TRIANGLES,
-                self.mesh.indices_count,
-                gl::UNSIGNED_INT,
-                0 as *const gl::types::GLvoid,
-            );
+            self.mesh.render(gl, shader, model);
         }
     }
 }
@@ -74,6 +106,7 @@ impl SkinnedMesh {
 // alternative just load the data. and then we can instanciate it if needed
 
 pub struct GltfMesh {
+    name: String,
     pos_data: Vec<na::Vector3::<f32>>,
     normal_data: Vec<[f32; 3]>,
     indices_data: Vec<u32>,
@@ -208,22 +241,11 @@ fn load_gltf_mesh_data(mesh: &gltf::mesh::Mesh, buffers: &Vec<gltf::buffer::Data
 
     }
 
-    /*
-    println!(
-    "Vertices {:#?}, Normals {:?} tex {:?}, indices {}, joints {}, weights {}",
-    pos_data.len(),
-    normal_data.len(),
-    tex_data.len(),
-    indices_data.len(),
-    joints_data.len(),
-    weights_data.len(),
-);
-     */
-
 
     let vertex_weights = reduce_to_2_joints(&joints_data, &weights_data);
 
     Ok(GltfMesh {
+        name,
         pos_data,
         normal_data,
         indices_data,
@@ -241,7 +263,7 @@ fn load_mesh_gltf(
     norm_data: &Vec<[f32; 3]>,
     ebo_data: &Vec<u32>,
     tex_data: &Vec<[f32; 2]>,
-    skinning_data: &Vec<VertexWeights>
+    skinning_data: Option<&Vec<VertexWeights>>
 ) -> Mesh {
     let vbo = buffer::ArrayBuffer::new(gl);
     let vao = buffer::VertexArray::new(gl);
@@ -253,6 +275,7 @@ fn load_mesh_gltf(
     let indices_count = ebo_data.len();
 
     //println!("{:#?}", skinning_data);
+
     for i in 0..pos_data.len() {
         vertex_data.push(pos_data[i].x);
         vertex_data.push(pos_data[i].y);
@@ -264,15 +287,33 @@ fn load_mesh_gltf(
         vertex_data.push(norm_data[i][1]);
         vertex_data.push(norm_data[i][2]);
 
-        // BONE WEIGHTS
 
-        vertex_data.push(skinning_data[i].weights[0]);
-        vertex_data.push(skinning_data[i].weights[1]);
 
-        // BONE INDICES
+        match skinning_data {
+            Some(s_data) => {
 
-        vertex_data.push(skinning_data[i].joints[0] as f32);
-        vertex_data.push(skinning_data[i].joints[1] as f32);
+                // BONE WEIGHTS
+                vertex_data.push(s_data[i].weights[0]);
+                vertex_data.push(s_data[i].weights[1]);
+
+                // BONE INDICES
+
+                vertex_data.push(s_data[i].joints[0] as f32);
+                vertex_data.push(s_data[i].joints[1] as f32);
+            },
+            _ => {
+                // BONE WEIGHTS
+                vertex_data.push(0.0);
+                vertex_data.push(0.0);
+
+                // BONE INDICES
+
+                vertex_data.push(-1.0);
+                vertex_data.push(-1.0);
+
+            }
+        }
+
 
         // TEXTURE INFO
 

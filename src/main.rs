@@ -247,17 +247,17 @@ fn run() -> Result<(), failure::Error> {
                 Command::SwitchRenderMode => {
                     ctx.render_context.switch_mode();
                 },
+
                 Command::DecrementWalkTime => {
                     let player = ctx.entities.player_mut();
-                    player.animation_player.animations.walk.duration -= 0.1;
-                    println!("{:#?}", player.animation_player.animations.walk.duration);
+                    player.animation_player.as_mut().map(|ap| ap.animations.walk.duration -= 0.1);
+                    println!("{:#?}", player.animation_player.as_ref().map(|ap| ap.animations.walk.duration));
                 },
                 Command::IncrementWalkTime => {
                     let player = ctx.entities.player_mut();
-                    player.animation_player.animations.walk.duration += 0.1;
-                    println!("{:#?}", player.animation_player.animations.walk.duration);
+                    player.animation_player.as_mut().map(|ap| ap.animations.walk.duration += 0.1);
+                    println!("{:#?}", player.animation_player.as_ref().map(|ap| ap.animations.walk.duration));
                 },
-
             }
             CMD = Command::Nop;
         }
@@ -269,7 +269,7 @@ fn run() -> Result<(), failure::Error> {
 
 
 fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
-
+    /*
     let mut player = ctx.entities.player_mut();
 
     let mut animation_player = &mut player.animation_player;
@@ -280,58 +280,58 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
     let skeleton = animation_player.skeleton.clone();
 
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::B) {
-        Some(true) => {
-            println!("BONES");
-            println!("there are {:#?} bones", bones.len());
-            println!("there are {:#?} skel joints", skeleton.joints.len());
-            for i in 0..bones.len() {
-                println!("i = {} {:#?}", skeleton.joints[i].name.clone(), bones[i]);
-            }
-        },
-        _ => {}
-    }
+    Some(true) => {
+    println!("BONES");
+    println!("there are {:#?} bones", bones.len());
+    println!("there are {:#?} skel joints", skeleton.joints.len());
+    for i in 0..bones.len() {
+    println!("i = {} {:#?}", skeleton.joints[i].name.clone(), bones[i]);
+}
+},
+    _ => {}
+}
 
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::T) {
-        Some(true) => {
-            animation_player.set_current(render_gl::PlayerAnimation::TPose);
+    Some(true) => {
+    animation_player.set_current(render_gl::PlayerAnimation::TPose);
 
-        },
-        _ => {}
-    };
+},
+    _ => {}
+};
 
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::K) {
-        Some(true) => {
-            println!("Setting to waalk");
-            animation_player.set_current(render_gl::PlayerAnimation::Walk);
-        },
-        _ => {
-        }
+    Some(true) => {
+    println!("Setting to waalk");
+    animation_player.set_current(render_gl::PlayerAnimation::Walk);
+},
+    _ => {
+}
 
-    };
+};
 
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::V) {
-        Some(true) => {
+    Some(true) => {
 
-            ctx.cube_shader.set_used();
+    ctx.cube_shader.set_used();
 
-            let bones = animation_player.bones.clone();
-            let proj = ctx.camera().projection();
-            let view = ctx.camera().view();
-            ctx.cube_shader.set_projection_and_view(&ctx.render_context.gl, proj, view);
-            let mut scale_mat = na::Matrix4::identity();
-            scale_mat = scale_mat * 0.2;
-            scale_mat[15] = 1.0;
-
-
-            for joint in &skeleton.joints {
-                bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, joint.world_matrix * scale_mat);
-            }
+    let bones = animation_player.bones.clone();
+    let proj = ctx.camera().projection();
+    let view = ctx.camera().view();
+    ctx.cube_shader.set_projection_and_view(&ctx.render_context.gl, proj, view);
+    let mut scale_mat = na::Matrix4::identity();
+    scale_mat = scale_mat * 0.2;
+    scale_mat[15] = 1.0;
 
 
-        },
-        _ => {}
-    };
+    for joint in &skeleton.joints {
+    bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, joint.world_matrix * scale_mat);
+}
 
+
+},
+    _ => {}
+};
+     */
 }
 
 fn set_t_pose(bones: &mut [na::Matrix4::<f32>]) {

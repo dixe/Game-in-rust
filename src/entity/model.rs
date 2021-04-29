@@ -8,7 +8,8 @@ enum ModelType {
 
     Cube(cube::Cube),
     WaveModel(render_gl::Model),
-    Skinned(render_gl::SkinnedMesh)
+    Skinned(render_gl::SkinnedMesh),
+    Mesh(render_gl::Mesh)
 }
 
 pub struct Model {
@@ -39,8 +40,15 @@ impl Model {
         }
     }
 
+    pub fn mesh(mesh: render_gl::Mesh) -> Self {
+        let model = ModelType::Mesh(mesh);
+        Model {
+            model
+        }
+    }
 
-    pub fn render_from_model_mat(&self, gl: &gl::Gl, shader: &render_gl::Shader, model_mat: na::Matrix4::<f32>, bones: &Vec::<na::Matrix4::<f32>>) {
+
+    pub fn render_from_model_mat(&self, gl: &gl::Gl, shader: &render_gl::Shader, model_mat: na::Matrix4::<f32>, bones: Option<&Vec::<na::Matrix4::<f32>>>) {
         match &self.model {
             ModelType::Cube(c) => {
                 c.render(gl, shader,  model_mat);
@@ -49,8 +57,20 @@ impl Model {
                 wm.render(gl, shader, model_mat);
             },
             ModelType::Skinned(mesh) => {
-                mesh.render(gl, shader, model_mat, bones);
+                match bones {
+                    Some(bs) => {
+
+                        mesh.render(gl, shader, model_mat, bs);
+                    },
+                    None => {
+                        panic!("SKInned mesh render with NONE bones");
+                    }
+                };
+            },
+            ModelType::Mesh(mesh) => {
+                mesh.render(gl, shader, model_mat);
             }
+
         }
     }
 }

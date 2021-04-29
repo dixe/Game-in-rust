@@ -27,7 +27,7 @@ mod model;
 pub use self::model::{Model};
 
 mod render_functions;
-pub use self::render_functions::{render, render_entity};
+pub use self::render_functions::{render_entity};
 
 
 mod keyframe_animation;
@@ -38,7 +38,7 @@ mod animation_player;
 pub use self::animation_player::{AnimationPlayer, PlayerAnimation};
 
 mod mesh;
-pub use self::mesh::{Mesh, SkinnedMesh, meshes_from_gltf};
+pub use self::mesh::{Mesh, SkinnedMesh, GltfMeshes, meshes_from_gltf};
 
 mod skeleton;
 pub use self::skeleton::{Skeleton, Joint};

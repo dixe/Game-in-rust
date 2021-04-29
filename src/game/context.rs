@@ -46,13 +46,15 @@ pub struct Context {
     pub entities: entity::Entities,
 
 
+    // MEHES AND SHADERS
     pub cube_shader: render_gl::Shader,
     pub mesh_shader: render_gl::Shader,
 
+    // make this a struct that can keep track of it, with usize ids, but not as a vec index
+    // but something where we can add and remove from
+    pub models: std::collections::HashMap<String, entity::Model>,
 
     pub actions: action_system::ActionsImpl,
-
-    pub models: Vec::<entity::Model>,
 
 
     delta_time: deltatime::Deltatime,
@@ -103,8 +105,6 @@ impl Context {
         let mut animation_player = render_gl::AnimationPlayer::new(render_gl::PlayerAnimation::Idle, &skeleton, animations);
         let gltf_meshes = render_gl::meshes_from_gltf(&player_glb_path, &self.render_context.gl, &index_map)?;
 
-        let model_mesh = render_gl::SkinnedMesh::new(&self.render_context.gl, &gltf_meshes.meshes["model"]);
-
         let mut bones = Vec::new();
         let joint_count = skeleton.joints.len();
         for _ in 0..joint_count {
@@ -113,26 +113,64 @@ impl Context {
 
         animation_player.set_bones(bones);
 
-        let player_model = entity::Model::skinned_model(model_mesh);
 
-        self.models.push(player_model);
+        // MODELS
 
-        let model_id = self.models.len() - 1;
+        let model_name = "player";
+        self.add_skinned_model(model_name, &gltf_meshes);
+
+        self.add_model("hammer", &gltf_meshes);
+
+        // ENTITY
         let id = self.entities.next_id;
         let physics = entity::Physics::new(id);
 
-
         let health = entity::Health::new(100.0);
 
-        let player = entity::Entity::new(physics, health, animation_player, model_id);
+        let player = entity::Entity::new(physics, health, Some(animation_player), model_name.to_string());
 
         self.entities.add(player);
         self.entities.player_id = id;
+
+        // ENTITY
+        let id = self.entities.next_id;
+        let physics = entity::Physics::new(id);
+
+        let health = entity::Health::new(100.0);
+
+        let hammer = entity::Entity::new(physics, health, None, "hammer".to_string());
+
+        self.entities.add(hammer);
+        self.entities.hammer_id = id;
 
 
         Ok(())
     }
 
+
+
+    fn add_skinned_model(&mut self, name: &str, gltf_meshes: &render_gl::GltfMeshes) {
+        let model_mesh = render_gl::SkinnedMesh::new(&self.render_context.gl, &gltf_meshes.meshes[name]);
+
+        let model = entity::Model::skinned_model(model_mesh);
+
+        let model_name = name.to_string();
+
+        self.models.insert(name.to_string(), model);
+
+    }
+
+
+    fn add_model(&mut self, name: &str, gltf_meshes: &render_gl::GltfMeshes) {
+        let model_mesh = render_gl::Mesh::new(&self.render_context.gl, &gltf_meshes.meshes[name]);
+
+        let model = entity::Model::mesh(model_mesh);
+
+        let model_name = name.to_string();
+
+        self.models.insert(name.to_string(), model);
+
+    }
 
     pub fn camera(&self) -> &dyn camera::Camera {
         match self.cameras.mode {
@@ -178,16 +216,17 @@ impl Context {
     pub fn update_animations(&mut self) {
         let delta = self.get_delta_time();
 
-        let animation_player = &mut self.entities.player_mut().animation_player;
 
-        animation_player.set_frame_bones(delta);
+        if let Some(animation_player) = &mut self.entities.player_mut().animation_player {
+            animation_player.set_frame_bones(delta);
+        }
+
     }
 
 
 
 
-    pub fn render(&self){
-
+    pub fn render(&self) {
 
         // RENDER SCENE WITH CUBE SHADER
         self.cube_shader.set_used();
@@ -213,9 +252,13 @@ impl Context {
 
         let player = self.entities.player();
 
-        let player_model = &self.models[player.model_id];
+        let player_model = &self.models[&player.model_name];
 
         render_gl::render_entity(&player, &self.entities, player_model, &self.render_context.gl, &self.mesh_shader);
+
+        let hammer_model = &self.models["hammer"];
+        let hammer = self.entities.hammer();
+        render_gl::render_entity(&hammer, &self.entities, hammer_model, &self.render_context.gl, &self.mesh_shader);
 
     }
 }
@@ -287,7 +330,7 @@ fn empty() -> Result<Context, failure::Error> {
         cube_shader,
         entities,
         cameras,
-        models: Vec::new(),
+        models: std::collections::HashMap::new(),
     })
 }
 

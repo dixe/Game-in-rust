@@ -5,19 +5,20 @@ use crate::entity::*;
 pub struct Entity {
     pub physics: Physics,
     pub health: Health,
-    pub model_id: usize,
-    pub animation_player: render_gl::AnimationPlayer,
+    pub model_name: String,
+    pub animation_player: Option<render_gl::AnimationPlayer>,
     state: EntityState,
+
 }
 
 
 impl Entity {
 
-    pub fn new(physics: Physics, health: Health, animation_player:render_gl::AnimationPlayer, model_id: usize) -> Self {
+    pub fn new(physics: Physics, health: Health, animation_player: Option<render_gl::AnimationPlayer>, model_name: String) -> Self {
         Entity {
             physics,
             health,
-            model_id,
+            model_name,
             animation_player,
             state: EntityState::Idle,
         }
@@ -30,9 +31,12 @@ impl Entity {
     pub fn update_state(&mut self, state: EntityState) {
         self.state = state;
 
-        match state {
-            EntityState::Moving => self.animation_player.set_current(render_gl::PlayerAnimation::Walk),
-            EntityState::Idle => self.animation_player.set_current(render_gl::PlayerAnimation::Idle),
+        if let Some(animation_player) = &mut self.animation_player {
+
+            match state {
+                EntityState::Moving => animation_player.set_current(render_gl::PlayerAnimation::Walk),
+                EntityState::Idle => animation_player.set_current(render_gl::PlayerAnimation::Idle),
+            };
         };
     }
 }
@@ -40,6 +44,7 @@ impl Entity {
 pub struct Entities {
     pub next_id: usize,
     pub player_id: usize,
+    pub hammer_id: usize,
     pub entities_map: std::collections::HashMap::<usize, Entity>,
 
 }
@@ -57,6 +62,7 @@ impl Entities {
         Entities {
             next_id: 0,
             player_id: 0,
+            hammer_id: 0,
             entities_map: std::collections::HashMap::<usize, Entity>::new(),
         }
     }
@@ -72,6 +78,14 @@ impl Entities {
         match self.entities_map.get_mut(&self.player_id) {
             Some(e) => e,
             None => panic!("No player set")
+        }
+    }
+
+
+    pub fn hammer(&self) -> &Entity {
+        match self.entities_map.get(&self.hammer_id) {
+            Some(e) => e,
+            None => panic!("No hammer set")
         }
     }
 

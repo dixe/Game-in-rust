@@ -37,17 +37,5 @@ pub fn render_entity(entity: &entity::Entity, entities: &entity::Entities, model
 
     let model_mat = calculate_model_mat(&physics);
 
-
-    model.render_from_model_mat(gl, shader, model_mat, &entity.animation_player.bones);
-}
-
-pub fn render(entities: &entity::Entities, models: Vec::<entity::Model>, entity_id: usize, gl: &gl::Gl, shader: &render_gl::Shader) {
-
-    let entity = match entities.get(entity_id) {
-        Some(e) => e,
-        None => return,
-    };
-
-    render_entity(entity, entities, &models[entity.model_id], gl, shader);
-
+    model.render_from_model_mat(gl, shader, model_mat, entity.animation_player.as_ref().map(|ap| &ap.bones));
 }
