@@ -24,6 +24,11 @@ uniform mat4 projection;
 
 mat4 boneTransform() {
 
+  if(int(BoneIndices.x) < 0)
+  {
+    return mat4(1.0);
+
+  }
   mat4 ret;
 
   // Weight1 * Bone1 + Weight2 * Bone2

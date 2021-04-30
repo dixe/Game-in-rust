@@ -19,7 +19,8 @@ impl ConvexCollisionShape {
 
     pub fn rectangle(center: &na::Vector3::<f32>, height: f32, width: f32, physics: &entity::Physics ) -> ConvexCollisionShape {
 
-        let rot = na::Matrix3::<f32>::new_rotation(physics.rotation.z);
+        let z_angle = physics.rotation.euler_angles().2;
+        let rot = na::Matrix3::<f32>::new_rotation(z_angle);
 
         let scale = na::Matrix3::<f32>::new(
             physics.scale, 0.0, 0.0,

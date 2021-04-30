@@ -175,7 +175,6 @@ fn load_gltf_mesh_data(mesh: &gltf::mesh::Mesh, buffers: &Vec<gltf::buffer::Data
 
     let set = 0;
 
-    let base_rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0 , -90.0_f32.to_radians()).to_homogeneous();
 
     for primitive in mesh.primitives() {
 
@@ -183,9 +182,7 @@ fn load_gltf_mesh_data(mesh: &gltf::mesh::Mesh, buffers: &Vec<gltf::buffer::Data
 
         if let Some(iter) = reader.read_positions() {
             for pos in iter {
-                let p = base_rot * na::Vector4::new(pos[0], pos[1], pos[2], 1.0);
-
-                let p1 = na::Vector3::new(p.x, p.y, p.z);
+                let p1 = na::Vector3::new(pos[0], pos[1], pos[2]);
                 pos_data.push(p1);
             }
         }

@@ -9,6 +9,9 @@ pub struct Entity {
     pub animation_player: Option<render_gl::AnimationPlayer>,
     state: EntityState,
 
+    pub bones: Vec::<na::Matrix4::<f32>>,
+    pub skeleton: render_gl::Skeleton,
+
 }
 
 
@@ -21,11 +24,24 @@ impl Entity {
             model_name,
             animation_player,
             state: EntityState::Idle,
+            bones: Vec::new(),
+            skeleton: render_gl::Skeleton {
+                name: "empty".to_string(),
+                joints: Vec::new(),
+            }
         }
     }
 
     pub fn get_state(&self) -> EntityState {
         self.state
+    }
+
+
+    pub fn update_animations(&mut self, delta: f32) {
+
+        if let Some(animation_player) = &mut self.animation_player {
+            animation_player.set_frame_bones(&mut self.bones, &mut self.skeleton, delta);
+        }
     }
 
     pub fn update_state(&mut self, state: EntityState) {
@@ -34,8 +50,8 @@ impl Entity {
         if let Some(animation_player) = &mut self.animation_player {
 
             match state {
-                EntityState::Moving => animation_player.set_current(render_gl::PlayerAnimation::Walk),
-                EntityState::Idle => animation_player.set_current(render_gl::PlayerAnimation::Idle),
+                EntityState::Moving => animation_player.set_current(render_gl::PlayerAnimation::Walk, &self.skeleton),
+                EntityState::Idle => animation_player.set_current(render_gl::PlayerAnimation::Idle, &self.skeleton),
             };
         };
     }
@@ -82,12 +98,27 @@ impl Entities {
     }
 
 
+
+
     pub fn hammer(&self) -> &Entity {
         match self.entities_map.get(&self.hammer_id) {
             Some(e) => e,
             None => panic!("No hammer set")
         }
     }
+
+    pub fn hammer_mut(&mut self) -> &mut Entity {
+        match self.entities_map.get_mut(&self.hammer_id) {
+            Some(e) => e,
+            None => panic!("No hammer set")
+        }
+    }
+
+
+
+
+
+
 
     pub fn get(&self, entity_id: usize) -> Option<&Entity> {
         self.entities_map.get(&entity_id)

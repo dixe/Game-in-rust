@@ -69,12 +69,9 @@ impl BezierAction {
 
                 let angle = (bz_normal.dot(&base)).acos();
 
-                let rot = na::Rotation3::from_axis_angle(&na::Unit::new_normalize(rot_axis), angle);
-                let (rx,ry,rz) = rot.euler_angles();
+                let rot = na::UnitQuaternion::from_axis_angle(&na::Unit::new_normalize(rot_axis), angle);
 
-                physics.rotation.x = rx;
-                physics.rotation.y = ry;
-                physics.rotation.z = rz;
+                physics.rotation = rot;
 
                 physics.pos = init.pos + bz;
             }

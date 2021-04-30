@@ -152,11 +152,6 @@ fn key_frames_from_gltf(file_path: &str, skeleton: &Skeleton) -> Result<HashMap<
                 }
             };
 
-            let mut base_rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0, 0.0);
-            if target.node().name().unwrap() == "hip" {
-                base_rot = na::UnitQuaternion::from_euler_angles(0.0, -90.0_f32.to_radians(), 0.0);
-            }
-
             for read_outputs in reader.read_outputs() {
                 match read_outputs {
                     gltf::animation::util::ReadOutputs::Translations(ts) => {
@@ -172,7 +167,7 @@ fn key_frames_from_gltf(file_path: &str, skeleton: &Skeleton) -> Result<HashMap<
 
                             let q = na::Quaternion::from(na::Vector4::new(r[0], r[1], r[2], r[3]));
 
-                            frames[i].joints[joints_index].rotation = na::UnitQuaternion::from_quaternion(q) * base_rot;
+                            frames[i].joints[joints_index].rotation = na::UnitQuaternion::from_quaternion(q);
                             i += 1 ;
                         }
                     },

@@ -88,7 +88,8 @@ fn update_entities_rotation (ctx: &mut game::Context) {
 
         let mut physics = entity.physics;
         let target_r = f32::atan2(physics.target_dir.y, physics.target_dir.x);
-        let mut diff = target_r - physics.rotation.z;
+
+        let mut diff = target_r - physics.rotation.euler_angles().2;
 
         if diff < -std::f32::consts::PI {
             diff += 2.0 * std::f32::consts::PI;
@@ -108,8 +109,8 @@ fn update_entities_rotation (ctx: &mut game::Context) {
         }
 
         if diff.abs() > 0.01 {
-
-            physics.rotation.z += rot;
+            let z_rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0, rot);
+            physics.rotation *=  z_rot;
         }
 
         entity.physics = physics;

@@ -6,7 +6,7 @@ pub struct Physics {
     pub pos: na::Vector3<f32>,
     pub velocity: na::Vector3<f32>,
     pub max_speed: f32,
-    pub rotation: na::Vector3<f32>,
+    pub rotation: na::UnitQuaternion::<f32>,
     pub target_dir: na::Vector3<f32>,
     pub scale: f32,
     //
@@ -18,7 +18,7 @@ impl Physics {
     pub fn new(entity_id: usize) -> Physics {
         Physics {
             entity_id: entity_id,
-            rotation: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
+            rotation: na::UnitQuaternion::identity(),
             pos: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             target_dir: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
@@ -28,4 +28,52 @@ impl Physics {
             anchor_id: None
         }
     }
+
+    pub fn apply_transform(&mut self, transform: na::Matrix4::<f32>) {
+
+        let mut identity_pos = na::Vector4::new(0.0, 0.0, 0.0, 1.0);
+
+        let mut up = transform * na::Vector4::new(0.0, 0.0, 1.0, 1.0);
+        let rotated = na::Unit::new_normalize(up.xyz());
+
+        (transform * identity_pos).xyz();
+
+        self.pos = (transform * identity_pos).xyz();
+
+
+        let mut rot_mat = na::Matrix3::<f32>::identity();
+
+        rot_mat[0] = transform[0];
+        rot_mat[1] = transform[1];
+        rot_mat[2] = transform[2];
+        rot_mat[3] = transform[4];
+        rot_mat[4] = transform[5];
+        rot_mat[5] = transform[6];
+        rot_mat[6] = transform[8];
+        rot_mat[7] = transform[9];
+        rot_mat[8] = transform[10];
+
+        self.rotation = na::UnitQuaternion::from_matrix(&rot_mat);
+
+    }
+
+
+    pub fn calculate_model_mat(&self) -> na::Matrix4::<f32> {
+
+        let scale_mat = na::Matrix4::<f32>::new(
+            self.scale, 0.0, 0.0, 0.0,
+            0.0, self.scale, 0.0, 0.0,
+            0.0, 0.0, self.scale, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+        );
+
+        let rot_mat = self.rotation.to_homogeneous();
+
+        let trans_mat = na::Matrix4::new_translation(&self.pos);
+
+        let model_mat = trans_mat * rot_mat * scale_mat;
+
+        model_mat
+    }
+
 }

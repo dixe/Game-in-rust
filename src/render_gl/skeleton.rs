@@ -88,6 +88,7 @@ impl Skeleton {
     }
 
 
+
     pub fn from_gltf(file_path: &str) -> Result<(Skeleton, std::collections::HashMap<u16,usize>), failure::Error> {
         let (gltf, _, _) = gltf::import(file_path)?;
 
@@ -143,13 +144,6 @@ impl Skeleton {
             if !index_map.contains_key(&0) {
                 index_map.insert(0, 0);
             }
-
-
-            let rot_90 = na::UnitQuaternion::from_euler_angles(0.0, -90.0_f32.to_radians(), 0.0, );
-            let new = skeleton.joints[0].rotation * rot_90;
-
-            skeleton.joints[0].rotation = new;
-
 
             skeleton.calc_t_pose();
 

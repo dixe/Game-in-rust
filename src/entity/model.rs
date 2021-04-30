@@ -48,7 +48,7 @@ impl Model {
     }
 
 
-    pub fn render_from_model_mat(&self, gl: &gl::Gl, shader: &render_gl::Shader, model_mat: na::Matrix4::<f32>, bones: Option<&Vec::<na::Matrix4::<f32>>>) {
+    pub fn render_from_model_mat(&self, gl: &gl::Gl, shader: &render_gl::Shader, model_mat: na::Matrix4::<f32>, bones: &Vec::<na::Matrix4::<f32>>) {
         match &self.model {
             ModelType::Cube(c) => {
                 c.render(gl, shader,  model_mat);
@@ -57,15 +57,7 @@ impl Model {
                 wm.render(gl, shader, model_mat);
             },
             ModelType::Skinned(mesh) => {
-                match bones {
-                    Some(bs) => {
-
-                        mesh.render(gl, shader, model_mat, bs);
-                    },
-                    None => {
-                        panic!("SKInned mesh render with NONE bones");
-                    }
-                };
+                mesh.render(gl, shader, model_mat, bones);
             },
             ModelType::Mesh(mesh) => {
                 mesh.render(gl, shader, model_mat);

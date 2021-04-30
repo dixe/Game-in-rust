@@ -111,9 +111,6 @@ impl Context {
             bones.push(na::Matrix4::identity());
         }
 
-        animation_player.set_bones(bones);
-
-
         // MODELS
 
         let model_name = "player";
@@ -127,7 +124,11 @@ impl Context {
 
         let health = entity::Health::new(100.0);
 
-        let player = entity::Entity::new(physics, health, Some(animation_player), model_name.to_string());
+        let mut player = entity::Entity::new(physics, health, Some(animation_player), model_name.to_string());
+
+        player.skeleton = skeleton;
+
+        player.bones = bones;
 
         self.entities.add(player);
         self.entities.player_id = id;
@@ -216,10 +217,7 @@ impl Context {
     pub fn update_animations(&mut self) {
         let delta = self.get_delta_time();
 
-
-        if let Some(animation_player) = &mut self.entities.player_mut().animation_player {
-            animation_player.set_frame_bones(delta);
-        }
+        self.entities.player_mut().update_animations(delta);
 
     }
 
@@ -258,6 +256,7 @@ impl Context {
 
         let hammer_model = &self.models["hammer"];
         let hammer = self.entities.hammer();
+
         render_gl::render_entity(&hammer, &self.entities, hammer_model, &self.render_context.gl, &self.mesh_shader);
 
     }

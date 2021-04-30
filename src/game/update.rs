@@ -6,16 +6,26 @@ use crate::controls;
 use crate::camera;
 
 
+fn format_matrix4(mat: &na::Matrix4::<f32>) {
+
+    println!("{:.2} {:.2} {:.2} {:.2} ", mat[0], mat[1], mat[2], mat[3]);
+    println!("{:.2} {:.2} {:.2} {:.2} ", mat[4], mat[5], mat[6], mat[7]);
+    println!("{:.2} {:.2} {:.2} {:.2} ", mat[8], mat[9], mat[10], mat[11]);
+    println!("{:.2} {:.2} {:.2} {:.2} ", mat[12], mat[13], mat[14], mat[15]);
+}
+
+fn format_matrix3(mat: &na::Matrix3::<f32>) {
+
+    println!("{:.2} {:.2} {:.2} ", mat[0], mat[1], mat[2]);
+    println!("{:.2} {:.2} {:.2} ", mat[3], mat[4], mat[5]);
+    println!("{:.2} {:.2} {:.2} ", mat[6], mat[7], mat[8]);
+}
+
 pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::EntityCollision>) {
 
 
     let delta = ctx.get_delta_time();
 
-    // Update shooters, projectiles and othertime based stuff
-
-
-    //update_enemies_death(ctx);
-    //update_player_swing(ctx);
 
     // also "action" system update fx sword arc ect
     //action_system::update_actions(&mut ctx.ecs.actions_info, &mut ctx.ecs.physics, &mut ctx.state, delta as f32, &ctx.actions);
@@ -24,6 +34,25 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
     // PLAYER MOVEMENT
 
     update_player_movement(ctx.cameras.current(), &ctx.controls, ctx.entities.player_mut(), delta);
+
+
+    // make a function on player, weapon anchor mat and just use that as world_matrix
+    let mut world_mat = ctx.entities.player().skeleton.joints[14].world_matrix;
+    // This is not it
+
+    let player_model_mat = ctx.entities.player().physics.calculate_model_mat();
+    let hammer = ctx.entities.hammer_mut();
+
+    hammer.physics.apply_transform(player_model_mat * world_mat);
+
+
+
+
+
+
+
+    // we need the rotation part of world matrix
+    //    hammer.physics.rotation = rotation * world ;
 
 
 

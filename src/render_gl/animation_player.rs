@@ -15,10 +15,8 @@ pub enum PlayerAnimation {
 pub struct AnimationPlayer {
     current_animation: PlayerAnimation,
     next_animation: Option<PlayerAnimation>,
-    pub skeleton: Skeleton,
     elapsed: f32,
     pub animations: PlayerAnimations,
-    pub bones: Vec::<na::Matrix4::<f32>>,
 }
 
 impl AnimationPlayer {
@@ -29,17 +27,11 @@ impl AnimationPlayer {
             current_animation,
             elapsed: 0.0,
             animations,
-            bones: Vec::new(),
-            skeleton: skeleton.clone(),
             next_animation: None,
         }
     }
 
-    pub fn set_bones(&mut self, bones: Vec::<na::Matrix4::<f32>> ) {
-        self.bones = bones;
-    }
-
-    pub fn set_current(&mut self, animation: PlayerAnimation) {
+    pub fn set_current(&mut self, animation: PlayerAnimation, skeleton: &Skeleton) {
         let key_frame_end = match animation {
             PlayerAnimation::TPose => self.animations.t_pose.key_frames[0].clone(),
             PlayerAnimation::Idle => self.animations.idle.key_frames[0].clone(),
@@ -53,7 +45,7 @@ impl AnimationPlayer {
         // create transition animation from current frame state
         let transition_time = 0.2;
 
-        let keyFrames = vec![self.current_frame(), key_frame_end];
+        let keyFrames = vec![self.current_frame(skeleton), key_frame_end];
 
         // important that this is after we call current_frame, since that uses the elapsed time
         self.elapsed = 0.0;
@@ -82,7 +74,7 @@ impl AnimationPlayer {
     }
 
 
-    fn current_frame(&self) -> KeyFrame {
+    fn current_frame(&self, skeleton: &Skeleton) -> KeyFrame {
 
         let current_animation = self.current_animation();
 
@@ -93,7 +85,7 @@ impl AnimationPlayer {
 
         let (t, next_frame_index) = self.current_t();
 
-        current_animation.keyframe_from_t(&self.skeleton, next_frame_index, t)
+        current_animation.keyframe_from_t(skeleton, next_frame_index, t)
 
     }
 
@@ -126,7 +118,7 @@ impl AnimationPlayer {
 
 
 
-    pub fn set_frame_bones(&mut self, delta: f32) {
+    pub fn set_frame_bones(&mut self, bones: &mut Vec::<na::Matrix4::<f32>>, skeleton: &mut Skeleton, delta: f32) {
 
         let (t, next_frame_index) = self.current_t();
 
@@ -145,8 +137,7 @@ impl AnimationPlayer {
             PlayerAnimation::Transition(ref mut anim) => anim
         };
 
-
-        current_animation.move_to_key_frame(&mut self.bones, &mut self.skeleton, next_frame_index, t);
+        current_animation.move_to_key_frame(bones, skeleton, next_frame_index, t);
 
         if self.elapsed > current_animation.duration {
             match self.next_animation {
