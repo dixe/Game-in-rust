@@ -52,12 +52,29 @@ impl CollisionBox {
         }
     }
 
+    pub fn make_transformed(&self, translation: na::Vector3::<f32>, rotation: na::UnitQuaternion::<f32>) -> CollisionBox {
 
-    pub fn vertices(&self) -> Vec<na::Vector3::<f32>> {
+        CollisionBox {
+            v0:  rotation *  self.v0  + translation,
+            v1:  rotation *  self.v1  + translation,
+            v2:  rotation *  self.v2  + translation,
+            v3:  rotation *  self.v3  + translation,
+            v4:  rotation *  self.v4  + translation,
+            v5:  rotation *  self.v5  + translation,
+            v6:  rotation *  self.v6  + translation,
+            v7:  rotation *  self.v7  + translation,
+            name: "".to_string()
+        }
+
+
+    }
+
+
+    fn vertices(&self) -> Vec<na::Vector3::<f32>> {
         vec![ self.v0, self.v1, self.v2, self.v3, self.v4, self.v5, self.v6, self.v7]
     }
 
-    pub fn sat_axis(&self) -> Vec<na::Vector3::<f32>> {
+    fn sat_axis(&self) -> Vec<na::Vector3::<f32>> {
 
         // sat axis are all face normals. Since it is a box opposite normals wil create same axis
         // so just take the 3 unique
@@ -75,7 +92,7 @@ impl CollisionBox {
     }
 
 
-    pub fn edges(&self) -> Vec<na::Vector3::<f32>> {
+    fn edges(&self) -> Vec<na::Vector3::<f32>> {
 
         // sat axis are all face normals. Since it is a box opposite normals wil create same axis
         // so just take the 3 unique
@@ -101,7 +118,7 @@ pub struct AxisBox {
 
 pub fn check_collision(box_1: &CollisionBox, box_2: &CollisionBox) -> bool {
 
-    // first find axix aligned bouding box
+    // first find axis aligned bounding box collision
     let axis_collision = axis_aligned_collision(box_1, box_2);
 
     if !axis_collision {
@@ -132,8 +149,6 @@ pub fn check_collision(box_1: &CollisionBox, box_2: &CollisionBox) -> bool {
 
     for axis in &all_sat_axis {
 
-        //println!("{:#?}", axis);
-
         let mut shape_1_max = vertices_1[0].dot(&axis);
         let mut shape_1_min = vertices_1[0].dot(&axis);
         for v in &vertices_1 {
@@ -141,7 +156,6 @@ pub fn check_collision(box_1: &CollisionBox, box_2: &CollisionBox) -> bool {
 
             shape_1_max = f32::max(shape_1_max, proj_dot);
             shape_1_min = f32::min(shape_1_min, proj_dot);
-            //println!("v1: {:#?}", proj_dot);
         }
 
 

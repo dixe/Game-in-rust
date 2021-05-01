@@ -10,6 +10,7 @@ use crate::resources;
 pub struct KeyframeAnimation {
     pub duration: f32,
     pub key_frames: Vec<KeyFrame>,
+    pub cyclic: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -64,6 +65,11 @@ pub fn load_animations(file_path: &str, skeleton: &Skeleton) -> Result<PlayerAni
 
     let animations = key_frames_from_gltf(file_path, skeleton)?;
 
+    // This is not the FPS is will be played back at, by used to normalise longer and shorter animaions
+    // to be invariant of keyframes
+    let frame_normalize = 40.0;
+
+
     let t_pose_frames = animations.get("t_pose").unwrap();
 
     let walk_frames = animations.get("walk").unwrap();
@@ -73,13 +79,14 @@ pub fn load_animations(file_path: &str, skeleton: &Skeleton) -> Result<PlayerAni
 
     let attack_frames = animations.get("attack").unwrap();
 
-    let t_pose = KeyframeAnimation::new(1.0, t_pose_frames.clone());
 
-    let walk = KeyframeAnimation::new(0.7, walk_frames.clone());
+    let t_pose = KeyframeAnimation::new(t_pose_frames.len() as f32 / frame_normalize, t_pose_frames.clone(), true);
 
-    let idle = KeyframeAnimation::new(2.0, idle_frames.clone());
+    let walk = KeyframeAnimation::new(walk_frames.len() as f32 / frame_normalize, walk_frames.clone(), true);
 
-    let attack = KeyframeAnimation::new(1.0, attack_frames.clone());
+    let idle = KeyframeAnimation::new(idle_frames.len() as f32 / frame_normalize, idle_frames.clone(), true);
+
+    let attack = KeyframeAnimation::new(attack_frames.len()  as f32 / frame_normalize, attack_frames.clone(), false);
 
 
     Ok(PlayerAnimations {
@@ -228,13 +235,15 @@ impl KeyframeAnimation {
 
     pub fn empty() -> KeyframeAnimation {
         KeyframeAnimation {
+            cyclic: true,
             duration: 1.0,
             key_frames: Vec::new(),
         }
     }
 
-    pub fn new(duration: f32,  key_frames: Vec<KeyFrame>) -> KeyframeAnimation {
+    pub fn new(duration: f32,  key_frames: Vec<KeyFrame>, cyclic: bool) -> KeyframeAnimation {
         KeyframeAnimation {
+            cyclic,
             duration,
             key_frames,
         }

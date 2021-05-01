@@ -86,9 +86,9 @@ impl Context {
 
         let gltf_meshes = render_gl::meshes_from_gltf(&player_glb_path, &self.render_context.gl, &index_map)?;
 
-        let dummy_id = self.setup_hitbox_model("targetDummy", &gltf_meshes);
+        let dummy = self.setup_hitbox_model("targetDummy", &gltf_meshes);
 
-        self.entities.dummy_id = dummy_id;
+        self.entities.enemies.add(dummy);
 
         Ok(())
 
@@ -116,48 +116,38 @@ impl Context {
         let model_name = "player";
         self.add_skinned_model(model_name, &gltf_meshes);
 
-        // ENTITY PLAYER
-        let id = self.entities.next_id;
-        let physics = entity::Physics::new(id);
 
-        let health = entity::Health::new(100.0);
-
-        let mut player = entity::Entity::new(physics, health, Some(animation_player), model_name.to_string());
+        let mut player = entity::Entity::new(Some(animation_player), model_name.to_string());
 
         player.skeleton = skeleton;
 
         player.bones = bones;
 
-        self.entities.add(player);
-        self.entities.player_id = id;
+        self.entities.player = player;
 
-        let hammer_id = self.setup_hitbox_model("hammer", &gltf_meshes);
 
-        self.entities.hammer_id = hammer_id;
+        let hammer = self.setup_hitbox_model("hammer", &gltf_meshes);
+
+        self.entities.weapons.add(hammer);
 
         Ok(())
     }
 
 
 
-    fn setup_hitbox_model(&mut self, name: &str, gltf_meshes: &render_gl::GltfMeshes) -> usize {
+    fn setup_hitbox_model(&mut self, name: &str, gltf_meshes: &render_gl::GltfMeshes) -> entity::Entity {
 
         let hitboxes = gltf_meshes.hitboxes(name);
 
         self.add_model(name, &gltf_meshes);
 
-        // ENTITY WEAPON
-        let id = self.entities.next_id;
-
-        let mut entity = entity::create_weapon(id, name.to_string(), &hitboxes);
+        let entity = entity::create_weapon(name.to_string(), &hitboxes);
 
         for hb_kv in &hitboxes {
             self.add_model(&hb_kv.0, &gltf_meshes);
         }
 
-        self.entities.add(entity);
-
-        id
+        entity
 
     }
 
@@ -228,9 +218,7 @@ impl Context {
 
     pub fn update_animations(&mut self) {
         let delta = self.get_delta_time();
-        for entity in self.entities.values_mut() {
-            entity.update_animations(delta);
-        }
+        self.entities.player.update_animations(delta);
 
     }
 
@@ -255,39 +243,57 @@ impl Context {
         self.mesh_shader.set_vec3(&self.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
         self.mesh_shader.set_projection_and_view(&self.render_context.gl, self.camera().projection(), self.camera().view());
 
+
+
         for entity in self.entities.values() {
             let model = &self.models[&entity.model_name];
             render_gl::render_entity(&entity, &self.entities, model, &self.render_context.gl, &self.mesh_shader);
         }
 
 
-        if self.render_hitboxes {
-            // TODO should be for all entities, but for now just weapon (hammeer)
+        //RENDER HITBOXES
 
-            self.hitbox_shader.set_used();
-            self.hitbox_shader.set_projection_and_view(&self.render_context.gl, self.camera().projection(), self.camera().view());
-            let switched = false;
+        self.hitbox_shader.set_used();
+        self.hitbox_shader.set_projection_and_view(&self.render_context.gl, self.camera().projection(), self.camera().view());
+        let switched = false;
 
-            if !self.render_context.wire_frame {
-                self.render_context.switch_mode();
-            }
+        if !self.render_context.wire_frame {
+            self.render_context.switch_mode();
+        }
 
-
-            for entity in self.entities.values() {
+        for entity in self.entities.hitbox_entities() {
+            if entity.is_hit {
                 for hitbox in &entity.hit_boxes {
                     let model = &self.models[&hitbox.name];
                     render_gl::render_entity(&entity, &self.entities, model, &self.render_context.gl, &self.hitbox_shader);
 
                 }
             }
-
-            if !switched {
-                self.render_context.switch_mode();
-            }
-
         }
 
+        if !switched {
+            self.render_context.switch_mode();
+        }
     }
+
+    pub fn reload_shaders(&mut self) {
+
+        let shaders = vec![ ("mesh_shader", &mut self.mesh_shader), ("hitbox_shader", &mut self.hitbox_shader)];
+
+        for (name, shader) in shaders {
+            match render_gl::Shader::new(name, &self.render_context.res, &self.render_context.gl) {
+                Ok(new_shader) => {
+
+                    println!("Reloaded {}", name);
+                    *shader = new_shader;
+                },
+                Err(err) => {
+                    println!("Error loading {}: {}", name, err);
+                }
+            };
+        }
+    }
+
 }
 
 

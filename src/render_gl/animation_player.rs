@@ -11,7 +11,6 @@ pub enum PlayerAnimation {
     Transition(KeyframeAnimation)
 }
 
-
 #[derive(Clone)]
 pub struct AnimationPlayer {
     current_animation: PlayerAnimation,
@@ -35,7 +34,25 @@ impl AnimationPlayer {
     }
 
     pub fn set_current(&mut self, animation: PlayerAnimation, skeleton: &Skeleton) {
-        let key_frame_end = match animation {
+        let should_transition = match animation {
+            PlayerAnimation::Attack => false,
+            _ => true,
+        };
+
+        if should_transition {
+            self.transition_into_next(animation, skeleton);
+        }
+        else {
+            self.current_animation = animation;
+            self.next_animation = None;
+            self.has_repeated = false;
+            self.elapsed = 0.0;
+        }
+    }
+
+
+    fn transition_into_next(&mut self, animation: PlayerAnimation, skeleton: &Skeleton) {
+        let next_start_key_frame = match animation {
             PlayerAnimation::TPose => self.animations.t_pose.key_frames[0].clone(),
             PlayerAnimation::Idle => self.animations.idle.key_frames[0].clone(),
             PlayerAnimation::Walk => self.animations.walk.key_frames[0].clone(),
@@ -49,14 +66,13 @@ impl AnimationPlayer {
         // create transition animation from current frame state
         let transition_time = 0.2;
 
-        let keyFrames = vec![self.current_frame(skeleton), key_frame_end];
-
+        let keyFrames = vec![self.current_frame(skeleton), next_start_key_frame];
         // important that this is after we call current_frame, since that uses the elapsed time
         self.elapsed = 0.0;
 
-        self.current_animation = PlayerAnimation::Transition(KeyframeAnimation::new(transition_time, keyFrames));
-        self.has_repeated = false;
 
+        self.current_animation = PlayerAnimation::Transition(KeyframeAnimation::new(transition_time, keyFrames, false));
+        self.has_repeated = false;
     }
 
 
@@ -124,6 +140,27 @@ impl AnimationPlayer {
     }
 
 
+    fn is_current_cyclic(&self) -> bool {
+        match &self.current_animation {
+            PlayerAnimation::TPose => {
+                self.animations.t_pose.cyclic
+            },
+            PlayerAnimation::Walk => {
+                self.animations.walk.cyclic
+            },
+            PlayerAnimation::Idle => {
+                self.animations.idle.cyclic
+            },
+            PlayerAnimation::Attack => {
+                self.animations.attack.cyclic
+            },
+            PlayerAnimation::Transition(_) => {
+                false
+            }
+        }
+
+    }
+
 
 
     pub fn set_frame_bones(&mut self, bones: &mut Vec::<na::Matrix4::<f32>>, skeleton: &mut Skeleton, delta: f32) {
@@ -161,12 +198,15 @@ impl AnimationPlayer {
                     self.has_repeated = true;
                 }
             };
-            self.elapsed = 0.0;
 
-
+            if self.is_current_cyclic() {
+                self.elapsed = 0.0;
+            }
         }
     }
 }
+
+
 
 
 fn clamp01(t: f32, min: f32, max: f32) -> f32{

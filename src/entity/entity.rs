@@ -9,19 +9,26 @@ pub struct Entity {
     pub model_name: String,
     pub animation_player: Option<render_gl::AnimationPlayer>,
     state: EntityState,
-
     pub bones: Vec::<na::Matrix4::<f32>>,
     pub skeleton: render_gl::Skeleton,
     pub hit_boxes: Vec::<physics::CollisionBox>,
+    pub weapon_id: usize,
+    pub is_hit: bool
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum EntityState {
+    Idle,
+    Moving,
+    Attack,
+}
 
 impl Entity {
 
-    pub fn new(physics: Physics, health: Health, animation_player: Option<render_gl::AnimationPlayer>, model_name: String) -> Self {
+    pub fn new(animation_player: Option<render_gl::AnimationPlayer>, model_name: String) -> Self {
         Entity {
-            physics,
-            health,
+            physics: Physics::new(),
+            health: Health::new(100.0),
             model_name,
             animation_player,
             state: EntityState::Idle,
@@ -30,7 +37,9 @@ impl Entity {
                 name: "empty".to_string(),
                 joints: Vec::new(),
             },
+            weapon_id: 0,
             hit_boxes: Vec::<physics::CollisionBox>::new(),
+            is_hit: false,
         }
     }
 
@@ -58,100 +67,4 @@ impl Entity {
             };
         };
     }
-}
-
-pub struct Entities {
-    pub next_id: usize,
-    pub player_id: usize,
-    pub hammer_id: usize,
-    pub dummy_id: usize,
-    pub entities_map: std::collections::HashMap::<usize, Entity>,
-
-}
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum EntityState {
-    Idle,
-    Moving,
-    Attack,
-}
-
-impl Entities {
-
-
-    pub fn new() -> Self {
-        Entities {
-            next_id: 0,
-            player_id: 0,
-            hammer_id: 0,
-            dummy_id: 0,
-            entities_map: std::collections::HashMap::<usize, Entity>::new(),
-        }
-    }
-
-    pub fn player(&self) -> &Entity {
-        match self.entities_map.get(&self.player_id) {
-            Some(e) => e,
-            None => panic!("No player set")
-        }
-    }
-
-    pub fn player_mut(&mut self) -> &mut Entity {
-        match self.entities_map.get_mut(&self.player_id) {
-            Some(e) => e,
-            None => panic!("No player set")
-        }
-    }
-
-
-    pub fn hammer(&self) -> &Entity {
-        match self.entities_map.get(&self.hammer_id) {
-            Some(e) => e,
-            None => panic!("No hammer set")
-        }
-    }
-
-    pub fn hammer_mut(&mut self) -> &mut Entity {
-        match self.entities_map.get_mut(&self.hammer_id) {
-            Some(e) => e,
-            None => panic!("No hammer set")
-        }
-    }
-
-
-    pub fn get(&self, entity_id: usize) -> Option<&Entity> {
-        self.entities_map.get(&entity_id)
-    }
-
-    pub fn get_mut(&mut self, entity_id: usize) -> Option<&mut Entity> {
-        self.entities_map.get_mut(&entity_id)
-    }
-
-    pub fn add(&mut self, entity: Entity) -> usize {
-
-        let id = self.next_id;
-        self.next_id += 1;
-
-        self.entities_map.insert(id, entity);
-        id
-    }
-
-    pub fn values_mut(&mut self) -> std::collections::hash_map::ValuesMut<'_, usize, Entity> {
-        self.entities_map.values_mut()
-    }
-
-
-    pub fn values(&self) -> std::collections::hash_map::Values<'_, usize, Entity> {
-        self.entities_map.values()
-    }
-
-    pub fn set_physics(&mut self, entity_id: usize, physics: entity::Physics) {
-
-        match self.entities_map.get_mut(&entity_id) {
-            Some(e) => {
-                e.physics = physics  }
-            _ => {}
-        };
-    }
-
 }

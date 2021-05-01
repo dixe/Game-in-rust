@@ -7,7 +7,10 @@ mod model;
 pub use self::model::{Model};
 
 mod entity;
-pub use self::entity::{Entity, Entities, EntityState};
+pub use self::entity::{Entity, EntityState};
+
+mod entities;
+pub use self::entities::{Entities};
 
 mod health;
 pub use self::health::{Health};

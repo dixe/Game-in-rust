@@ -94,15 +94,18 @@ impl Skeleton {
 
         for skin in gltf.skins() {
 
-            println!("SKING {:#?}", skin.name());
+            //println!("SKING {:#?}", skin.name());
 
             let mut joints_data = std::collections::HashMap::new();
 
             // fill the array with joints data
             let mut hip_index = 0;
+            /*
             for node in skin.joints() {
-                println!("{:#?} {}", node.name(), node.index());
-            }
+            println!("{:#?} {}", node.name(), node.index());
+        }
+             */
+
             for node in skin.joints() {
 
                 let index = node.index();

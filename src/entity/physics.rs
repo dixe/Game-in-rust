@@ -2,7 +2,6 @@ use nalgebra as na;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Physics {
-    pub entity_id: usize,
     pub pos: na::Vector3<f32>,
     pub velocity: na::Vector3<f32>,
     pub max_speed: f32,
@@ -15,9 +14,8 @@ pub struct Physics {
 }
 
 impl Physics {
-    pub fn new(entity_id: usize) -> Physics {
+    pub fn new() -> Physics {
         Physics {
-            entity_id: entity_id,
             rotation: na::UnitQuaternion::identity(),
             pos: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
@@ -39,7 +37,6 @@ impl Physics {
         (transform * identity_pos).xyz();
 
         self.pos = (transform * identity_pos).xyz();
-
 
         let mut rot_mat = na::Matrix3::<f32>::identity();
 

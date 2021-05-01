@@ -13,6 +13,8 @@ pub struct EntityCollision {
 
 pub fn process(ctx: &mut game::Context) -> Vec<EntityCollision> {
     // MOVE ENTITIES
+
+
     update_entities_position(ctx);
     update_entities_rotation(ctx);
 
@@ -66,6 +68,7 @@ fn weapon_collision(weapon: &ConvexCollisionShape, enemies: Vec::<(usize, Convex
         }
     }
 }
+
 
 
 fn update_entities_position(ctx: &mut game::Context) {

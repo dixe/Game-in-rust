@@ -28,24 +28,22 @@ pub fn do_impulse_correction(ctx: &mut game::Context) -> Vec<EntityCollision>{
     impulse_collisions_resolution(&manifolds, &mut impulse_entities);
 
     for e in impulse_entities.iter() {
-        if e.entity_id > 0 { // don't update walls ect
 
-            ctx.entities.set_physics(e.entity_id, *e);
+        // Find a better way to not update walls
+        // and update entities in general
 
-        }
+        //ctx.entities.set_physics(e.entity_id, *e);
+
     }
 
     manifolds.iter().filter_map(|m| {
         let e1 = impulse_entities[m.entity_1_index];
         let e2 = impulse_entities[m.entity_2_index];
 
-        if e1.entity_id == 0 || e2.entity_id == 0 {
-            return None;
-        }
 
         Some(EntityCollision {
-            entity_1_id: e1.entity_id,
-            entity_2_id: e2.entity_id,
+            entity_1_id: 0,
+            entity_2_id: 0,
         })
     }).collect()
 
@@ -116,7 +114,7 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
     let mut no_checks = std::collections::HashSet::new();
 
     // Get some data out of enitiy component system
-    let player_physics = ctx.entities.player().physics;
+    let player_physics = ctx.entities.player.physics;
     entities.push(player_physics);
     collision_shapes.push(ConvexCollisionShape::rectangle(&player_physics.pos, 1.0, 1.0, &player_physics));
 
@@ -190,15 +188,13 @@ fn do_impulse_collisions(entities: &[entity::Physics], shapes: &[ConvexCollision
         for index_2 in (index_1+1)..entities.len() {
             let e2 = entities[index_2];
             // if both are a wall we don't care about collision
+            // TODO again find a better way, maybe just have a bool that says wall ??
+            /*
             if e1.entity_id == 0 && e2.entity_id == 0 {
-                continue;
-            }
+            continue;
+        }
+             */
 
-            // if they can not collide,
-            // fx player and their own shots, enemies and their shots
-            if no_checks.contains(&(e1.entity_id, e2.entity_id)) {
-                continue;
-            }
 
             let (col, normal, penetration) = collision_sat_shapes_impulse(&shapes[index_1], &shapes[index_2]);
 

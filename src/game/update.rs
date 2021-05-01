@@ -33,47 +33,71 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 
     // PLAYER MOVEMENT
 
-    update_player(ctx.cameras.current(), &ctx.controls, ctx.entities.player_mut(), delta);
+    update_player(ctx.cameras.current(), &ctx.controls, &mut ctx.entities.player, delta);
 
 
     // make a function on player, weapon anchor mat and just use that as world_matrix
-    let mut world_mat = ctx.entities.player().skeleton.joints[14].world_matrix;
-    // This is not it
+    // or a function to pass in the hammer reference, even though it might
+    // not play nice with borrow checker
 
-    let player_model_mat = ctx.entities.player().physics.calculate_model_mat();
-    let hammer = ctx.entities.hammer_mut();
 
+    let mut world_mat = ctx.entities.player.skeleton.joints[14].world_matrix;
+    let player_model_mat = ctx.entities.player.physics.calculate_model_mat();
+
+    let player = &ctx.entities.player;
+    let hammer = ctx.entities.weapons.get_mut(player.weapon_id).unwrap(); // Maybe not always true
+
+
+    // Move player weapon (hammer)
     hammer.physics.apply_transform(player_model_mat * world_mat);
 
-    /*
-    for c in collisions {
-    // VALIDATE! entity_1 is always lower than entity_2 and enemies will spawn before projectiles always??
 
-    if ctx.state.enemies.contains(&c.entity_1_id) && ctx.state.player_shots.contains(&c.entity_2_id) {
-    match (ctx.ecs.get_health(c.entity_1_id), ctx.ecs.get_shot(c.entity_2_id )) {
-    (Some(e_hp), Some(s)) => {
-    let mut shot = *s;
-    let mut enemy_hp = *e_hp;
+    let player = &ctx.entities.player;
 
-    if ! shot.used {
-    enemy_hp.damage(shot.damage);
-    shot.used = true;
-    ctx.ecs.set_shot(shot.entity_id, shot);
-    ctx.ecs.set_health(c.entity_1_id, enemy_hp);
+
+    // Weapon collisions
+
+
+
+    // only if player is attacking
+    if ctx.entities.player.get_state() == entity::EntityState::Attack {
+        for dummy in ctx.entities.enemies.values_mut() {
+            dummy.is_hit = false;
+            if entity_collision(&hammer, dummy) {
+                resolve_player_hit_enemy(player, dummy);
+                println!("collision");
+                dummy.is_hit = true;
+            }
+        }
+    }
+}
+
+
+fn resolve_player_hit_enemy(player: &entity::Entity, enemy: &mut entity::Entity) {
+
 
 }
 
-},
-    _ => {}
 
-};
+fn entity_collision(entity_1: &entity::Entity, entity_2: &entity::Entity) -> bool{
 
-};
+
+    // TODO make this more optimized, by calculation each transformed hitbox only once
+    for e1_hitbox_base in &entity_1.hit_boxes {
+        let e1_hitbox = e1_hitbox_base.make_transformed(entity_1.physics.pos, entity_1.physics.rotation);
+
+        for e2_hitbox_base in &entity_2.hit_boxes {
+            let e2_hitbox = e2_hitbox_base.make_transformed(entity_2.physics.pos, entity_2.physics.rotation);
+            if physics::check_collision(&e1_hitbox, &e2_hitbox) {
+                return true;
+            }
+
+        }
+    }
+
+    false
 }
-     */
 
-
-}
 
 
 fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, player: &mut entity::Entity,  _delta:  f32) {
@@ -113,15 +137,10 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
                 target_state = entity::EntityState::Moving;
             }
 
-
-
             if player.get_state() != target_state {
 
                 player.update_state(target_state);
             }
-
-
-
         },
 
         camera::CameraMode::Free => {},

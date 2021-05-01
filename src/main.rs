@@ -230,18 +230,8 @@ fn run() -> Result<(), failure::Error> {
                 Command::ReloadActions => {
                     println!("Reload action");
 
-                    match render_gl::Shader::new("mesh_shader", &ctx.render_context.res, &ctx.render_context.gl) {
-                        Ok(shader) => {
+                    ctx.reload_shaders();
 
-                            println!("Reloaded mesh shader");
-                            ctx.mesh_shader = shader;
-                        },
-                        Err(err) => {
-                            println!("Error loading mesh shader: {}",err);
-                        }
-                    };
-
-                    //TODO load using the context
 
                 },
                 Command::SwitchRenderMode => {
@@ -249,12 +239,12 @@ fn run() -> Result<(), failure::Error> {
                 },
 
                 Command::DecrementWalkTime => {
-                    let player = ctx.entities.player_mut();
+                    let player = &mut ctx.entities.player;
                     player.animation_player.as_mut().map(|ap| ap.animations.walk.duration -= 0.1);
                     println!("{:#?}", player.animation_player.as_ref().map(|ap| ap.animations.walk.duration));
                 },
                 Command::IncrementWalkTime => {
-                    let player = ctx.entities.player_mut();
+                    let player = &mut ctx.entities.player;
                     player.animation_player.as_mut().map(|ap| ap.animations.walk.duration += 0.1);
                     println!("{:#?}", player.animation_player.as_ref().map(|ap| ap.animations.walk.duration));
                 },
@@ -270,9 +260,7 @@ fn run() -> Result<(), failure::Error> {
 
 fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
 
-    let hammer_hitbox = &ctx.entities.hammer().hit_boxes;
-
-    let mut player = ctx.entities.player_mut();
+    let player = &mut ctx.entities.player;
 
     let mut animation_player = player.animation_player.as_mut().unwrap();
 
@@ -353,7 +341,7 @@ fn set_t_pose(bones: &mut [na::Matrix4::<f32>]) {
 
 fn update_follow_camera(ctx: &mut game::Context) {
 
-    let player = ctx.entities.player_mut();
+    let player = &ctx.entities.player;
 
     let mut physics = player.physics;
 
