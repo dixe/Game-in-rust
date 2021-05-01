@@ -60,7 +60,7 @@ struct VertexWeights {
 impl SkinnedMesh {
     pub fn new(gl: &gl::Gl, gltf_mesh: &GltfMesh) -> Self {
 
-        println!("{:#?}", gltf_mesh.name);
+        //println!("CREATING SKINNED MESH: {:#?}", gltf_mesh.name);
 
         let mesh = load_mesh_gltf(
             gl,
@@ -117,6 +117,33 @@ pub struct GltfMesh {
 pub struct GltfMeshes {
     pub meshes: std::collections::HashMap::<String, GltfMesh>
 }
+
+
+impl GltfMeshes {
+
+    pub fn hitboxes(&self, base_name: &str) -> Vec::<(String, Vec<na::Vector3::<f32>>)>{
+
+        println!("HITBOXES FOR {}", base_name);
+        let mut res = Vec::new();
+        for mesh_data in self.meshes.iter().filter(|kv| kv.0.starts_with(base_name) && kv.0.contains("hitbox")).map(|kv| kv.1) {
+            // meshes are triangulated, so we want to detriangulate them before we pass them on.
+            // They should have 8 vertices
+            // from looking at data it seems liek for at box the layout is v0,v0,v0, v1, v1,v1, v2,v2,v2, v3,v3,v3... v7,v7,v7,
+            // So we can just loop over in with step of 2 and thus get the vertices
+
+            let mut hitbox = Vec::new();
+            for i in (0..24).step_by(3) {
+                hitbox.push(mesh_data.pos_data[i]);
+            }
+            res.push((mesh_data.name.clone(), hitbox));
+        }
+
+
+        res
+    }
+}
+
+
 
 
 pub fn meshes_from_gltf(file_path: &str, gl: &gl::Gl, index_map: &std::collections::HashMap<u16,usize>) -> Result<GltfMeshes, failure::Error> {

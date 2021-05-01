@@ -1,12 +1,14 @@
 use nalgebra as na;
 
-
 use crate::physics::projection_collision::*;
 
 
 //TODO store better with faces normal ect. maybe
 #[derive(Debug, Clone)]
 pub struct CollisionBox {
+
+    pub name: String,
+
     pub v0: na::Vector3::<f32>,
     pub v1: na::Vector3::<f32>,
     pub v2: na::Vector3::<f32>,
@@ -18,7 +20,7 @@ pub struct CollisionBox {
 }
 
 
-impl  CollisionBox {
+impl CollisionBox {
 
     pub fn new(center: na::Vector3::<f32>, rot: na::Rotation3::<f32>, scale: na::Matrix3::<f32> ) -> CollisionBox {
 
@@ -31,6 +33,22 @@ impl  CollisionBox {
             v5: rot * (scale * na::Vector3::new(0.5, -0.5, 0.5)) + center,
             v6: rot * (scale * na::Vector3::new(0.5, 0.5, 0.5)) + center,
             v7: rot * (scale * na::Vector3::new(-0.5, 0.5, 0.5)) + center,
+            name: "".to_string()
+        }
+    }
+
+    pub fn from_mesh_data(vertices: &Vec<na::Vector3::<f32>>) -> CollisionBox {
+
+        CollisionBox {
+            v0: vertices[0],
+            v1: vertices[1],
+            v2: vertices[2],
+            v3: vertices[3],
+            v4: vertices[4],
+            v5: vertices[5],
+            v6: vertices[6],
+            v7: vertices[7],
+            name: "".to_string()
         }
     }
 

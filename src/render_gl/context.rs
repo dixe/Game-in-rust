@@ -20,7 +20,7 @@ pub struct Context {
     pub viewport: render_gl::Viewport,
 
     controller: Option<sdl2::controller::GameController>,
-    wire_frame: bool,
+    pub wire_frame: bool,
 
 }
 
@@ -40,9 +40,9 @@ impl Context {
                 self.gl.PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
             }
         }
-
-
     }
+
+
 
 
     pub fn gl_swap_window(&self) {

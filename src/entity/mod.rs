@@ -18,3 +18,7 @@ pub use self::anchor_point::AnchorPoint;
 
 mod action;
 pub use self::action::{ActionData, ActionsInfo};
+
+
+mod weapon;
+pub use self::weapon::{create_weapon};

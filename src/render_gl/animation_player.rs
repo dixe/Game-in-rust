@@ -7,6 +7,7 @@ pub enum PlayerAnimation {
     TPose,
     Idle,
     Walk,
+    Attack,
     Transition(KeyframeAnimation)
 }
 
@@ -16,6 +17,7 @@ pub struct AnimationPlayer {
     current_animation: PlayerAnimation,
     next_animation: Option<PlayerAnimation>,
     elapsed: f32,
+    pub has_repeated: bool,
     pub animations: PlayerAnimations,
 }
 
@@ -27,6 +29,7 @@ impl AnimationPlayer {
             current_animation,
             elapsed: 0.0,
             animations,
+            has_repeated: false,
             next_animation: None,
         }
     }
@@ -36,6 +39,7 @@ impl AnimationPlayer {
             PlayerAnimation::TPose => self.animations.t_pose.key_frames[0].clone(),
             PlayerAnimation::Idle => self.animations.idle.key_frames[0].clone(),
             PlayerAnimation::Walk => self.animations.walk.key_frames[0].clone(),
+            PlayerAnimation::Attack => self.animations.attack.key_frames[0].clone(),
             PlayerAnimation::Transition(ref anim) => anim.key_frames[0].clone(),
         };
 
@@ -51,6 +55,7 @@ impl AnimationPlayer {
         self.elapsed = 0.0;
 
         self.current_animation = PlayerAnimation::Transition(KeyframeAnimation::new(transition_time, keyFrames));
+        self.has_repeated = false;
 
     }
 
@@ -66,6 +71,9 @@ impl AnimationPlayer {
             },
             PlayerAnimation::Idle => {
                 &self.animations.idle
+            },
+            PlayerAnimation::Attack => {
+                &self.animations.attack
             },
             PlayerAnimation::Transition(ref anim) => {
                 anim
@@ -134,6 +142,9 @@ impl AnimationPlayer {
             PlayerAnimation::Idle => {
                 &mut self.animations.idle
             },
+            PlayerAnimation::Attack => {
+                &mut self.animations.attack
+            }
             PlayerAnimation::Transition(ref mut anim) => anim
         };
 
@@ -144,10 +155,15 @@ impl AnimationPlayer {
                 Some(ref next) => {
                     self.current_animation = next.clone();
                     self.next_animation = None;
+                    self.has_repeated = false;
                 },
-                _ => {}
+                _ => {
+                    self.has_repeated = true;
+                }
             };
-            self.elapsed = 0.0
+            self.elapsed = 0.0;
+
+
         }
     }
 }

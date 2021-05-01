@@ -1,5 +1,6 @@
 use crate::render_gl;
 use crate::entity::*;
+use crate::physics;
 
 #[derive(Clone)]
 pub struct Entity {
@@ -11,7 +12,7 @@ pub struct Entity {
 
     pub bones: Vec::<na::Matrix4::<f32>>,
     pub skeleton: render_gl::Skeleton,
-
+    pub hit_boxes: Vec::<physics::CollisionBox>,
 }
 
 
@@ -28,7 +29,8 @@ impl Entity {
             skeleton: render_gl::Skeleton {
                 name: "empty".to_string(),
                 joints: Vec::new(),
-            }
+            },
+            hit_boxes: Vec::<physics::CollisionBox>::new(),
         }
     }
 
@@ -51,6 +53,7 @@ impl Entity {
 
             match state {
                 EntityState::Moving => animation_player.set_current(render_gl::PlayerAnimation::Walk, &self.skeleton),
+                EntityState::Attack => animation_player.set_current(render_gl::PlayerAnimation::Attack, &self.skeleton),
                 EntityState::Idle => animation_player.set_current(render_gl::PlayerAnimation::Idle, &self.skeleton),
             };
         };
@@ -61,6 +64,7 @@ pub struct Entities {
     pub next_id: usize,
     pub player_id: usize,
     pub hammer_id: usize,
+    pub dummy_id: usize,
     pub entities_map: std::collections::HashMap::<usize, Entity>,
 
 }
@@ -69,6 +73,7 @@ pub struct Entities {
 pub enum EntityState {
     Idle,
     Moving,
+    Attack,
 }
 
 impl Entities {
@@ -79,6 +84,7 @@ impl Entities {
             next_id: 0,
             player_id: 0,
             hammer_id: 0,
+            dummy_id: 0,
             entities_map: std::collections::HashMap::<usize, Entity>::new(),
         }
     }
@@ -98,8 +104,6 @@ impl Entities {
     }
 
 
-
-
     pub fn hammer(&self) -> &Entity {
         match self.entities_map.get(&self.hammer_id) {
             Some(e) => e,
@@ -115,20 +119,18 @@ impl Entities {
     }
 
 
-
-
-
-
-
     pub fn get(&self, entity_id: usize) -> Option<&Entity> {
         self.entities_map.get(&entity_id)
+    }
+
+    pub fn get_mut(&mut self, entity_id: usize) -> Option<&mut Entity> {
+        self.entities_map.get_mut(&entity_id)
     }
 
     pub fn add(&mut self, entity: Entity) -> usize {
 
         let id = self.next_id;
         self.next_id += 1;
-
 
         self.entities_map.insert(id, entity);
         id
@@ -138,6 +140,10 @@ impl Entities {
         self.entities_map.values_mut()
     }
 
+
+    pub fn values(&self) -> std::collections::hash_map::Values<'_, usize, Entity> {
+        self.entities_map.values()
+    }
 
     pub fn set_physics(&mut self, entity_id: usize, physics: entity::Physics) {
 

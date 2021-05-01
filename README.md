@@ -21,7 +21,6 @@ A game in rust to learn rust and some opengl
 - [x] Sword collision, based on its location
 - [x] Complex model
 - [x] Player/entity/action state. Some actions has to finishe before new input is valid
-- [ ] Sword collision bug fix
 - [x] Sword animation only when attacking state
 - [x] render of collision boxes
 - [x] third person follow cam
@@ -34,9 +33,9 @@ A game in rust to learn rust and some opengl
 - [x] blender model as player model
 - [x] Play run when moving and idle when not
 - [x] Smooth transition between animations
-- [ ] load weapon and achor to weapon bone
+- [x] load weapon and achor to weapon bone
 - [ ] load hitbox from blender models
-
+- [ ] Hitboxes from bones/some bones. fx arms and legs
 
 
 # complex model

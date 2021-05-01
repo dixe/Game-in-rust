@@ -53,6 +53,7 @@ impl From<gltf::Error> for Error {
 #[derive(Clone)]
 pub struct PlayerAnimations {
     pub walk: KeyframeAnimation,
+    pub attack: KeyframeAnimation,
     pub t_pose: KeyframeAnimation,
     pub idle: KeyframeAnimation,
 }
@@ -69,17 +70,23 @@ pub fn load_animations(file_path: &str, skeleton: &Skeleton) -> Result<PlayerAni
 
     let idle_frames = animations.get("idle").unwrap();
 
+
+    let attack_frames = animations.get("attack").unwrap();
+
     let t_pose = KeyframeAnimation::new(1.0, t_pose_frames.clone());
 
     let walk = KeyframeAnimation::new(0.7, walk_frames.clone());
 
     let idle = KeyframeAnimation::new(2.0, idle_frames.clone());
 
+    let attack = KeyframeAnimation::new(1.0, attack_frames.clone());
+
 
     Ok(PlayerAnimations {
         t_pose,
         walk,
         idle,
+        attack
     })
 }
 

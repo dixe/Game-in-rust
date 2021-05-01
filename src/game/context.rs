@@ -49,6 +49,7 @@ pub struct Context {
     // MEHES AND SHADERS
     pub cube_shader: render_gl::Shader,
     pub mesh_shader: render_gl::Shader,
+    pub hitbox_shader: render_gl::Shader,
 
     // make this a struct that can keep track of it, with usize ids, but not as a vec index
     // but something where we can add and remove from
@@ -56,6 +57,8 @@ pub struct Context {
 
     pub actions: action_system::ActionsImpl,
 
+
+    pub render_hitboxes: bool,
 
     delta_time: deltatime::Deltatime,
 
@@ -69,30 +72,27 @@ impl Context {
 
         ctx.setup_player()?;
 
-        //ctx.setup_enemy_models()?;
-
-        //ctx.add_enemy();
+        ctx.setup_enemy()?;
 
         Ok(ctx)
     }
 
-    /*
-    fn setup_enemy_models(&mut self) -> Result<(), failure::Error> {
 
-    let enemy_color = na::Vector3::new(0.3, 0.0, 0.0);
 
-    let enemy_cube = cube::Cube::new(enemy_color, &self.render_context.gl);
+    fn setup_enemy(&mut self) -> Result<(), failure::Error>  {
+        let player_glb_path = "E:/repos/Game-in-rust/blender_models/player.glb";
 
-    let e_model = entity::Model::cube(enemy_cube);
+        let (skeleton, index_map) = render_gl::Skeleton::from_gltf(&player_glb_path)?;
 
-    self.enemy_model_id = self.ecs.add_model(e_model);
+        let gltf_meshes = render_gl::meshes_from_gltf(&player_glb_path, &self.render_context.gl, &index_map)?;
 
-    println!("Enemy model id: {}", self.enemy_model_id);
-    Ok(())
+        let dummy_id = self.setup_hitbox_model("targetDummy", &gltf_meshes);
 
-}
-     */
+        self.entities.dummy_id = dummy_id;
 
+        Ok(())
+
+    }
 
     fn setup_player(&mut self) -> Result<(), failure::Error>  {
 
@@ -116,9 +116,7 @@ impl Context {
         let model_name = "player";
         self.add_skinned_model(model_name, &gltf_meshes);
 
-        self.add_model("hammer", &gltf_meshes);
-
-        // ENTITY
+        // ENTITY PLAYER
         let id = self.entities.next_id;
         let physics = entity::Physics::new(id);
 
@@ -133,21 +131,35 @@ impl Context {
         self.entities.add(player);
         self.entities.player_id = id;
 
-        // ENTITY
-        let id = self.entities.next_id;
-        let physics = entity::Physics::new(id);
+        let hammer_id = self.setup_hitbox_model("hammer", &gltf_meshes);
 
-        let health = entity::Health::new(100.0);
-
-        let hammer = entity::Entity::new(physics, health, None, "hammer".to_string());
-
-        self.entities.add(hammer);
-        self.entities.hammer_id = id;
-
+        self.entities.hammer_id = hammer_id;
 
         Ok(())
     }
 
+
+
+    fn setup_hitbox_model(&mut self, name: &str, gltf_meshes: &render_gl::GltfMeshes) -> usize {
+
+        let hitboxes = gltf_meshes.hitboxes(name);
+
+        self.add_model(name, &gltf_meshes);
+
+        // ENTITY WEAPON
+        let id = self.entities.next_id;
+
+        let mut entity = entity::create_weapon(id, name.to_string(), &hitboxes);
+
+        for hb_kv in &hitboxes {
+            self.add_model(&hb_kv.0, &gltf_meshes);
+        }
+
+        self.entities.add(entity);
+
+        id
+
+    }
 
 
     fn add_skinned_model(&mut self, name: &str, gltf_meshes: &render_gl::GltfMeshes) {
@@ -163,6 +175,7 @@ impl Context {
 
 
     fn add_model(&mut self, name: &str, gltf_meshes: &render_gl::GltfMeshes) {
+        println!("Add Model: {:#?}", name);
         let model_mesh = render_gl::Mesh::new(&self.render_context.gl, &gltf_meshes.meshes[name]);
 
         let model = entity::Model::mesh(model_mesh);
@@ -170,7 +183,6 @@ impl Context {
         let model_name = name.to_string();
 
         self.models.insert(name.to_string(), model);
-
     }
 
     pub fn camera(&self) -> &dyn camera::Camera {
@@ -216,15 +228,13 @@ impl Context {
 
     pub fn update_animations(&mut self) {
         let delta = self.get_delta_time();
-
-        self.entities.player_mut().update_animations(delta);
+        for entity in self.entities.values_mut() {
+            entity.update_animations(delta);
+        }
 
     }
 
-
-
-
-    pub fn render(&self) {
+    pub fn render(&mut self) {
 
         // RENDER SCENE WITH CUBE SHADER
         self.cube_shader.set_used();
@@ -241,23 +251,41 @@ impl Context {
         // RENDER WITH MESH SHADER
 
         self.mesh_shader.set_used();
-
         self.mesh_shader.set_vec3(&self.render_context.gl, "lightPos", na::Vector3::new(1.0, 0.0, 7.0));
         self.mesh_shader.set_vec3(&self.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
-
         self.mesh_shader.set_projection_and_view(&self.render_context.gl, self.camera().projection(), self.camera().view());
 
+        for entity in self.entities.values() {
+            let model = &self.models[&entity.model_name];
+            render_gl::render_entity(&entity, &self.entities, model, &self.render_context.gl, &self.mesh_shader);
+        }
 
-        let player = self.entities.player();
 
-        let player_model = &self.models[&player.model_name];
+        if self.render_hitboxes {
+            // TODO should be for all entities, but for now just weapon (hammeer)
 
-        render_gl::render_entity(&player, &self.entities, player_model, &self.render_context.gl, &self.mesh_shader);
+            self.hitbox_shader.set_used();
+            self.hitbox_shader.set_projection_and_view(&self.render_context.gl, self.camera().projection(), self.camera().view());
+            let switched = false;
 
-        let hammer_model = &self.models["hammer"];
-        let hammer = self.entities.hammer();
+            if !self.render_context.wire_frame {
+                self.render_context.switch_mode();
+            }
 
-        render_gl::render_entity(&hammer, &self.entities, hammer_model, &self.render_context.gl, &self.mesh_shader);
+
+            for entity in self.entities.values() {
+                for hitbox in &entity.hit_boxes {
+                    let model = &self.models[&hitbox.name];
+                    render_gl::render_entity(&entity, &self.entities, model, &self.render_context.gl, &self.hitbox_shader);
+
+                }
+            }
+
+            if !switched {
+                self.render_context.switch_mode();
+            }
+
+        }
 
     }
 }
@@ -288,11 +316,11 @@ fn empty() -> Result<Context, failure::Error> {
 
     let level = level::Level::load(&render_context.res,"levels/debugLevel1.txt")?;
 
-
-
     let cube_shader = render_gl::Shader::new("light_color_shader", &render_context.res, &render_context.gl)?;
 
-    let mut mesh_shader = render_gl::Shader::new("mesh_shader", &render_context.res, &render_context.gl)?;
+    let mesh_shader = render_gl::Shader::new("mesh_shader", &render_context.res, &render_context.gl)?;
+
+    let hitbox_shader = render_gl::Shader::new("hitbox_shader", &render_context.res, &render_context.gl)?;
 
 
 
@@ -327,9 +355,11 @@ fn empty() -> Result<Context, failure::Error> {
         delta_time,
         actions,
         cube_shader,
+        hitbox_shader,
         entities,
         cameras,
         models: std::collections::HashMap::new(),
+        render_hitboxes: false,
     })
 }
 

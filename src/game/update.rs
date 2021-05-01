@@ -33,7 +33,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 
     // PLAYER MOVEMENT
 
-    update_player_movement(ctx.cameras.current(), &ctx.controls, ctx.entities.player_mut(), delta);
+    update_player(ctx.cameras.current(), &ctx.controls, ctx.entities.player_mut(), delta);
 
 
     // make a function on player, weapon anchor mat and just use that as world_matrix
@@ -44,17 +44,6 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
     let hammer = ctx.entities.hammer_mut();
 
     hammer.physics.apply_transform(player_model_mat * world_mat);
-
-
-
-
-
-
-
-    // we need the rotation part of world matrix
-    //    hammer.physics.rotation = rotation * world ;
-
-
 
     /*
     for c in collisions {
@@ -87,12 +76,21 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 }
 
 
-fn update_player_movement(camera: &dyn camera::Camera, controls: &controls::Controls, player: &mut entity::Entity,  _delta:  f32) {
-    if ! can_move(player.get_state()) {
+fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, player: &mut entity::Entity,  _delta:  f32) {
+
+    // UPDATE STATE, IE WHEN ATTACK IS DONE SET BACK TO IDLE
+    update_player_state(player);
+
+
+    if !can_perform_action(player.get_state()) {
         game::update_velocity(&mut player.physics, na::Vector3::new(0.0, 0.0, 0.0));
         return;
     }
 
+    if controls.attack {
+        player.update_state(entity::EntityState::Attack);
+        return;
+    }
 
     match camera.mode() {
         camera::CameraMode::Follow => {
@@ -130,13 +128,29 @@ fn update_player_movement(camera: &dyn camera::Camera, controls: &controls::Cont
     }
 }
 
-fn can_move(state: entity::EntityState) -> bool {
+fn can_perform_action(state: entity::EntityState) -> bool {
     match state {
         entity::EntityState::Idle => true,
         entity::EntityState::Moving => true,
-        // Attacking - false
+        entity::EntityState::Attack => false,
     }
 }
+
+
+fn update_player_state(player: &mut entity::Entity) {
+    match player.get_state() {
+        entity::EntityState::Attack => {
+
+            if player.animation_player.as_ref().unwrap().has_repeated {
+                player.update_state(entity::EntityState::Idle);
+            }
+
+            // check if animation is don
+        },
+        _ => {}
+    };
+}
+
 
 
 fn update_enemies_death(ctx: &mut game::Context) {

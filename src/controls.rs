@@ -19,9 +19,12 @@ pub struct Controls {
     pub e: bool,
     pub movement_dir: na::Vector3::<f32>,
     pub right_stick: Option<na::Vector3::<f32>>,
-    pub right_shoulder: bool,
+    pub attack: bool,
     pub reset: bool,
     pub keys: std::collections::HashMap<sdl2::keyboard::Keycode, bool>,
+
+
+
 
     pub mouse_move: na::Vector2::<f32>,
     pub is_focus: bool
@@ -55,7 +58,7 @@ impl Controls {
             down: false,
             left: false,
             right: false,
-            right_shoulder: false,
+            attack: false,
             reset: false,
             keys: std::collections::HashMap::new(),
 
@@ -82,7 +85,7 @@ impl Controls {
             self.movement_dir.z = 0.0;
         }
 
-        self.right_shoulder = false;
+        self.attack = false;
 
         for event in self.event_pump.poll_iter() {
             use sdl2::event::Event;
@@ -258,8 +261,18 @@ impl Controls {
                 Event::ControllerButtonDown {button,..} => {
                     //println!("Pressed button : {:#?} ", button);
                     match button {
-                        sdl2::controller::Button::RightShoulder => self.right_shoulder = true,
+                        sdl2::controller::Button::RightShoulder => self.attack = true,
                         sdl2::controller::Button::Y => self.reset = true,
+                        _ => {}
+
+                    }
+                },
+
+                // MOUSE
+                Event::MouseButtonDown {mouse_btn,..} => {
+                    //println!("Pressed button : {:#?} ", button);
+                    match mouse_btn {
+                        sdl2::mouse::MouseButton::Left => self.attack = true,
                         _ => {}
 
                     }

@@ -7,7 +7,7 @@ out VS_OUTPUT {
 } OUT;
 
 
-uniform vec3 color;
+
 
 uniform mat4 model;
 uniform mat4 view;
@@ -16,7 +16,6 @@ uniform mat4 projection;
 
 void main()
 {
-    OUT.Color = color;
-    gl_Position = projection * view * model * vec4(Position, 1.0);
-
+    OUT.Color = vec3(1.0, 1.0, 1.0);
+    gl_Position =  projection * view * model * vec4(Position, 1.0);
 }

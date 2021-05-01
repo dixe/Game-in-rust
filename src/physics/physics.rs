@@ -23,10 +23,12 @@ pub fn process(ctx: &mut game::Context) -> Vec<EntityCollision> {
     //NON IMPULSE COLLISION
 
     /*
+    // USE THE ENTITIES HIT BOXES
     let weapon_col_shape = create_entity_collision_shape(ctx.player_weapon_id, ctx);
 
     let mut enemies = Vec::<(usize, ConvexCollisionShape)>::new();
     for enemy_id in &ctx.state.enemies {
+    // SAME USE COLLISION BOXES
     match create_entity_collision_shape(*enemy_id, ctx) {
     Some(col_shape) => {
     enemies.push((*enemy_id, col_shape));

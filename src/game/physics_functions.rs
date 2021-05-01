@@ -36,15 +36,6 @@ pub fn update_velocity_and_rotation(entity: &mut entity::Physics, velocity_chang
 }
 
 
-pub fn get_absoulte_physics(entity_id: usize, entities: &entity::Entities) -> Option<entity::Physics> {
-    match entities.get(entity_id) {
-        None => None,
-        Some(e) => Some(e.physics),
-    }
-
-}
-
-
 
 #[derive(Debug)]
 pub struct Rotation {

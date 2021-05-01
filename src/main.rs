@@ -270,6 +270,8 @@ fn run() -> Result<(), failure::Error> {
 
 fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
 
+    let hammer_hitbox = &ctx.entities.hammer().hit_boxes;
+
     let mut player = ctx.entities.player_mut();
 
     let mut animation_player = player.animation_player.as_mut().unwrap();
@@ -302,6 +304,16 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
         Some(true) => {
             println!("Setting to waalk");
             animation_player.set_current(render_gl::PlayerAnimation::Walk, &skeleton);
+        },
+        _ => {
+        }
+
+    };
+
+    //HIT BOXES
+    match ctx.controls.keys.get(&sdl2::keyboard::Keycode::H) {
+        Some(true) => {
+            ctx.render_hitboxes = true;
         },
         _ => {
         }
