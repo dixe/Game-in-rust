@@ -313,7 +313,7 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
 
             ctx.cube_shader.set_used();
 
-            let _bones = player.bones.clone();
+
             let proj = ctx.camera().projection();
             let view = ctx.camera().view();
             ctx.cube_shader.set_projection_and_view(&ctx.render_context.gl, proj, view);
@@ -325,6 +325,9 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
             for joint in &skeleton.joints {
                 bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, joint.world_matrix * scale_mat);
             }
+
+            ctx.hitbox_shader.set_used();
+            ctx.hitbox_shader.set_projection_and_view(&ctx.render_context.gl, proj, view);
 
 
         },
