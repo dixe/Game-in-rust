@@ -34,9 +34,10 @@ A game in rust to learn rust and some opengl
 - [x] Play run when moving and idle when not
 - [x] Smooth transition between animations
 - [x] load weapon and achor to weapon bone
-- [ ] load hitbox from blender models
+- [x] load hitbox from blender models
 - [ ] Hitboxes from bones/some bones. fx arms and legs
-
+- [ ] Follow up/combo attack animations
+- [ ] properties on animation, like when the attack is active, when a follow up can be triggered and more
 
 # complex model
 based on multiple models, fx sword follow player, or hat or weapon, legs that are fixed to fx a player and when player move sword moves to. If we swing a sword we take into account the player physics too.

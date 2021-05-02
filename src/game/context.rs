@@ -251,6 +251,14 @@ impl Context {
         }
 
 
+        if self.render_hitboxes {
+            self.render_hitboxes();
+        }
+    }
+
+
+    fn render_hitboxes(&mut self) {
+
         //RENDER HITBOXES
 
         self.hitbox_shader.set_used();
@@ -262,18 +270,22 @@ impl Context {
         }
 
         for entity in self.entities.hitbox_entities() {
-            if entity.is_hit {
-                for hitbox in &entity.hit_boxes {
-                    let model = &self.models[&hitbox.name];
-                    render_gl::render_entity(&entity, &self.entities, model, &self.render_context.gl, &self.hitbox_shader);
+            match entity.is_hit {
+                true => self.hitbox_shader.set_vec3(&self.render_context.gl, "color", na::Vector3::new(1.0, 0.0, 0.0)),
+                false => self.hitbox_shader.set_vec3(&self.render_context.gl, "color", na::Vector3::new(1.0, 1.0, 1.0))
+            };
 
-                }
+            for hitbox in &entity.hit_boxes {
+                let model = &self.models[&hitbox.name];
+                render_gl::render_entity(&entity, &self.entities, model, &self.render_context.gl, &self.hitbox_shader);
+
             }
         }
 
         if !switched {
             self.render_context.switch_mode();
         }
+
     }
 
     pub fn reload_shaders(&mut self) {
