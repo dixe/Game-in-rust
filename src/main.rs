@@ -262,7 +262,7 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
 
     let player = &mut ctx.entities.player;
 
-    let mut animation_player = player.animation_player.as_mut().unwrap();
+    let animation_player = player.animation_player.as_mut().unwrap();
 
     let bones = player.bones.clone();
 
@@ -313,7 +313,7 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
 
             ctx.cube_shader.set_used();
 
-            let bones = player.bones.clone();
+            let _bones = player.bones.clone();
             let proj = ctx.camera().projection();
             let view = ctx.camera().view();
             ctx.cube_shader.set_projection_and_view(&ctx.render_context.gl, proj, view);

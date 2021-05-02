@@ -126,7 +126,7 @@ fn update_entities_rotation (ctx: &mut game::Context) {
 
 
 
-fn create_entity_collision_shape(entity_id: usize, ctx: &game::Context) -> Option<ConvexCollisionShape> {
+fn create_entity_collision_shape(_entity_id: usize, _ctx: &game::Context) -> Option<ConvexCollisionShape> {
 
     //TODO get an entity and thus we have physics, or take entities map
     None

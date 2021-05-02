@@ -146,7 +146,7 @@ impl GltfMeshes {
 
 
 
-pub fn meshes_from_gltf(file_path: &str, gl: &gl::Gl, index_map: &std::collections::HashMap<u16,usize>) -> Result<GltfMeshes, failure::Error> {
+pub fn meshes_from_gltf(file_path: &str, _gl: &gl::Gl, index_map: &std::collections::HashMap<u16,usize>) -> Result<GltfMeshes, failure::Error> {
 
     let (gltf, buffers, _) = gltf::import(file_path)?;
 

@@ -27,7 +27,7 @@ pub fn do_impulse_correction(ctx: &mut game::Context) -> Vec<EntityCollision>{
 
     impulse_collisions_resolution(&manifolds, &mut impulse_entities);
 
-    for e in impulse_entities.iter() {
+    for _e in impulse_entities.iter() {
 
         // Find a better way to not update walls
         // and update entities in general
@@ -37,8 +37,8 @@ pub fn do_impulse_correction(ctx: &mut game::Context) -> Vec<EntityCollision>{
     }
 
     manifolds.iter().filter_map(|m| {
-        let e1 = impulse_entities[m.entity_1_index];
-        let e2 = impulse_entities[m.entity_2_index];
+        let _e1 = impulse_entities[m.entity_1_index];
+        let _e2 = impulse_entities[m.entity_2_index];
 
 
         Some(EntityCollision {
@@ -111,7 +111,7 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
 
     let mut entities = Vec::new();
     let mut collision_shapes = Vec::new();
-    let mut no_checks = std::collections::HashSet::new();
+    let no_checks = std::collections::HashSet::new();
 
     // Get some data out of enitiy component system
     let player_physics = ctx.entities.player.physics;
@@ -179,14 +179,14 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
 
 
 
-fn do_impulse_collisions(entities: &[entity::Physics], shapes: &[ConvexCollisionShape], no_checks: std::collections::HashSet<(usize,usize)> ) -> Vec<Manifold> {
+fn do_impulse_collisions(entities: &[entity::Physics], shapes: &[ConvexCollisionShape], _no_checks: std::collections::HashSet<(usize,usize)> ) -> Vec<Manifold> {
 
     let mut res = Vec::new();
 
     for index_1 in 0..entities.len() {
-        let e1 = entities[index_1];
+        let _e1 = entities[index_1];
         for index_2 in (index_1+1)..entities.len() {
-            let e2 = entities[index_2];
+            let _e2 = entities[index_2];
             // if both are a wall we don't care about collision
             // TODO again find a better way, maybe just have a bool that says wall ??
             /*

@@ -235,7 +235,7 @@ mod tests {
     #[test]
     fn collision_sat_intersect_1() {
 
-        let physics = entity::Physics::new(0);
+        let physics = entity::Physics::new();
 
         let box1 = ConvexCollisionShape::rectangle(
             &na::Vector3::new(1.0, 0.8, 0.0),
@@ -262,7 +262,7 @@ mod tests {
     #[test]
     fn collision_sat_intersect_2() {
 
-        let physics = entity::Physics::new(0);
+        let physics = entity::Physics::new();
 
         let box1 = ConvexCollisionShape::rectangle(
             &na::Vector3::new(1.0, 0.0, 0.0),
@@ -290,7 +290,7 @@ mod tests {
     #[test]
     fn collision_sat_no_intersect() {
 
-        let physics = entity::Physics::new(0);
+        let physics = entity::Physics::new();
 
         let box1 = ConvexCollisionShape::rectangle(
             &na::Vector3::new(1.0, 0.0, 0.0),
@@ -316,7 +316,7 @@ mod tests {
     #[test]
     fn sat_shape_true_top_left() {
 
-        let physics = entity::Physics::new(0);
+        let physics = entity::Physics::new();
         let box_ = ConvexCollisionShape::rectangle(
             &na::Vector3::new(3.0, 0., 0.0),
             1.0,
@@ -343,7 +343,7 @@ mod tests {
     #[test]
     fn sat_shape_true_above() {
 
-        let physics = entity::Physics::new(0);
+        let physics = entity::Physics::new();
 
         let box_ = ConvexCollisionShape::rectangle(
             &na::Vector3::new(3.1, 0.0, 0.0),
@@ -365,7 +365,7 @@ mod tests {
     #[test]
     fn sat_shape_true_below() {
 
-        let physics = entity::Physics::new(0);
+        let physics = entity::Physics::new();
 
         let box_ = ConvexCollisionShape::rectangle(
             &na::Vector3::new(3.0, 0.0, 0.0),
@@ -387,7 +387,7 @@ mod tests {
     #[test]
     fn sat_shape_true_below_swap() {
 
-        let physics = entity::Physics::new(0);
+        let physics = entity::Physics::new();
 
         let box_ = ConvexCollisionShape::rectangle(
             &na::Vector3::new(3.0, 0.0, 0.0),
@@ -410,7 +410,7 @@ mod tests {
     #[test]
     fn sat_shape_true_1() {
 
-        let physics = entity::Physics::new(0);
+        let physics = entity::Physics::new();
 
         let wall = create_wall_collision_shape(
             na::Vector3::new(-9.0, 9.0,0.0),
@@ -428,7 +428,7 @@ mod tests {
     #[test]
     fn sat_shape_false() {
 
-        let physics = entity::Physics::new(0);
+        let physics = entity::Physics::new();
 
         let wall = create_wall_collision_shape(
             na::Vector3::new(9.0, -10.0, 0.0),
@@ -445,7 +445,7 @@ mod tests {
     #[test]
     fn sat_shape_false_2() {
 
-        let physics = entity::Physics::new(0);
+        let physics = entity::Physics::new();
 
         let wall = create_wall_collision_shape(
             na::Vector3::new(-9.0, 9.0,0.0),
@@ -463,7 +463,7 @@ mod tests {
 
     fn create_wall_collision_shape(v1: na::Vector3::<f32>, v2: na::Vector3::<f32>) -> ConvexCollisionShape {
 
-        let _physics = entity::Physics::new(0);
+        let _physics = entity::Physics::new();
 
         let line  = v2 - v1;
         let last = na::Vector3::new( line.y, line.x, line.z);

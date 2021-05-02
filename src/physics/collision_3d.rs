@@ -248,6 +248,7 @@ mod tests {
             v5: rot_mat * na::Vector3::new(1.0, 0.0, 1.0) + off_set,
             v6: rot_mat * na::Vector3::new(1.0, 1.0, 1.0) + off_set,
             v7: rot_mat * na::Vector3::new(0.0, 1.0, 1.0) + off_set,
+            name: "".to_string()
         }
     }
 

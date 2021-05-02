@@ -162,7 +162,7 @@ impl AnimationPlayer {
         let frame_time = current_animation.duration / current_animation.key_frames.len() as f32;
 
         // find current frame id
-        let frame_index = usize::min(current_animation.key_frames.len() - 1,  (self.elapsed / frame_time) as usize);
+        let _frame_index = usize::min(current_animation.key_frames.len() - 1,  (self.elapsed / frame_time) as usize);
 
         let (t, next_frame_index) = self.current_t();
 

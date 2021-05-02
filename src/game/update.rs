@@ -1,7 +1,7 @@
 use crate::game;
 use crate::physics;
 use crate::entity;
-use crate::action_system;
+
 use crate::controls;
 use crate::camera;
 use crate::render_gl;
@@ -22,10 +22,10 @@ fn format_matrix3(mat: &na::Matrix3::<f32>) {
     println!("{:.2} {:.2} {:.2} ", mat[6], mat[7], mat[8]);
 }
 
-pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::EntityCollision>) {
+pub fn update_game_state(ctx: &mut game::Context, _collisions: &Vec<physics::EntityCollision>) {
 
 
-    let delta = ctx.get_delta_time();
+    let _delta = ctx.get_delta_time();
 
 
     // also "action" system update fx sword arc ect
@@ -34,7 +34,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 
     // PLAYER MOVEMENT
 
-    let weapons_count = ctx.entities.weapons.count();
+    let _weapons_count = ctx.entities.weapons.count();
     update_player(ctx.cameras.current(), &ctx.controls, &mut ctx.entities.player, &ctx.entities.weapons, &ctx.animations);
 
 
@@ -43,7 +43,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
     // not play nice with borrow checker
 
 
-    let mut world_mat = ctx.entities.player.skeleton.joints[14].world_matrix;
+    let world_mat = ctx.entities.player.skeleton.joints[14].world_matrix;
     let player_model_mat = ctx.entities.player.physics.calculate_model_mat();
 
     let player = &ctx.entities.player;
@@ -80,7 +80,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 }
 
 
-fn resolve_player_hit_enemy(player: &entity::Entity, enemy: &mut entity::Entity) {
+fn resolve_player_hit_enemy(_player: &entity::Entity, _enemy: &mut entity::Entity) {
 
 
 }
@@ -179,7 +179,7 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
 
 fn perform_attack(entity: &mut entity::Entity) {
     match entity.get_state() {
-        entity::EntityState::Attack(start_frame, end_frame) => {
+        entity::EntityState::Attack(_start_frame, end_frame) => {
 
             let current_frame = entity.animation_player.as_ref().unwrap().current_frame_number();
 
@@ -207,7 +207,7 @@ fn can_perform_action(state: entity::EntityState) -> bool {
 
 fn update_player_state(player: &mut entity::Entity) {
     match player.get_state() {
-        entity::EntityState::Attack(start_frame, end_frame) => {
+        entity::EntityState::Attack(_start_frame, _end_frame) => {
             if player.animation_player.as_ref().unwrap().has_repeated {
                 player.update_state(entity::EntityState::Idle);
             }
@@ -220,7 +220,7 @@ fn update_player_state(player: &mut entity::Entity) {
 
 
 
-fn update_enemies_death(ctx: &mut game::Context) {
+fn update_enemies_death(_ctx: &mut game::Context) {
     /*
     let mut deaths = Vec::new();
     for e in &ctx.state.enemies {

@@ -1,9 +1,9 @@
 use nalgebra as na;
 
-use crate::game;
+
 use crate::entity;
 use crate::render_gl;
-use crate::cube;
+
 use crate::camera;
 use crate::scene;
 use crate::level;
@@ -84,7 +84,7 @@ impl Context {
     fn setup_enemy(&mut self) -> Result<(), failure::Error>  {
         let player_glb_path = "E:/repos/Game-in-rust/blender_models/player.glb";
 
-        let (skeleton, index_map) = render_gl::Skeleton::from_gltf(&player_glb_path)?;
+        let (_skeleton, index_map) = render_gl::Skeleton::from_gltf(&player_glb_path)?;
 
         let gltf_meshes = render_gl::meshes_from_gltf(&player_glb_path, &self.render_context.gl, &index_map)?;
 
@@ -101,7 +101,7 @@ impl Context {
 
         let (skeleton, index_map) = render_gl::Skeleton::from_gltf(&glb_path)?;
 
-        let gltf_meshes = render_gl::meshes_from_gltf(&glb_path, &self.render_context.gl, &index_map)?;
+        let _gltf_meshes = render_gl::meshes_from_gltf(&glb_path, &self.render_context.gl, &index_map)?;
 
         let animations = load_animations(&glb_path, &skeleton).unwrap();
 
@@ -126,7 +126,7 @@ impl Context {
 
         self.animations.insert("player".to_string(), animations.clone());
 
-        let mut animation_player = render_gl::AnimationPlayer::new(render_gl::Animation::Idle, animations);
+        let animation_player = render_gl::AnimationPlayer::new(render_gl::Animation::Idle, animations);
         let gltf_meshes = render_gl::meshes_from_gltf(&player_glb_path, &self.render_context.gl, &index_map)?;
 
         let mut bones = Vec::new();
@@ -173,7 +173,7 @@ impl Context {
 
         let model = entity::Model::skinned_model(model_mesh);
 
-        let model_name = name.to_string();
+        let _model_name = name.to_string();
 
         self.models.insert(name.to_string(), model);
 
@@ -186,7 +186,7 @@ impl Context {
 
         let model = entity::Model::mesh(model_mesh);
 
-        let model_name = name.to_string();
+        let _model_name = name.to_string();
 
         self.models.insert(name.to_string(), model);
     }
