@@ -72,8 +72,13 @@ impl Context {
 
         let mut ctx = empty()?;
 
+        println!("Setup player");
         ctx.setup_player()?;
+
+        println!("Setup weapon");
         ctx.load_weapon()?;
+
+        println!("Setup enemy");
         ctx.setup_enemy()?;
 
         Ok(ctx)

@@ -58,15 +58,12 @@ pub fn update_game_state(ctx: &mut game::Context, _collisions: &Vec<physics::Ent
 
 
     // Weapon collisions
-
-
-
     // only if player is attacking and attack animation is in attack state
-    if let entity::EntityState::Attack(start, end) = player.get_state()  {
+    if let entity::EntityState::Attack(info) = player.get_state()  {
 
         let current_frame = player.animation_player.as_ref().unwrap().current_frame_number();
 
-        if current_frame >= start && current_frame <= end {
+        if current_frame >= info.hit_start_frame && current_frame <= info.hit_end_frame {
 
             for dummy in ctx.entities.enemies.values_mut() {
                 dummy.is_hit = false;
@@ -111,8 +108,6 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
 
     // UPDATE STATE, IE WHEN ATTACK IS DONE SET BACK TO IDLE
     update_player_state(player);
-
-
 
 
     if controls.attack {
@@ -160,15 +155,13 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
 
             let mut target_state = entity::EntityState::Idle;
 
-
             if player.physics.velocity.magnitude() > 0.0 {
 
                 target_state = entity::EntityState::Moving;
             }
 
             if player.get_state() != target_state {
-
-                player.update_state(target_state);
+                player.queued_action = Some(target_state);
             }
         },
 
@@ -179,43 +172,72 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
 
 fn perform_attack(entity: &mut entity::Entity) {
     match entity.get_state() {
-        entity::EntityState::Attack(_start_frame, end_frame) => {
+        entity::EntityState::Attack(info) => {
 
             let current_frame = entity.animation_player.as_ref().unwrap().current_frame_number();
 
-            if current_frame > end_frame {
-                println!("COMBO");
-                //entity.update_state(entity::EntityState::Attack(9, 20));
-            }
+            // this is to not buffer for too long, otherwise it feels as if
+            // the attack was not indented
+            if current_frame >= info.hit_start_frame {
 
+                let attackInfo = entity::AttackInfo {
+                    combo_num: 1 - info.combo_num,
+                    hit_start_frame: 9,
+                    hit_end_frame: 20,
+                };
+
+                entity.queued_action = Some(entity::EntityState::Attack(attackInfo));
+            }
         },
+
         _ => {
-            entity.update_state(entity::EntityState::Attack(9, 20));
+
+            let attackInfo = entity::AttackInfo {
+                combo_num: 0,
+                hit_start_frame: 9,
+                hit_end_frame: 20,
+            };
+
+            entity.queued_action = Some(entity::EntityState::Attack(attackInfo));
         }
     };
-
 }
 
 fn can_perform_action(state: entity::EntityState) -> bool {
     match state {
         entity::EntityState::Idle => true,
         entity::EntityState::Moving => true,
-        entity::EntityState::Attack(_,_) => false,
+        entity::EntityState::Attack(_) => false,
     }
 }
 
 
 fn update_player_state(player: &mut entity::Entity) {
+    let mut next_action = false;
     match player.get_state() {
-        entity::EntityState::Attack(_start_frame, _end_frame) => {
-            if player.animation_player.as_ref().unwrap().has_repeated {
-                player.update_state(entity::EntityState::Idle);
-            }
+        entity::EntityState::Attack(info) => {
 
-            // check if animation is don
+            // CHECK IF WE ARE IN COMBO FRAME RANGE
+
+            let current_frame = player.animation_player.as_ref().unwrap().current_frame_number();
+            next_action |= current_frame >= info.hit_end_frame;
+
+            if player.animation_player.as_ref().unwrap().has_repeated {
+                next_action = true;
+                if player.queued_action == None {
+                    player.queued_action = Some(entity::EntityState::Idle);
+                }
+                // check if animation is don
+            }
         },
-        _ => {}
+        _ => {
+            next_action = true;
+        }
     };
+
+    if next_action {
+        player.next_action();
+    }
 }
 
 

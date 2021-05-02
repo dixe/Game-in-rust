@@ -8,6 +8,7 @@ pub enum Animation {
     Idle,
     Walk,
     Attack,
+    AttackFollow,
     Transition(KeyframeAnimation)
 }
 
@@ -81,7 +82,10 @@ impl AnimationPlayer {
             },
             Animation::Attack => {
                 &mut self.animations.attack
-            }
+            },
+            Animation::AttackFollow => {
+                &mut self.animations.attack_follow
+            },
             Animation::Transition(ref mut anim) => anim
         };
 
@@ -114,6 +118,7 @@ impl AnimationPlayer {
             Animation::Idle => self.animations.idle.key_frames[0].clone(),
             Animation::Walk => self.animations.walk.key_frames[0].clone(),
             Animation::Attack => self.animations.attack.key_frames[0].clone(),
+            Animation::AttackFollow => self.animations.attack_follow.key_frames[0].clone(),
             Animation::Transition(ref anim) => anim.key_frames[0].clone(),
         };
 
@@ -147,6 +152,9 @@ impl AnimationPlayer {
             },
             Animation::Attack => {
                 &self.animations.attack
+            },
+            Animation::AttackFollow => {
+                &self.animations.attack_follow
             },
             Animation::Transition(ref anim) => {
                 anim
@@ -206,6 +214,10 @@ impl AnimationPlayer {
                 self.animations.idle.cyclic
             },
             Animation::Attack => {
+                self.animations.attack.cyclic
+            },
+
+            Animation::AttackFollow => {
                 self.animations.attack.cyclic
             },
             Animation::Transition(_) => {

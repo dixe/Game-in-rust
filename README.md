@@ -35,16 +35,15 @@ A game in rust to learn rust and some opengl
 - [x] Smooth transition between animations
 - [x] load weapon and achor to weapon bone
 - [x] load hitbox from blender models
-- [ ] Hitboxes from bones/some bones. fx arms and legs
 - [ ] Follow up/combo attack animations
 - [ ] properties on animation, like when the attack is active, when a follow up can be triggered and more
 
-# complex model
-based on multiple models, fx sword follow player, or hat or weapon, legs that are fixed to fx a player and when player move sword moves to. If we swing a sword we take into account the player physics too.
+
+
 
 # Cool stuff
 distortion shader fx https://lindenreid.wordpress.com/2018/03/05/heat-distortion-shader-tutorial/#:~:text=The%20basic%20premise%20of%20the,uses%20to%20sample%20that%20texture.
 
 
-# Export of models from blender
-Z up and -X forward
+## future improvments/ challanges
+- [ ] Hitboxes from bones/some bones. fx arms and legs

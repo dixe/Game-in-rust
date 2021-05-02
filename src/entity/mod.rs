@@ -7,7 +7,7 @@ mod model;
 pub use self::model::{Model};
 
 mod entity;
-pub use self::entity::{Entity, EntityState};
+pub use self::entity::{Entity, EntityState, AttackInfo};
 
 mod entities;
 pub use self::entities::{Entities, EntitiesCollection};

@@ -14,14 +14,24 @@ pub struct Entity {
     pub hit_boxes: Vec::<physics::CollisionBox>,
     pub weapon_id: usize,
     pub is_hit: bool,
+    pub queued_action: Option<EntityState>,
+}
+
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct AttackInfo {
+    pub combo_num: usize,
+    pub hit_start_frame: usize,
+    pub hit_end_frame: usize,
 
 }
+
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum EntityState {
     Idle,
     Moving,
-    Attack(usize, usize),
+    Attack(AttackInfo),
 }
 
 impl Entity {
@@ -41,6 +51,7 @@ impl Entity {
             weapon_id: 9999999,
             hit_boxes: Vec::<physics::CollisionBox>::new(),
             is_hit: false,
+            queued_action: None
         }
     }
 
@@ -56,14 +67,35 @@ impl Entity {
         }
     }
 
-    pub fn update_state(&mut self, state: EntityState) {
+
+    pub fn next_action(&mut self) {
+
+        match self.queued_action {
+            Some(action) => {
+                self.update_state(action);
+                self.queued_action = None;
+            },
+            None => {
+            }
+        };
+    }
+
+    fn update_state(&mut self, state: EntityState) {
+
         self.state = state;
 
         if let Some(animation_player) = &mut self.animation_player {
 
             match state {
                 EntityState::Moving => animation_player.set_current(render_gl::Animation::Walk, &self.skeleton),
-                EntityState::Attack(_,_) => animation_player.set_current(render_gl::Animation::Attack, &self.skeleton),
+                EntityState::Attack(info) => {
+                    if info.combo_num == 1 {
+                        animation_player.set_current(render_gl::Animation::AttackFollow, &self.skeleton)
+                    }
+                    else {
+                        animation_player.set_current(render_gl::Animation::Attack, &self.skeleton)
+                    }
+                },
                 EntityState::Idle => animation_player.set_current(render_gl::Animation::Idle, &self.skeleton),
             };
         };

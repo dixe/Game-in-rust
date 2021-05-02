@@ -55,6 +55,7 @@ impl From<gltf::Error> for Error {
 pub struct PlayerAnimations {
     pub walk: KeyframeAnimation,
     pub attack: KeyframeAnimation,
+    pub attack_follow: KeyframeAnimation,
     pub t_pose: KeyframeAnimation,
     pub idle: KeyframeAnimation,
 }
@@ -68,31 +69,25 @@ pub fn load_animations(file_path: &str, skeleton: &Skeleton) -> Result<PlayerAni
     // This is not the FPS is will be played back at, by used to normalise longer and shorter animaions
     // to be invariant of keyframes
     let frame_normalize = 40.0;
-
-
     let t_pose_frames = animations.get("t_pose").unwrap();
-
     let walk_frames = animations.get("walk").unwrap();
-
     let idle_frames = animations.get("idle").unwrap();
-
     let attack_frames = animations.get("attack").unwrap();
+    let attack_follow_frames = animations.get("attack_follow").unwrap();
 
 
     let t_pose = KeyframeAnimation::new(t_pose_frames.len() as f32 / frame_normalize, t_pose_frames.clone(), true);
-
     let walk = KeyframeAnimation::new(walk_frames.len() as f32 / frame_normalize, walk_frames.clone(), true);
-
     let idle = KeyframeAnimation::new(idle_frames.len() as f32 / frame_normalize, idle_frames.clone(), true);
-
     let attack = KeyframeAnimation::new(attack_frames.len()  as f32 / frame_normalize, attack_frames.clone(), false);
-
+    let attack_follow = KeyframeAnimation::new(attack_frames.len()  as f32 / frame_normalize, attack_follow_frames.clone(), false);
 
     Ok(PlayerAnimations {
         t_pose,
         walk,
         idle,
-        attack
+        attack,
+        attack_follow
     })
 }
 
