@@ -169,8 +169,10 @@ pub fn meshes_from_gltf(file_path: &str, gl: &gl::Gl, index_map: &std::collectio
 
 
     for node in gltf.nodes() {
+        println!("EXTRA MESH {} {:?}", node.name().unwrap(), node.extras());
         match node.mesh() {
             Some(m) => {
+
                 res.meshes.insert(node.name().unwrap().to_string(), load_gltf_mesh_data(&m, &buffers, &index_map, &inter_joint_index)?);
             },
             _ => {}

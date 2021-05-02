@@ -59,14 +59,19 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 
 
 
-    // only if player is attacking
-    if ctx.entities.player.get_state() == entity::EntityState::Attack {
-        for dummy in ctx.entities.enemies.values_mut() {
-            dummy.is_hit = false;
-            if entity_collision(&hammer, dummy) {
-                resolve_player_hit_enemy(player, dummy);
-                println!("collision");
-                dummy.is_hit = true;
+    // only if player is attacking and attack animation is in attack state
+    if let entity::EntityState::Attack(start, end) = player.get_state()  {
+
+        let current_frame = player.animation_player.as_ref().unwrap().current_frame_number();
+
+        if current_frame >= start && current_frame <= end {
+
+            for dummy in ctx.entities.enemies.values_mut() {
+                dummy.is_hit = false;
+                if entity_collision(&hammer, dummy) {
+                    resolve_player_hit_enemy(player, dummy);
+                    dummy.is_hit = true;
+                }
             }
         }
     }
@@ -106,13 +111,15 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
     update_player_state(player);
 
 
-    if !can_perform_action(player.get_state()) {
-        game::update_velocity(&mut player.physics, na::Vector3::new(0.0, 0.0, 0.0));
+    if controls.attack {
+        //TODO get attack start and end frame from player/current weapon
+        perform_attack(player);
+
         return;
     }
 
-    if controls.attack {
-        player.update_state(entity::EntityState::Attack);
+    if !can_perform_action(player.get_state()) {
+        game::update_velocity(&mut player.physics, na::Vector3::new(0.0, 0.0, 0.0));
         return;
     }
 
@@ -147,19 +154,38 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
     }
 }
 
+
+fn perform_attack(entity: &mut entity::Entity) {
+    match entity.get_state() {
+        entity::EntityState::Attack(start_frame, end_frame) => {
+
+            let current_frame = entity.animation_player.as_ref().unwrap().current_frame_number();
+
+            if current_frame > end_frame {
+                println!("COMBO");
+                entity.update_state(entity::EntityState::Attack(9, 20));
+            }
+
+        },
+        _ => {
+            entity.update_state(entity::EntityState::Attack(9, 20));
+        }
+    };
+
+}
+
 fn can_perform_action(state: entity::EntityState) -> bool {
     match state {
         entity::EntityState::Idle => true,
         entity::EntityState::Moving => true,
-        entity::EntityState::Attack => false,
+        entity::EntityState::Attack(_,_) => false,
     }
 }
 
 
 fn update_player_state(player: &mut entity::Entity) {
     match player.get_state() {
-        entity::EntityState::Attack => {
-
+        entity::EntityState::Attack(start_frame, end_frame) => {
             if player.animation_player.as_ref().unwrap().has_repeated {
                 player.update_state(entity::EntityState::Idle);
             }

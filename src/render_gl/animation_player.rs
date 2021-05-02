@@ -98,13 +98,22 @@ impl AnimationPlayer {
     }
 
 
+    pub fn current_frame_number(&self) -> usize {
+        let current_animation = self.current_animation();
+        let frame_time = current_animation.duration / current_animation.key_frames.len() as f32;
+
+
+        usize::min(current_animation.key_frames.len() - 1,  (self.elapsed / frame_time) as usize)
+
+    }
+
     fn current_frame(&self, skeleton: &Skeleton) -> KeyFrame {
 
         let current_animation = self.current_animation();
 
         let frame_time = current_animation.duration / current_animation.key_frames.len() as f32;
 
-        // find next frame id
+        // find current frame id
         let frame_index = usize::min(current_animation.key_frames.len() - 1,  (self.elapsed / frame_time) as usize);
 
         let (t, next_frame_index) = self.current_t();

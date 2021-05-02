@@ -20,7 +20,7 @@ pub struct Entity {
 pub enum EntityState {
     Idle,
     Moving,
-    Attack,
+    Attack(usize, usize),
 }
 
 impl Entity {
@@ -62,7 +62,7 @@ impl Entity {
 
             match state {
                 EntityState::Moving => animation_player.set_current(render_gl::PlayerAnimation::Walk, &self.skeleton),
-                EntityState::Attack => animation_player.set_current(render_gl::PlayerAnimation::Attack, &self.skeleton),
+                EntityState::Attack(_,_) => animation_player.set_current(render_gl::PlayerAnimation::Attack, &self.skeleton),
                 EntityState::Idle => animation_player.set_current(render_gl::PlayerAnimation::Idle, &self.skeleton),
             };
         };

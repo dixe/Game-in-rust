@@ -76,7 +76,6 @@ pub fn load_animations(file_path: &str, skeleton: &Skeleton) -> Result<PlayerAni
 
     let idle_frames = animations.get("idle").unwrap();
 
-
     let attack_frames = animations.get("attack").unwrap();
 
 
