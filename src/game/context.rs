@@ -55,6 +55,8 @@ pub struct Context {
     // but something where we can add and remove from
     pub models: std::collections::HashMap<String, entity::Model>,
 
+    pub animations: std::collections::HashMap<String, render_gl::PlayerAnimations>,
+
     pub actions: action_system::ActionsImpl,
 
 
@@ -71,7 +73,7 @@ impl Context {
         let mut ctx = empty()?;
 
         ctx.setup_player()?;
-
+        ctx.load_weapon()?;
         ctx.setup_enemy()?;
 
         Ok(ctx)
@@ -94,6 +96,26 @@ impl Context {
 
     }
 
+    fn load_weapon(&mut self) ->  Result<(), failure::Error>  {
+        let glb_path = "E:/repos/Game-in-rust/blender_models/hammer.glb";
+
+        let (skeleton, index_map) = render_gl::Skeleton::from_gltf(&glb_path)?;
+
+        let gltf_meshes = render_gl::meshes_from_gltf(&glb_path, &self.render_context.gl, &index_map)?;
+
+        let animations = load_animations(&glb_path, &skeleton).unwrap();
+
+        let gltf_meshes = render_gl::meshes_from_gltf(&glb_path, &self.render_context.gl, &index_map)?;
+
+        let weapon = self.setup_hitbox_model("hammer", &gltf_meshes);
+
+        self.animations.insert("hammer".to_string(), animations);
+        self.entities.weapons.add(weapon);
+
+        Ok(())
+    }
+
+
     fn setup_player(&mut self) -> Result<(), failure::Error>  {
 
         let player_glb_path = "E:/repos/Game-in-rust/blender_models/player.glb";
@@ -102,7 +124,9 @@ impl Context {
 
         let animations = load_animations(&player_glb_path, &skeleton).unwrap();
 
-        let mut animation_player = render_gl::AnimationPlayer::new(render_gl::PlayerAnimation::Idle, &skeleton, animations);
+        self.animations.insert("player".to_string(), animations.clone());
+
+        let mut animation_player = render_gl::AnimationPlayer::new(render_gl::Animation::Idle, animations);
         let gltf_meshes = render_gl::meshes_from_gltf(&player_glb_path, &self.render_context.gl, &index_map)?;
 
         let mut bones = Vec::new();
@@ -112,23 +136,15 @@ impl Context {
         }
 
         // MODELS
-
         let model_name = "player";
         self.add_skinned_model(model_name, &gltf_meshes);
 
-
         let mut player = entity::Entity::new(Some(animation_player), model_name.to_string());
-
         player.skeleton = skeleton;
-
         player.bones = bones;
 
         self.entities.player = player;
 
-
-        let hammer = self.setup_hitbox_model("hammer", &gltf_meshes);
-
-        self.entities.weapons.add(hammer);
 
         Ok(())
     }
@@ -141,7 +157,7 @@ impl Context {
 
         self.add_model(name, &gltf_meshes);
 
-        let entity = entity::create_weapon(name.to_string(), &hitboxes);
+        let entity = entity::create_hitbox_entity(name.to_string(), &hitboxes);
 
         for hb_kv in &hitboxes {
             self.add_model(&hb_kv.0, &gltf_meshes);
@@ -377,6 +393,7 @@ fn empty() -> Result<Context, failure::Error> {
         entities,
         cameras,
         models: std::collections::HashMap::new(),
+        animations: std::collections::HashMap::new(),
         render_hitboxes: false,
     })
 }

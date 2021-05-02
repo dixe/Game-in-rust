@@ -282,7 +282,7 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
 
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::T) {
         Some(true) => {
-            animation_player.set_current(render_gl::PlayerAnimation::TPose, &skeleton);
+            animation_player.set_current(render_gl::Animation::TPose, &skeleton);
 
         },
         _ => {}
@@ -291,7 +291,7 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::K) {
         Some(true) => {
             println!("Setting to waalk");
-            animation_player.set_current(render_gl::PlayerAnimation::Walk, &skeleton);
+            animation_player.set_current(render_gl::Animation::Walk, &skeleton);
         },
         _ => {
         }

@@ -35,7 +35,7 @@ pub use self::keyframe_animation::{KeyframeAnimation, PlayerAnimations, Transfor
 
 
 mod animation_player;
-pub use self::animation_player::{AnimationPlayer, PlayerAnimation};
+pub use self::animation_player::{AnimationPlayer, Animation};
 
 mod mesh;
 pub use self::mesh::{Mesh, SkinnedMesh, GltfMeshes, meshes_from_gltf};

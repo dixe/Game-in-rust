@@ -1,7 +1,7 @@
 use crate::physics::CollisionBox;
 use crate::entity::*;
 
-pub fn create_weapon(model_name: String, hitboxes:  &Vec::<(String,Vec<na::Vector3::<f32>>)>) -> Entity {
+pub fn create_hitbox_entity(model_name: String, hitboxes:  &Vec::<(String,Vec<na::Vector3::<f32>>)>) -> Entity {
 
     let mut entity = Entity::new(None, model_name);
 

@@ -150,10 +150,6 @@ impl Skeleton {
 
             skeleton.calc_t_pose();
 
-            for i in 0..skeleton.joints.len() {
-                println!("{:#?} {}", skeleton.joints[i].name, i);
-            }
-
             return Ok((skeleton, index_map));
 
         }

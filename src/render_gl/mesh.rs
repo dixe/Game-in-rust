@@ -169,7 +169,6 @@ pub fn meshes_from_gltf(file_path: &str, gl: &gl::Gl, index_map: &std::collectio
 
 
     for node in gltf.nodes() {
-        println!("EXTRA MESH {} {:?}", node.name().unwrap(), node.extras());
         match node.mesh() {
             Some(m) => {
 

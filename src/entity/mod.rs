@@ -10,7 +10,7 @@ mod entity;
 pub use self::entity::{Entity, EntityState};
 
 mod entities;
-pub use self::entities::{Entities};
+pub use self::entities::{Entities, EntitiesCollection};
 
 mod health;
 pub use self::health::{Health};
@@ -23,5 +23,5 @@ mod action;
 pub use self::action::{ActionData, ActionsInfo};
 
 
-mod weapon;
-pub use self::weapon::{create_weapon};
+mod hitbox_entity;
+pub use self::hitbox_entity::{create_hitbox_entity};

@@ -4,6 +4,7 @@ use crate::entity;
 use crate::action_system;
 use crate::controls;
 use crate::camera;
+use crate::render_gl;
 
 
 fn format_matrix4(mat: &na::Matrix4::<f32>) {
@@ -33,7 +34,8 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 
     // PLAYER MOVEMENT
 
-    update_player(ctx.cameras.current(), &ctx.controls, &mut ctx.entities.player, delta);
+    let weapons_count = ctx.entities.weapons.count();
+    update_player(ctx.cameras.current(), &ctx.controls, &mut ctx.entities.player, &ctx.entities.weapons, &ctx.animations);
 
 
     // make a function on player, weapon anchor mat and just use that as world_matrix
@@ -45,13 +47,13 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
     let player_model_mat = ctx.entities.player.physics.calculate_model_mat();
 
     let player = &ctx.entities.player;
-    let hammer = ctx.entities.weapons.get_mut(player.weapon_id).unwrap(); // Maybe not always true
 
+    let weapon = match ctx.entities.weapons.get_mut(player.weapon_id) {
+        Some(weapon) => weapon,
+        None => &mut ctx.entities.default_weapon // default weapon for player
+    };
 
-    // Move player weapon (hammer)
-    hammer.physics.apply_transform(player_model_mat * world_mat);
-
-
+    weapon.physics.apply_transform(player_model_mat * world_mat);
     let player = &ctx.entities.player;
 
 
@@ -68,7 +70,7 @@ pub fn update_game_state(ctx: &mut game::Context, collisions: &Vec<physics::Enti
 
             for dummy in ctx.entities.enemies.values_mut() {
                 dummy.is_hit = false;
-                if entity_collision(&hammer, dummy) {
+                if entity_collision(&weapon, dummy) {
                     resolve_player_hit_enemy(player, dummy);
                     dummy.is_hit = true;
                 }
@@ -105,10 +107,12 @@ fn entity_collision(entity_1: &entity::Entity, entity_2: &entity::Entity) -> boo
 
 
 
-fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, player: &mut entity::Entity,  _delta:  f32) {
+fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, player: &mut entity::Entity, weapons: &entity::EntitiesCollection, animations: &std::collections::HashMap<String, render_gl::PlayerAnimations>) {
 
     // UPDATE STATE, IE WHEN ATTACK IS DONE SET BACK TO IDLE
     update_player_state(player);
+
+
 
 
     if controls.attack {
@@ -121,6 +125,24 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
     if !can_perform_action(player.get_state()) {
         game::update_velocity(&mut player.physics, na::Vector3::new(0.0, 0.0, 0.0));
         return;
+    }
+
+
+    if controls.next_weapon {
+        // Also change the animations on the animation player
+        player.weapon_id = (player.weapon_id + 1) % (weapons.count() + 1);
+
+
+        let new_weapon_name = match weapons.get(player.weapon_id) {
+            Some(w) => &w.model_name,
+            None => &player.model_name,
+        };
+
+        let new_animations = animations.get(new_weapon_name).unwrap();
+
+        player.animation_player.as_mut().unwrap().set_animations(new_animations.clone());
+        println!("Weapon {:#?}", new_weapon_name);
+
     }
 
     match camera.mode() {
@@ -163,7 +185,7 @@ fn perform_attack(entity: &mut entity::Entity) {
 
             if current_frame > end_frame {
                 println!("COMBO");
-                entity.update_state(entity::EntityState::Attack(9, 20));
+                //entity.update_state(entity::EntityState::Attack(9, 20));
             }
 
         },

@@ -3,6 +3,7 @@ use crate::entity::*;
 
 pub struct Entities {
     pub player: Entity,
+    pub default_weapon: Entity,
     pub weapons: EntitiesCollection,
     pub enemies: EntitiesCollection,
 }
@@ -44,6 +45,10 @@ impl EntitiesCollection {
         self.entities.values()
     }
 
+    pub fn count(&self) -> usize {
+        self.entities.len()
+    }
+
 }
 
 impl Entities {
@@ -52,7 +57,8 @@ impl Entities {
         Entities {
             enemies: EntitiesCollection::new(),
             weapons: EntitiesCollection::new(),
-            player: Entity::new(None, "Placeholder".to_string())
+            player: Entity::new(None, "Placeholder".to_string()),
+            default_weapon: Entity::new(None, "default_weapon".to_string())
         }
     }
 
@@ -68,16 +74,24 @@ impl Entities {
 
         res.push(&self.player);
 
-        for w in self.weapons.entities.values() {
-            res.push(&w);
+
+
+        // and weapons used
+
+        match self.weapons.entities.get(&self.player.weapon_id) {
+            Some(w) => {
+                res.push(w);
+            },
+            _ =>{}
         }
+
 
         for e in self.enemies.entities.values() {
-            res.push(&e);
+            res.push(e);
         }
 
-
         res
+
 
     }
 

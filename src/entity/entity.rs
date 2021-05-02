@@ -13,7 +13,8 @@ pub struct Entity {
     pub skeleton: render_gl::Skeleton,
     pub hit_boxes: Vec::<physics::CollisionBox>,
     pub weapon_id: usize,
-    pub is_hit: bool
+    pub is_hit: bool,
+
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -37,7 +38,7 @@ impl Entity {
                 name: "empty".to_string(),
                 joints: Vec::new(),
             },
-            weapon_id: 0,
+            weapon_id: 9999999,
             hit_boxes: Vec::<physics::CollisionBox>::new(),
             is_hit: false,
         }
@@ -61,9 +62,9 @@ impl Entity {
         if let Some(animation_player) = &mut self.animation_player {
 
             match state {
-                EntityState::Moving => animation_player.set_current(render_gl::PlayerAnimation::Walk, &self.skeleton),
-                EntityState::Attack(_,_) => animation_player.set_current(render_gl::PlayerAnimation::Attack, &self.skeleton),
-                EntityState::Idle => animation_player.set_current(render_gl::PlayerAnimation::Idle, &self.skeleton),
+                EntityState::Moving => animation_player.set_current(render_gl::Animation::Walk, &self.skeleton),
+                EntityState::Attack(_,_) => animation_player.set_current(render_gl::Animation::Attack, &self.skeleton),
+                EntityState::Idle => animation_player.set_current(render_gl::Animation::Idle, &self.skeleton),
             };
         };
     }

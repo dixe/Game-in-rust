@@ -3,7 +3,7 @@ use crate::render_gl::{KeyframeAnimation, KeyFrame, Skeleton, PlayerAnimations};
 
 
 #[derive(Debug, Clone)]
-pub enum PlayerAnimation {
+pub enum Animation {
     TPose,
     Idle,
     Walk,
@@ -13,8 +13,8 @@ pub enum PlayerAnimation {
 
 #[derive(Clone)]
 pub struct AnimationPlayer {
-    current_animation: PlayerAnimation,
-    next_animation: Option<PlayerAnimation>,
+    current_animation: Animation,
+    next_animation: Option<Animation>,
     elapsed: f32,
     pub has_repeated: bool,
     pub animations: PlayerAnimations,
@@ -22,8 +22,7 @@ pub struct AnimationPlayer {
 
 impl AnimationPlayer {
 
-
-    pub fn new(current_animation: PlayerAnimation, skeleton: &Skeleton, animations: PlayerAnimations) -> Self {
+    pub fn new(current_animation: Animation, animations: PlayerAnimations) -> Self {
         AnimationPlayer {
             current_animation,
             elapsed: 0.0,
@@ -33,9 +32,9 @@ impl AnimationPlayer {
         }
     }
 
-    pub fn set_current(&mut self, animation: PlayerAnimation, skeleton: &Skeleton) {
+    pub fn set_current(&mut self, animation: Animation, skeleton: &Skeleton) {
         let should_transition = match animation {
-            PlayerAnimation::Attack => false,
+            Animation::Attack => false,
             _ => true,
         };
 
@@ -51,13 +50,71 @@ impl AnimationPlayer {
     }
 
 
-    fn transition_into_next(&mut self, animation: PlayerAnimation, skeleton: &Skeleton) {
+    pub fn current_frame_number(&self) -> usize {
+        let current_animation = self.current_animation();
+        let frame_time = current_animation.duration / current_animation.key_frames.len() as f32;
+
+
+        usize::min(current_animation.key_frames.len() - 1,  (self.elapsed / frame_time) as usize)
+
+    }
+
+    pub fn set_animations(&mut self, animations: PlayerAnimations) {
+        self.animations = animations;
+    }
+
+    pub fn set_frame_bones(&mut self, bones: &mut Vec::<na::Matrix4::<f32>>, skeleton: &mut Skeleton, delta: f32) {
+
+        let (t, next_frame_index) = self.current_t();
+
+        self.elapsed += delta;
+
+        let current_animation = match self.current_animation {
+            Animation::TPose => {
+                &mut self.animations.t_pose
+            },
+            Animation::Walk => {
+                &mut self.animations.walk
+            },
+            Animation::Idle => {
+                &mut self.animations.idle
+            },
+            Animation::Attack => {
+                &mut self.animations.attack
+            }
+            Animation::Transition(ref mut anim) => anim
+        };
+
+        current_animation.move_to_key_frame(bones, skeleton, next_frame_index, t);
+
+        if self.elapsed > current_animation.duration {
+            match self.next_animation {
+                Some(ref next) => {
+                    self.current_animation = next.clone();
+                    self.next_animation = None;
+                    self.has_repeated = false;
+                },
+                _ => {
+                    self.has_repeated = true;
+                }
+            };
+
+            if self.is_current_cyclic() {
+                self.elapsed = 0.0;
+            }
+        }
+    }
+
+
+
+
+    fn transition_into_next(&mut self, animation: Animation, skeleton: &Skeleton) {
         let next_start_key_frame = match animation {
-            PlayerAnimation::TPose => self.animations.t_pose.key_frames[0].clone(),
-            PlayerAnimation::Idle => self.animations.idle.key_frames[0].clone(),
-            PlayerAnimation::Walk => self.animations.walk.key_frames[0].clone(),
-            PlayerAnimation::Attack => self.animations.attack.key_frames[0].clone(),
-            PlayerAnimation::Transition(ref anim) => anim.key_frames[0].clone(),
+            Animation::TPose => self.animations.t_pose.key_frames[0].clone(),
+            Animation::Idle => self.animations.idle.key_frames[0].clone(),
+            Animation::Walk => self.animations.walk.key_frames[0].clone(),
+            Animation::Attack => self.animations.attack.key_frames[0].clone(),
+            Animation::Transition(ref anim) => anim.key_frames[0].clone(),
         };
 
         self.next_animation = Some(animation);
@@ -71,7 +128,7 @@ impl AnimationPlayer {
         self.elapsed = 0.0;
 
 
-        self.current_animation = PlayerAnimation::Transition(KeyframeAnimation::new(transition_time, keyFrames, false));
+        self.current_animation = Animation::Transition(KeyframeAnimation::new(transition_time, keyFrames, false));
         self.has_repeated = false;
     }
 
@@ -79,33 +136,24 @@ impl AnimationPlayer {
     fn current_animation(&self) -> &KeyframeAnimation {
 
         match &self.current_animation {
-            PlayerAnimation::TPose => {
+            Animation::TPose => {
                 &self.animations.t_pose
             },
-            PlayerAnimation::Walk => {
+            Animation::Walk => {
                 &self.animations.walk
             },
-            PlayerAnimation::Idle => {
+            Animation::Idle => {
                 &self.animations.idle
             },
-            PlayerAnimation::Attack => {
+            Animation::Attack => {
                 &self.animations.attack
             },
-            PlayerAnimation::Transition(ref anim) => {
+            Animation::Transition(ref anim) => {
                 anim
             }
         }
     }
 
-
-    pub fn current_frame_number(&self) -> usize {
-        let current_animation = self.current_animation();
-        let frame_time = current_animation.duration / current_animation.key_frames.len() as f32;
-
-
-        usize::min(current_animation.key_frames.len() - 1,  (self.elapsed / frame_time) as usize)
-
-    }
 
     fn current_frame(&self, skeleton: &Skeleton) -> KeyFrame {
 
@@ -123,9 +171,6 @@ impl AnimationPlayer {
     }
 
 
-    pub fn set_animations(&mut self, animations: PlayerAnimations) {
-        self.animations = animations;
-    }
 
 
     fn current_t(&self) -> (f32, usize) {
@@ -151,19 +196,19 @@ impl AnimationPlayer {
 
     fn is_current_cyclic(&self) -> bool {
         match &self.current_animation {
-            PlayerAnimation::TPose => {
+            Animation::TPose => {
                 self.animations.t_pose.cyclic
             },
-            PlayerAnimation::Walk => {
+            Animation::Walk => {
                 self.animations.walk.cyclic
             },
-            PlayerAnimation::Idle => {
+            Animation::Idle => {
                 self.animations.idle.cyclic
             },
-            PlayerAnimation::Attack => {
+            Animation::Attack => {
                 self.animations.attack.cyclic
             },
-            PlayerAnimation::Transition(_) => {
+            Animation::Transition(_) => {
                 false
             }
         }
@@ -172,47 +217,7 @@ impl AnimationPlayer {
 
 
 
-    pub fn set_frame_bones(&mut self, bones: &mut Vec::<na::Matrix4::<f32>>, skeleton: &mut Skeleton, delta: f32) {
 
-        let (t, next_frame_index) = self.current_t();
-
-        self.elapsed += delta;
-
-        let current_animation = match self.current_animation {
-            PlayerAnimation::TPose => {
-                &mut self.animations.t_pose
-            },
-            PlayerAnimation::Walk => {
-                &mut self.animations.walk
-            },
-            PlayerAnimation::Idle => {
-                &mut self.animations.idle
-            },
-            PlayerAnimation::Attack => {
-                &mut self.animations.attack
-            }
-            PlayerAnimation::Transition(ref mut anim) => anim
-        };
-
-        current_animation.move_to_key_frame(bones, skeleton, next_frame_index, t);
-
-        if self.elapsed > current_animation.duration {
-            match self.next_animation {
-                Some(ref next) => {
-                    self.current_animation = next.clone();
-                    self.next_animation = None;
-                    self.has_repeated = false;
-                },
-                _ => {
-                    self.has_repeated = true;
-                }
-            };
-
-            if self.is_current_cyclic() {
-                self.elapsed = 0.0;
-            }
-        }
-    }
 }
 
 

@@ -20,11 +20,11 @@ pub struct Controls {
     pub movement_dir: na::Vector3::<f32>,
     pub right_stick: Option<na::Vector3::<f32>>,
     pub attack: bool,
+
+    pub next_weapon: bool,
+
     pub reset: bool,
     pub keys: std::collections::HashMap<sdl2::keyboard::Keycode, bool>,
-
-
-
 
     pub mouse_move: na::Vector2::<f32>,
     pub is_focus: bool
@@ -59,6 +59,7 @@ impl Controls {
             left: false,
             right: false,
             attack: false,
+            next_weapon: false,
             reset: false,
             keys: std::collections::HashMap::new(),
 
@@ -86,6 +87,7 @@ impl Controls {
         }
 
         self.attack = false;
+        self.next_weapon = false;
 
         for event in self.event_pump.poll_iter() {
             use sdl2::event::Event;
@@ -175,6 +177,7 @@ impl Controls {
                         },
                         Some(sdl2::keyboard::Keycode::E) =>  {
                             self.e = true;
+                            self.next_weapon = true;
                         },
                         Some(sdl2::keyboard::Keycode::Q) =>  {
                             self.q = true;
