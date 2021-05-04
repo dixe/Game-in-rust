@@ -75,6 +75,9 @@ pub fn load_animations(file_path: &str, skeleton: &Skeleton) -> Result<PlayerAni
     let attack_frames = animations.get("attack").unwrap();
     let attack_follow_frames = animations.get("attack_follow").unwrap();
 
+    for frame in attack_frames {
+        println!("{:#?}", frame.joints[0].translation);
+    }
 
     let t_pose = KeyframeAnimation::new(t_pose_frames.len() as f32 / frame_normalize, t_pose_frames.clone(), true);
     let walk = KeyframeAnimation::new(walk_frames.len() as f32 / frame_normalize, walk_frames.clone(), true);

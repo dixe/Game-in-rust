@@ -37,6 +37,7 @@ A game in rust to learn rust and some opengl
 - [x] load hitbox from blender models
 - [ ] Follow up/combo attack animations
 - [ ] properties on animation, like when the attack is active, when a follow up can be triggered and more
+- [ ] Implement root motion. So rolling and attack can be animated with movement. Maybe also walk
 
 
 
