@@ -11,6 +11,7 @@ pub struct KeyframeAnimation {
     pub duration: f32,
     pub key_frames: Vec<KeyFrame>,
     pub cyclic: bool,
+    pub root_motion: Option<na::Vector3::<f32>>,
 }
 
 #[derive(Debug, Clone)]
@@ -58,6 +59,7 @@ pub struct PlayerAnimations {
     pub attack_follow: KeyframeAnimation,
     pub t_pose: KeyframeAnimation,
     pub idle: KeyframeAnimation,
+    pub roll: KeyframeAnimation,
 }
 
 
@@ -75,22 +77,55 @@ pub fn load_animations(file_path: &str, skeleton: &Skeleton) -> Result<PlayerAni
     let attack_frames = animations.get("attack").unwrap();
     let attack_follow_frames = animations.get("attack_follow").unwrap();
 
-    for frame in attack_frames {
-        println!("{:#?}", frame.joints[0].translation);
-    }
 
-    let t_pose = KeyframeAnimation::new(t_pose_frames.len() as f32 / frame_normalize, t_pose_frames.clone(), true);
-    let walk = KeyframeAnimation::new(walk_frames.len() as f32 / frame_normalize, walk_frames.clone(), true);
-    let idle = KeyframeAnimation::new(idle_frames.len() as f32 / frame_normalize, idle_frames.clone(), true);
-    let attack = KeyframeAnimation::new(attack_frames.len()  as f32 / frame_normalize, attack_frames.clone(), false);
-    let attack_follow = KeyframeAnimation::new(attack_frames.len()  as f32 / frame_normalize, attack_follow_frames.clone(), false);
+    let mut roll_frames_res = animations.get("roll_1");
+
+
+    match roll_frames_res {
+        Some(roll_frames) => {
+            let base = roll_frames[0].joints[0].translation;
+
+            for frame in roll_frames {
+                //println!("{:#?}", frame.joints[0].translation - base);
+            }
+        },
+        _ => {}
+    };
+
+    let t_pose = KeyframeAnimation::new(t_pose_frames.len() as f32 / frame_normalize, t_pose_frames.clone(), true, None);
+    let walk = KeyframeAnimation::new(walk_frames.len() as f32 / frame_normalize, walk_frames.clone(), true, None);
+    let idle = KeyframeAnimation::new(idle_frames.len() as f32 / frame_normalize, idle_frames.clone(), true, None);
+    let attack = KeyframeAnimation::new(attack_frames.len()  as f32 / frame_normalize, attack_frames.clone(), false, None);
+    let attack_follow = KeyframeAnimation::new(attack_frames.len()  as f32 / frame_normalize, attack_follow_frames.clone(), false, None);
+
+    let roll = match roll_frames_res {
+        Some(rf) => {
+
+            let mut roll_frames = rf.clone();
+            // get root_motion into vec
+            // remove movement from animation
+            // so playing it without movement results in inplace animaiton
+            let base = roll_frames[0].joints[0].translation;
+
+            let root_motion = (&mut roll_frames).last().unwrap().joints[0].translation  - base;
+            for frame in roll_frames.iter_mut() {
+                frame.joints[0].translation.x = 0.0;
+                frame.joints[0].translation.y = 0.0;
+            }
+
+            KeyframeAnimation::new(roll_frames.len()  as f32 / (frame_normalize * 2.0), roll_frames.clone(), false, Some(root_motion))
+        },
+        _ => {
+            idle.clone()
+        }
+    };
 
     Ok(PlayerAnimations {
         t_pose,
         walk,
         idle,
         attack,
-        attack_follow
+        attack_follow, roll
     })
 }
 
@@ -235,14 +270,16 @@ impl KeyframeAnimation {
             cyclic: true,
             duration: 1.0,
             key_frames: Vec::new(),
+            root_motion: None
         }
     }
 
-    pub fn new(duration: f32,  key_frames: Vec<KeyFrame>, cyclic: bool) -> KeyframeAnimation {
+    pub fn new(duration: f32,  key_frames: Vec<KeyFrame>, cyclic: bool, root_motion: Option<na::Vector3::<f32>>) -> KeyframeAnimation {
         KeyframeAnimation {
             cyclic,
             duration,
             key_frames,
+            root_motion,
         }
     }
 

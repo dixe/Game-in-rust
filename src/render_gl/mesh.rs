@@ -123,7 +123,7 @@ impl GltfMeshes {
 
     pub fn hitboxes(&self, base_name: &str) -> Vec::<(String, Vec<na::Vector3::<f32>>)>{
 
-        println!("HITBOXES FOR {}", base_name);
+        //println!("HITBOXES FOR {}", base_name);
         let mut res = Vec::new();
         for mesh_data in self.meshes.iter().filter(|kv| kv.0.starts_with(base_name) && kv.0.contains("hitbox")).map(|kv| kv.1) {
             // meshes are triangulated, so we want to detriangulate them before we pass them on.
@@ -171,7 +171,7 @@ pub fn meshes_from_gltf(file_path: &str, _gl: &gl::Gl, index_map: &std::collecti
     for node in gltf.nodes() {
         match node.mesh() {
             Some(m) => {
-                println!("EXTRAS FOR {} {:?}", node.name().unwrap(), node.extras());
+                //println!("EXTRAS FOR {} {:?}", node.name().unwrap(), node.extras());
 
                 res.meshes.insert(node.name().unwrap().to_string(), load_gltf_mesh_data(&m, &buffers, &index_map, &inter_joint_index)?);
             },

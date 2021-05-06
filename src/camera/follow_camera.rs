@@ -21,7 +21,6 @@ impl FollowCamera {
 
     pub fn new(_width: u32, _height: u32) -> FollowCamera {
 
-
         let pos = na::Vector3::new(-5.0, 0.0, 5.0);
         let target = na::Vector3::new(0.0, 0.0, 2.0);
         let look_dir = na::Vector3::new(0.0, 0.0, 0.0);

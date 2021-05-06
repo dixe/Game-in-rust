@@ -21,6 +21,7 @@ pub struct Controls {
     pub right_stick: Option<na::Vector3::<f32>>,
     pub attack: bool,
 
+    pub roll: bool,
     pub next_weapon: bool,
 
     pub reset: bool,
@@ -59,6 +60,7 @@ impl Controls {
             left: false,
             right: false,
             attack: false,
+            roll: false,
             next_weapon: false,
             reset: false,
             keys: std::collections::HashMap::new(),
@@ -138,6 +140,9 @@ impl Controls {
                         Some(sdl2::keyboard::Keycode::Q) =>  {
                             self.q = false;
                         },
+                        Some(sdl2::keyboard::Keycode::Space) =>  {
+                            self.roll = false;
+                        },
 
                         Some(sdl2::keyboard::Keycode::Left) =>  {
                             self.left = false;
@@ -181,6 +186,9 @@ impl Controls {
                         },
                         Some(sdl2::keyboard::Keycode::Q) =>  {
                             self.q = true;
+                        },
+                        Some(sdl2::keyboard::Keycode::Space) =>  {
+                            self.roll = true;
                         },
 
                         Some(sdl2::keyboard::Keycode::Left) =>  {

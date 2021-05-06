@@ -24,17 +24,11 @@ fn format_matrix3(mat: &na::Matrix3::<f32>) {
 
 pub fn update_game_state(ctx: &mut game::Context, _collisions: &Vec<physics::EntityCollision>) {
 
-
-    let _delta = ctx.get_delta_time();
-
-
     // also "action" system update fx sword arc ect
     //action_system::update_actions(&mut ctx.ecs.actions_info, &mut ctx.ecs.physics, &mut ctx.state, delta as f32, &ctx.actions);
 
 
     // PLAYER MOVEMENT
-
-    let _weapons_count = ctx.entities.weapons.count();
     update_player(ctx.cameras.current(), &ctx.controls, &mut ctx.entities.player, &ctx.entities.weapons, &ctx.animations);
 
 
@@ -109,11 +103,14 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
     // UPDATE STATE, IE WHEN ATTACK IS DONE SET BACK TO IDLE
     update_player_state(player);
 
+    if controls.roll {
+        perform_roll(player);
+        return;
+    }
 
     if controls.attack {
         //TODO get attack start and end frame from player/current weapon
         perform_attack(player);
-
         return;
     }
 
@@ -170,6 +167,13 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
 }
 
 
+fn perform_roll(entity: &mut entity::Entity) {
+    if can_perform_action(entity.get_state()) {
+        entity.queued_action = Some(entity::EntityState::Roll);
+    }
+}
+
+
 fn perform_attack(entity: &mut entity::Entity) {
     match entity.get_state() {
         entity::EntityState::Attack(info) => {
@@ -189,9 +193,7 @@ fn perform_attack(entity: &mut entity::Entity) {
                 entity.queued_action = Some(entity::EntityState::Attack(attackInfo));
             }
         },
-
         _ => {
-
             let attackInfo = entity::AttackInfo {
                 combo_num: 0,
                 hit_start_frame: 9,
@@ -208,6 +210,7 @@ fn can_perform_action(state: entity::EntityState) -> bool {
         entity::EntityState::Idle => true,
         entity::EntityState::Moving => true,
         entity::EntityState::Attack(_) => false,
+        entity::EntityState::Roll => false,
     }
 }
 
@@ -216,9 +219,7 @@ fn update_player_state(player: &mut entity::Entity) {
     let mut next_action = false;
     match player.get_state() {
         entity::EntityState::Attack(info) => {
-
             // CHECK IF WE ARE IN COMBO FRAME RANGE
-
             let current_frame = player.animation_player.as_ref().unwrap().current_frame_number();
             next_action |= current_frame >= info.hit_end_frame;
 
@@ -228,6 +229,12 @@ fn update_player_state(player: &mut entity::Entity) {
                     player.queued_action = Some(entity::EntityState::Idle);
                 }
                 // check if animation is don
+            }
+        },
+        entity::EntityState::Roll => {
+            next_action = player.animation_player.as_ref().unwrap().has_repeated;
+            if player.queued_action == None {
+                player.queued_action = Some(entity::EntityState::Idle);
             }
         },
         _ => {

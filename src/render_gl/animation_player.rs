@@ -8,6 +8,7 @@ pub enum Animation {
     Idle,
     Walk,
     Attack,
+    Roll,
     AttackFollow,
     Transition(KeyframeAnimation)
 }
@@ -19,6 +20,7 @@ pub struct AnimationPlayer {
     elapsed: f32,
     pub has_repeated: bool,
     pub animations: PlayerAnimations,
+    root_motion_prev: na::Vector3::<f32>,
 }
 
 impl AnimationPlayer {
@@ -30,12 +32,14 @@ impl AnimationPlayer {
             animations,
             has_repeated: false,
             next_animation: None,
+            root_motion_prev: na::Vector3::new(0.0, 0.0, 0.0),
         }
     }
 
     pub fn set_current(&mut self, animation: Animation, skeleton: &Skeleton) {
         let should_transition = match animation {
             Animation::Attack => false,
+            Animation::Roll => false,
             _ => true,
         };
 
@@ -46,6 +50,7 @@ impl AnimationPlayer {
             self.current_animation = animation;
             self.next_animation = None;
             self.has_repeated = false;
+            self.root_motion_prev = na::Vector3::new(0.0, 0.0, 0.0);
             self.elapsed = 0.0;
         }
     }
@@ -54,7 +59,6 @@ impl AnimationPlayer {
     pub fn current_frame_number(&self) -> usize {
         let current_animation = self.current_animation();
         let frame_time = current_animation.duration / current_animation.key_frames.len() as f32;
-
 
         usize::min(current_animation.key_frames.len() - 1,  (self.elapsed / frame_time) as usize)
 
@@ -86,6 +90,9 @@ impl AnimationPlayer {
             Animation::AttackFollow => {
                 &mut self.animations.attack_follow
             },
+            Animation::Roll => {
+                &mut self.animations.roll
+            },
             Animation::Transition(ref mut anim) => anim
         };
 
@@ -105,6 +112,7 @@ impl AnimationPlayer {
 
             if self.is_current_cyclic() {
                 self.elapsed = 0.0;
+                self.root_motion_prev = na::Vector3::new(0.0, 0.0, 0.0);
             }
         }
     }
@@ -114,13 +122,15 @@ impl AnimationPlayer {
 
     fn transition_into_next(&mut self, animation: Animation, skeleton: &Skeleton) {
         let next_start_key_frame = match animation {
-            Animation::TPose => self.animations.t_pose.key_frames[0].clone(),
-            Animation::Idle => self.animations.idle.key_frames[0].clone(),
-            Animation::Walk => self.animations.walk.key_frames[0].clone(),
-            Animation::Attack => self.animations.attack.key_frames[0].clone(),
-            Animation::AttackFollow => self.animations.attack_follow.key_frames[0].clone(),
-            Animation::Transition(ref anim) => anim.key_frames[0].clone(),
-        };
+            Animation::TPose => &self.animations.t_pose,
+            Animation::Idle => &self.animations.idle,
+            Animation::Walk => &self.animations.walk,
+            Animation::Attack => &self.animations.attack,
+            Animation::AttackFollow => &self.animations.attack_follow,
+            Animation::Transition(ref anim) => anim,
+            Animation::Roll => &self.animations.roll,
+        }.key_frames[0].clone();
+
 
         self.next_animation = Some(animation);
 
@@ -131,10 +141,53 @@ impl AnimationPlayer {
         let keyFrames = vec![self.current_frame(skeleton), next_start_key_frame];
         // important that this is after we call current_frame, since that uses the elapsed time
         self.elapsed = 0.0;
+        self.root_motion_prev = na::Vector3::new(0.0, 0.0, 0.0);
+
+        self.current_animation = Animation::Transition(KeyframeAnimation::new(transition_time, keyFrames, false, None));
 
 
-        self.current_animation = Animation::Transition(KeyframeAnimation::new(transition_time, keyFrames, false));
         self.has_repeated = false;
+    }
+
+
+    pub fn current_animation_name(&self) -> &str {
+
+        match &self.current_animation {
+            Animation::TPose => "t_pose",
+            Animation::Walk => "walk",
+            Animation::Idle => "idle",
+            Animation::Attack => "attack",
+            Animation::AttackFollow => "attack_follow",
+            Animation::Roll => "roll",
+            Animation::Transition(_) => "transition"
+        }
+    }
+
+    pub fn current_root_motion(&mut self,) -> Option<na::Vector3::<f32>> {
+
+        let target_position = match &self.current_animation().root_motion {
+            Some(rm) => {
+                rm
+            },
+            _ => {
+                return None;
+            }
+        };
+
+
+        let t = clamp01(self.elapsed, 0.0, self.current_animation().duration);
+
+        let mut root_motion = target_position * t;
+
+        root_motion.z = 0.0;
+
+        let diff = root_motion - self.root_motion_prev;
+        //println!("{:?} {:?}, {:?}", diff, root_motion, self.root_motion_prev);
+        self.root_motion_prev = root_motion;
+
+        Some(diff)
+
+
     }
 
 
@@ -156,6 +209,9 @@ impl AnimationPlayer {
             Animation::AttackFollow => {
                 &self.animations.attack_follow
             },
+            Animation::Roll => {
+                &self.animations.roll
+            },
             Animation::Transition(ref anim) => {
                 anim
             }
@@ -167,15 +223,9 @@ impl AnimationPlayer {
 
         let current_animation = self.current_animation();
 
-        let frame_time = current_animation.duration / current_animation.key_frames.len() as f32;
-
-        // find current frame id
-        let _frame_index = usize::min(current_animation.key_frames.len() - 1,  (self.elapsed / frame_time) as usize);
-
         let (t, next_frame_index) = self.current_t();
 
         current_animation.keyframe_from_t(skeleton, next_frame_index, t)
-
     }
 
 
@@ -216,20 +266,17 @@ impl AnimationPlayer {
             Animation::Attack => {
                 self.animations.attack.cyclic
             },
-
             Animation::AttackFollow => {
                 self.animations.attack.cyclic
+            },
+            Animation::Roll => {
+                self.animations.roll.cyclic
             },
             Animation::Transition(_) => {
                 false
             }
         }
-
     }
-
-
-
-
 }
 
 

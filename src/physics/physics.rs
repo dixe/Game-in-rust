@@ -14,7 +14,6 @@ pub struct EntityCollision {
 pub fn process(ctx: &mut game::Context) -> Vec<EntityCollision> {
     // MOVE ENTITIES
 
-
     update_entities_position(ctx);
     update_entities_rotation(ctx);
 
@@ -79,7 +78,37 @@ fn update_entities_position(ctx: &mut game::Context) {
 
 
     for entity in ctx.entities.values_mut() {
-        entity.physics.pos += entity.physics.velocity * delta;
+        // maybe there is root_motion
+        let mut update_with_vel = true;
+
+        match entity.animation_player.as_mut() {
+            Some(animation_player) => {
+                match animation_player.current_root_motion() {
+                    Some(root_motion) =>
+                    {
+                        update_with_vel = false;
+
+                        // This should not be camera or controls dependent as it will also need to work for
+                        // enemies and other non player entities.
+                        // Maybe have a root_motion_rotation on entity, that can be set but entity
+                        // Or animaiton player, for the relavant animaiton
+                        let z_rot = entity.physics.rotation.euler_angles().2;
+
+                        let rot_mat = na::Matrix3::new_rotation(z_rot);
+                        let offset = rot_mat * root_motion;
+
+
+                        entity.physics.pos += offset;
+                    },
+                    None => {}
+                }
+            },
+            _ => {}
+        }
+
+        if update_with_vel {
+            entity.physics.pos += entity.physics.velocity * delta;
+        }
     }
 
 }

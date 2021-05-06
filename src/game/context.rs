@@ -186,7 +186,7 @@ impl Context {
 
 
     fn add_model(&mut self, name: &str, gltf_meshes: &render_gl::GltfMeshes) {
-        println!("Add Model: {:#?}", name);
+        //println!("Add Model: {:#?}", name);
         let model_mesh = render_gl::Mesh::new(&self.render_context.gl, &gltf_meshes.meshes[name]);
 
         let model = entity::Model::mesh(model_mesh);

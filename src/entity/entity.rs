@@ -32,6 +32,7 @@ pub enum EntityState {
     Idle,
     Moving,
     Attack(AttackInfo),
+    Roll,
 }
 
 impl Entity {
@@ -97,6 +98,7 @@ impl Entity {
                     }
                 },
                 EntityState::Idle => animation_player.set_current(render_gl::Animation::Idle, &self.skeleton),
+                EntityState::Roll => animation_player.set_current(render_gl::Animation::Roll, &self.skeleton),
             };
         };
     }
