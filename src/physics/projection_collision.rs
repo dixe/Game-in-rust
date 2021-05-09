@@ -39,9 +39,6 @@ impl ConvexCollisionShape {
         let v11 = *center + (rot * scale * na::Vector3::new(half_width, half_height, 0.0));
         let v10 = *center + (rot * scale * na::Vector3::new(half_width, -half_height, 0.0));
 
-
-
-
         ConvexCollisionShape {
             v1: v00,
             v2: v01,

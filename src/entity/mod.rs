@@ -24,4 +24,4 @@ pub use self::action::{ActionData, ActionsInfo};
 
 
 mod hitbox_entity;
-pub use self::hitbox_entity::{create_hitbox_entity};
+pub use self::hitbox_entity::{add_hitbox_to_entity};

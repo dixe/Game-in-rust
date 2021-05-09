@@ -104,7 +104,7 @@ impl PhysicsTest {
         let scale = na::Matrix3::identity();
         let cb = physics::CollisionBox::new(self.pos, rot, scale);
 
-        self.col = physics::check_collision(&static_cb, &cb);
+        self.col = physics::check_collision(&static_cb, &cb).has_collision();
     }
 
 

@@ -85,9 +85,9 @@ impl CollisionBox {
 
         vec![
             // the normals of the 3 faces we care about
-            s1.cross(&s2),
-            s2.cross(&s3),
-            s3.cross(&s1)
+            s1.cross(&s2).normalize(),
+            s2.cross(&s3).normalize(),
+            s3.cross(&s1).normalize()
         ]
     }
 
@@ -102,6 +102,8 @@ impl CollisionBox {
             self.v1 - self.v2,
             self.v0 - self.v4,
         ]
+
+
     }
 }
 
@@ -116,13 +118,27 @@ pub struct AxisBox {
 }
 
 
-pub fn check_collision(box_1: &CollisionBox, box_2: &CollisionBox) -> bool {
+pub enum CollisionResult {
+    NoCollision,
+    Collision(f32, na::Vector3::<f32>),
+}
+
+impl CollisionResult {
+    pub fn has_collision(&self) -> bool {
+        match self {
+            CollisionResult::NoCollision => false,
+            _ => true
+        }
+    }
+}
+
+pub fn check_collision(box_1: &CollisionBox, box_2: &CollisionBox) -> CollisionResult  {
 
     // first find axis aligned bounding box collision
     let axis_collision = axis_aligned_collision(box_1, box_2);
 
     if !axis_collision {
-        return false;
+        return CollisionResult::NoCollision;
     }
 
 
@@ -135,9 +151,10 @@ pub fn check_collision(box_1: &CollisionBox, box_2: &CollisionBox) -> bool {
             if e_1 == e_2 {
                 continue;
             }
+
             let axis = e_1.cross(&e_2);
 
-            all_sat_axis.push(axis);
+            all_sat_axis.push(axis.normalize());
         }
     }
 
@@ -147,6 +164,10 @@ pub fn check_collision(box_1: &CollisionBox, box_2: &CollisionBox) -> bool {
     let vertices_1 = box_1.vertices();
     let vertices_2 = box_2.vertices();
 
+
+    let mut smallest_overlap = 10000000.0;
+    let mut smallest_overlap_dir = na::Vector3::new(0.0, 0.0, 0.0);
+    let mut below = false;
     for axis in &all_sat_axis {
 
         let mut shape_1_max = vertices_1[0].dot(&axis);
@@ -170,11 +191,28 @@ pub fn check_collision(box_1: &CollisionBox, box_2: &CollisionBox) -> bool {
         has_gap = shape_1_min >= shape_2_max || shape_2_min >= shape_1_max;
 
         if has_gap {
-            return false;
+            return CollisionResult::NoCollision;
+        }
+
+        let smaller = f32::min(shape_1_max - shape_2_min, shape_2_max - shape_1_min);
+
+        if smaller < smallest_overlap {
+            below = shape_1_max - shape_2_min > shape_2_max - shape_1_min ;
+            smallest_overlap = smaller;
+            smallest_overlap_dir = *axis;
         }
     }
 
-    !has_gap
+    if !has_gap {
+        //println!("BOX1: {:?}\nBOX2: {:?}", box_1, box_2);
+        //println!("FINAL {} {:?}", smallest_overlap, smallest_overlap_dir);
+    }
+
+    if below {
+        smallest_overlap_dir *= -1.0;
+    }
+
+    CollisionResult::Collision(smallest_overlap, smallest_overlap_dir)
 
 }
 
@@ -233,7 +271,7 @@ mod tests {
     fn create_box(off_set: na::Vector3::<f32>, rotation: Option<na::Vector3::<f32>>) -> CollisionBox {
         let rot_mat = match rotation {
             Some(rot) => na::Rotation3::new(rot),
-            None => na::Rotation3::new(na::Vector3::new(0.0,0.0,1.0)),
+            None => na::Rotation3::identity(),
         };
 
         // println!("{:#?}", rot_mat);
@@ -258,10 +296,9 @@ mod tests {
         let box_1 = create_box(na::Vector3::new(0.0, 0.0, 0.0), None);
         let box_2 = create_box(na::Vector3::new(1.2, 0.0, 0.0), None);
 
-        let col = check_collision(&box_1, &box_2);
-        println!("{} should be {}", col, false);
+        let collision_res = check_collision(&box_1, &box_2);
+        assert!(!collision_res.has_collision());
 
-        assert!(!col);
     }
 
     #[test]
@@ -270,10 +307,8 @@ mod tests {
         let box_1 = create_box(na::Vector3::new(0.0, 0.0, 0.0), None);
         let box_2 = create_box(na::Vector3::new(0.9, 0.0, 0.0), None);
 
-        let col = check_collision(&box_1, &box_2);
-        println!("{} should be {}", col, true);
-
-        assert!(col);
+        let collision_res = check_collision(&box_1, &box_2);
+        assert!(collision_res.has_collision());
     }
 
     #[test]
@@ -284,13 +319,57 @@ mod tests {
         let box_1 = create_box(na::Vector3::new(0.0, 0.0, 0.0), None);
         let box_2 = create_box(na::Vector3::new(1.3, 0.0, 0.0), Some(rotation));
 
-        let col = check_collision(&box_1, &box_2);
-        println!("{} should be {}", col, true);
+        let collision_res = check_collision(&box_1, &box_2);
+        assert!(collision_res.has_collision());
+    }
 
+    #[test]
+    fn correction_test_1() {
 
-        assert!(col);
+        let box_1 = create_box(na::Vector3::new(0.0, 0.0, 0.0), None);
+        let box_2 = create_box(na::Vector3::new(0.9, 0.0, 0.0), None);
+
+        let collision_res = check_collision(&box_1, &box_2);
+
+        match collision_res {
+            CollisionResult::Collision(depth, dir) => {
+                println!("\n\n {} {:?}\n\n" , depth, dir);
+                let dot = dir.dot(&na::Vector3::new(1.0, 0.0, 0.0));
+                println!("DOT {:#?}", dot);
+                assert!(dot > 0.99);
+                assert!( depth > 0.0 && depth < 0.2);
+
+            },
+            _ => {
+                assert!(false);
+            }
+        };
+
     }
 
 
+    #[test]
+    fn correction_test_2() {
+
+        let box_1 = create_box(na::Vector3::new(0.0, 0.0, 0.0), None);
+        let box_2 = create_box(na::Vector3::new(-0.9, 0.0, 0.0), None);
+
+        let collision_res = check_collision(&box_1, &box_2);
+
+        match collision_res {
+            CollisionResult::Collision(depth, dir) => {
+                println!("\n\n {} {:?}\n\n" , depth, dir);
+                let dot = dir.dot(&na::Vector3::new(1.0, 0.0, 0.0));
+                println!("DOT {:#?}", dot);
+                assert!(dot < -0.99);
+                assert!( depth > 0.0 && depth < 0.2);
+
+            },
+            _ => {
+                assert!(false);
+            }
+        };
+
+    }
 
 }

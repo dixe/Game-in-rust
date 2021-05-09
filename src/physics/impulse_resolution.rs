@@ -120,6 +120,7 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
 
 
 
+
     /*
     for enemy_id in &ctx.state.enemies {
     match ctx.ecs.get_physics(*enemy_id) {

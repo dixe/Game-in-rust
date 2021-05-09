@@ -76,9 +76,8 @@ fn resolve_player_hit_enemy(_player: &entity::Entity, _enemy: &mut entity::Entit
 
 }
 
-
+//TODO move this into physics and call into that one
 fn entity_collision(entity_1: &entity::Entity, entity_2: &entity::Entity) -> bool{
-
 
     // TODO make this more optimized, by calculation each transformed hitbox only once
     for e1_hitbox_base in &entity_1.hit_boxes {
@@ -86,7 +85,8 @@ fn entity_collision(entity_1: &entity::Entity, entity_2: &entity::Entity) -> boo
 
         for e2_hitbox_base in &entity_2.hit_boxes {
             let e2_hitbox = e2_hitbox_base.make_transformed(entity_2.physics.pos, entity_2.physics.rotation);
-            if physics::check_collision(&e1_hitbox, &e2_hitbox) {
+            let collision_res = physics::check_collision(&e1_hitbox, &e2_hitbox);
+            if collision_res.has_collision() {
                 return true;
             }
 

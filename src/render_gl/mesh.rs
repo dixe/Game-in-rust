@@ -131,11 +131,25 @@ impl GltfMeshes {
             // from looking at data it seems liek for at box the layout is v0,v0,v0, v1, v1,v1, v2,v2,v2, v3,v3,v3... v7,v7,v7,
             // So we can just loop over in with step of 2 and thus get the vertices
 
+
+
             let mut hitbox = Vec::new();
+            let mut final_hitbox = Vec::new();
             for i in (0..24).step_by(3) {
                 hitbox.push(mesh_data.pos_data[i]);
             }
-            res.push((mesh_data.name.clone(), hitbox));
+
+            final_hitbox.push(hitbox[0]);
+            final_hitbox.push(hitbox[4]);
+            final_hitbox.push(hitbox[6]);
+            final_hitbox.push(hitbox[2]);
+            final_hitbox.push(hitbox[1]);
+            final_hitbox.push(hitbox[5]);
+            final_hitbox.push(hitbox[7]);
+            final_hitbox.push(hitbox[3]);
+
+            res.push((mesh_data.name.clone(), final_hitbox));
+
         }
 
 

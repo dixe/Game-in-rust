@@ -78,7 +78,7 @@ pub fn load_animations(file_path: &str, skeleton: &Skeleton) -> Result<PlayerAni
     let attack_follow_frames = animations.get("attack_follow").unwrap();
 
 
-    let mut roll_frames_res = animations.get("roll_1");
+    let mut roll_frames_res = animations.get("roll");
 
 
     match roll_frames_res {
@@ -113,7 +113,7 @@ pub fn load_animations(file_path: &str, skeleton: &Skeleton) -> Result<PlayerAni
                 frame.joints[0].translation.y = 0.0;
             }
 
-            KeyframeAnimation::new(roll_frames.len()  as f32 / (frame_normalize * 2.0), roll_frames.clone(), false, Some(root_motion))
+            KeyframeAnimation::new(roll_frames.len()  as f32 / frame_normalize, roll_frames.clone(), false, Some(root_motion))
         },
         _ => {
             idle.clone()

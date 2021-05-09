@@ -1,6 +1,6 @@
 use nalgebra as na;
 
-
+use crate::cube;
 use crate::entity;
 use crate::render_gl;
 
@@ -84,8 +84,6 @@ impl Context {
         Ok(ctx)
     }
 
-
-
     fn setup_enemy(&mut self) -> Result<(), failure::Error>  {
         let player_glb_path = "E:/repos/Game-in-rust/blender_models/player.glb";
 
@@ -93,13 +91,17 @@ impl Context {
 
         let gltf_meshes = render_gl::meshes_from_gltf(&player_glb_path, &self.render_context.gl, &index_map)?;
 
-        let dummy = self.setup_hitbox_model("targetDummy", &gltf_meshes);
+        let model_name = "targetDummy";
+        self.add_model(model_name, &gltf_meshes);
 
+        let mut dummy = entity::Entity::new(None, model_name.to_string());
+        self.setup_hitboxes(&mut dummy, &gltf_meshes);
+        dummy.physics.pos.x += 5.0;
         self.entities.enemies.add(dummy);
 
         Ok(())
-
     }
+
 
     fn load_weapon(&mut self) ->  Result<(), failure::Error>  {
         let glb_path = "E:/repos/Game-in-rust/blender_models/hammer.glb";
@@ -111,10 +113,14 @@ impl Context {
         let animations = load_animations(&glb_path, &skeleton).unwrap();
 
         let gltf_meshes = render_gl::meshes_from_gltf(&glb_path, &self.render_context.gl, &index_map)?;
+        let model_name = "hammer";
 
-        let weapon = self.setup_hitbox_model("hammer", &gltf_meshes);
+        self.add_model(model_name, &gltf_meshes);
 
-        self.animations.insert("hammer".to_string(), animations);
+        let mut weapon = entity::Entity::new(None, model_name.to_string());
+        self.setup_hitboxes(&mut weapon, &gltf_meshes);
+
+        self.animations.insert(model_name.to_string(), animations);
         self.entities.weapons.add(weapon);
 
         Ok(())
@@ -145,6 +151,8 @@ impl Context {
         self.add_skinned_model(model_name, &gltf_meshes);
 
         let mut player = entity::Entity::new(Some(animation_player), model_name.to_string());
+        self.setup_hitboxes(&mut player, &gltf_meshes);
+
         player.skeleton = skeleton;
         player.bones = bones;
 
@@ -156,20 +164,15 @@ impl Context {
 
 
 
-    fn setup_hitbox_model(&mut self, name: &str, gltf_meshes: &render_gl::GltfMeshes) -> entity::Entity {
+    fn setup_hitboxes(&mut self, entity: &mut entity::Entity, gltf_meshes: &render_gl::GltfMeshes) {
 
-        let hitboxes = gltf_meshes.hitboxes(name);
+        let hitboxes = gltf_meshes.hitboxes(&entity.model_name);
 
-        self.add_model(name, &gltf_meshes);
-
-        let entity = entity::create_hitbox_entity(name.to_string(), &hitboxes);
+        let entity = entity::add_hitbox_to_entity(entity, &hitboxes);
 
         for hb_kv in &hitboxes {
             self.add_model(&hb_kv.0, &gltf_meshes);
         }
-
-        entity
-
     }
 
 
@@ -290,6 +293,8 @@ impl Context {
             self.render_context.switch_mode();
         }
 
+        self.cube_shader.set_used();
+        self.cube_shader.set_projection_and_view(&self.render_context.gl, self.camera().projection(), self.camera().view());
         for entity in self.entities.hitbox_entities() {
             match entity.is_hit {
                 true => self.hitbox_shader.set_vec3(&self.render_context.gl, "color", na::Vector3::new(1.0, 0.0, 0.0)),
@@ -297,8 +302,12 @@ impl Context {
             };
 
             for hitbox in &entity.hit_boxes {
-                let model = &self.models[&hitbox.name];
-                render_gl::render_entity(&entity, &self.entities, model, &self.render_context.gl, &self.hitbox_shader);
+                let col_box = hitbox.make_transformed(entity.physics.pos, entity.physics.rotation);
+
+                let clr = na::Vector3::new(1.0, 1.0, 0.0);
+                let cube_model = cube::Cube::from_collision_box(col_box, clr, &self.render_context.gl);
+
+                cube_model.render(&self.render_context.gl, &self.hitbox_shader, na::Matrix4::identity());
 
             }
         }
