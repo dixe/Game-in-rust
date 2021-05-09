@@ -351,8 +351,11 @@ fn update_follow_camera(ctx: &mut game::Context) {
     // pos.z bottom of player model
     physics.pos.z += 1.6;
 
+
+    // readjust to player
     ctx.camera_mut().update_target(physics.pos);
 
+    // camera movement by stick
     ctx.controls.right_stick.map(|right_stick| {
         ctx.camera_mut().update_movement(right_stick.x, right_stick.y);
     });

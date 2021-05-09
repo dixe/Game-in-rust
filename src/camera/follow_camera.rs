@@ -12,9 +12,9 @@ pub struct FollowCamera {
     pub height: f32,
     pub fov: f32,
     pub max_dist: f32,
+    pub min_dist: f32,
     pub max_pitch: f32,
 }
-
 
 
 impl FollowCamera {
@@ -37,7 +37,8 @@ impl FollowCamera {
             width: 900.0,
             height: 700.0,
             fov: 60.0,
-            max_dist: 7.0,
+            max_dist: 6.5,
+            min_dist: 4.5,
             max_pitch: 80.0_f32.to_radians(),
         }
     }
@@ -59,7 +60,6 @@ impl Camera for FollowCamera {
 
     fn update_movement(&mut self, x_change: f32, y_change: f32) {
 
-
         let speed = 0.4;
         let change_x = self.right * (-x_change * speed);
 
@@ -68,8 +68,6 @@ impl Camera for FollowCamera {
         let new_pos = self.pos + change_x + change_y;
 
         let new_pitch = f32::asin(-(self.target - self.pos).normalize().z);
-
-
 
         if new_pitch < self.max_pitch || y_change < 0.0 {
             self.pos = new_pos;
@@ -102,13 +100,17 @@ impl Camera for FollowCamera {
 
 
 
-        if new_dist < self.max_dist {
-            self.look_dir = (self.target - self.pos).normalize();
+        if new_dist > self.max_dist {
+            self.pos = self.target - self.look_dir * self.max_dist;
+
+        }
+        else if new_dist < self.min_dist {
+
+            self.pos = self.target - self.look_dir * self.min_dist;
         }
         else {
-            self.pos = self.target - self.look_dir * self.max_dist;
+            self.look_dir = (self.target - self.pos).normalize();
         }
-
 
         self.update_camera_vectors();
 

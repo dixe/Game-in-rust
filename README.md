@@ -39,7 +39,7 @@ A game in rust to learn rust and some opengl
 - [ ] properties on animation, like when the attack is active, when a follow up can be triggered and more
 - [x] Implement root motion. So rolling and attack can be animated with movement. Maybe also walk
 - [ ] Improve root motion, so that it follows the animaiton better. The roll/flip has smooth camera motion, but player is stationatry for the last 10 framees
-- [ ] Reimplement collision, but not impulse, jeg regular.
+- [x] Reimplement collision, but not impulse, jeg regular.
 - [ ] Move most of data from game Context into scenes. Game context should be stuff like window, current scene, inputs. But entities, models, shaders, animaiton, action, and more should be in scene. This also makes reloading scene, fx when .glb files are written easier
 - [ ] Have base animaiton, and have weapon just overwrite the onces they have. Fx all should use same dodge, and maybe also idle
 - [ ] Rework camera to behave like ashen, when player walks towads is. Camera should keep a minumums distance and not pivot around
