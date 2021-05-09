@@ -42,7 +42,7 @@ A game in rust to learn rust and some opengl
 - [x] Reimplement collision, but not impulse, jeg regular.
 - [ ] Move most of data from game Context into scenes. Game context should be stuff like window, current scene, inputs. But entities, models, shaders, animaiton, action, and more should be in scene. This also makes reloading scene, fx when .glb files are written easier
 - [ ] Have base animaiton, and have weapon just overwrite the onces they have. Fx all should use same dodge, and maybe also idle
-- [ ] Rework camera to behave like ashen, when player walks towads is. Camera should keep a minumums distance and not pivot around
+- [x] Rework camera to behave like ashen, when player walks towads is. Camera should keep a minumums distance and not pivot around
 
 
 # Cool stuff
