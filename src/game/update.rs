@@ -184,23 +184,23 @@ fn perform_attack(entity: &mut entity::Entity) {
             // the attack was not indented
             if current_frame >= info.hit_start_frame {
 
-                let attackInfo = entity::AttackInfo {
+                let attack_info = entity::AttackInfo {
                     combo_num: 1 - info.combo_num,
                     hit_start_frame: 9,
                     hit_end_frame: 20,
                 };
 
-                entity.queued_action = Some(entity::EntityState::Attack(attackInfo));
+                entity.queued_action = Some(entity::EntityState::Attack(attack_info));
             }
         },
         _ => {
-            let attackInfo = entity::AttackInfo {
+            let attack_info = entity::AttackInfo {
                 combo_num: 0,
                 hit_start_frame: 9,
                 hit_end_frame: 20,
             };
 
-            entity.queued_action = Some(entity::EntityState::Attack(attackInfo));
+            entity.queued_action = Some(entity::EntityState::Attack(attack_info));
         }
     };
 }

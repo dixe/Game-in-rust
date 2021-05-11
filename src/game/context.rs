@@ -1,5 +1,7 @@
 use nalgebra as na;
 
+
+use crate::physics;
 use crate::cube;
 use crate::entity;
 use crate::render_gl;
@@ -17,6 +19,9 @@ pub struct Cameras {
     follow_camera: camera::FollowCamera,
     pub mode: camera::CameraMode,
 }
+
+
+
 
 impl Cameras {
 
@@ -51,6 +56,12 @@ pub struct Context {
     pub mesh_shader: render_gl::Shader,
     pub hitbox_shader: render_gl::Shader,
 
+
+    // World
+
+    pub world_triangles: Vec::<physics::Triangle>,
+
+
     // make this a struct that can keep track of it, with usize ids, but not as a vec index
     // but something where we can add and remove from
     pub models: std::collections::HashMap<String, entity::Model>,
@@ -72,6 +83,9 @@ impl Context {
 
         let mut ctx = empty()?;
 
+        println!("Setup world");
+        ctx.setup_world()?;
+
         println!("Setup player");
         ctx.setup_player()?;
 
@@ -80,6 +94,8 @@ impl Context {
 
         println!("Setup enemy");
         ctx.setup_enemy()?;
+
+
 
         Ok(ctx)
     }
@@ -126,6 +142,26 @@ impl Context {
         Ok(())
     }
 
+
+
+    fn setup_world(&mut self) -> Result<(), failure::Error>  {
+
+        let world_glb_path = "E:/repos/Game-in-rust/blender_models/world_2.glb";
+
+        let index_map = std::collections::HashMap::new();
+
+        let gltf_meshes = render_gl::meshes_from_gltf(&world_glb_path, &self.render_context.gl, &index_map)?;
+
+        let model_name = "world";
+
+        self.world_triangles = gltf_meshes.triangles(model_name);
+
+        self.add_model(model_name, &gltf_meshes);
+
+        Ok(())
+
+
+    }
 
     fn setup_player(&mut self) -> Result<(), failure::Error>  {
 
@@ -257,7 +293,8 @@ impl Context {
 
         self.cube_shader.set_projection_and_view(&self.render_context.gl, self.camera().projection(), self.camera().view());
 
-        self.scene.render(&self.render_context.gl, &self.cube_shader);
+        //self.scene.render(&self.render_context.gl, &self.cube_shader);
+
 
 
         // RENDER WITH MESH SHADER
@@ -267,11 +304,12 @@ impl Context {
         self.mesh_shader.set_vec3(&self.render_context.gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
         self.mesh_shader.set_projection_and_view(&self.render_context.gl, self.camera().projection(), self.camera().view());
 
-
+        let model = &self.models["world"];
+        render_gl::render_world(model, &self.render_context.gl, &self.mesh_shader);
 
         for entity in self.entities.values() {
             let model = &self.models[&entity.model_name];
-            render_gl::render_entity(&entity, &self.entities, model, &self.render_context.gl, &self.mesh_shader);
+            render_gl::render_entity(&entity, model, &self.render_context.gl, &self.mesh_shader);
         }
 
 
@@ -287,14 +325,13 @@ impl Context {
 
         self.hitbox_shader.set_used();
         self.hitbox_shader.set_projection_and_view(&self.render_context.gl, self.camera().projection(), self.camera().view());
-        let switched = false;
+        let mut switched = false;
 
         if !self.render_context.wire_frame {
+            switched = true;
             self.render_context.switch_mode();
         }
 
-        self.cube_shader.set_used();
-        self.cube_shader.set_projection_and_view(&self.render_context.gl, self.camera().projection(), self.camera().view());
         for entity in self.entities.hitbox_entities() {
             match entity.is_hit {
                 true => self.hitbox_shader.set_vec3(&self.render_context.gl, "color", na::Vector3::new(1.0, 0.0, 0.0)),
@@ -308,11 +345,10 @@ impl Context {
                 let cube_model = cube::Cube::from_collision_box(col_box, clr, &self.render_context.gl);
 
                 cube_model.render(&self.render_context.gl, &self.hitbox_shader, na::Matrix4::identity());
-
             }
         }
 
-        if !switched {
+        if switched {
             self.render_context.switch_mode();
         }
 
@@ -409,6 +445,7 @@ fn empty() -> Result<Context, failure::Error> {
         models: std::collections::HashMap::new(),
         animations: std::collections::HashMap::new(),
         render_hitboxes: false,
+        world_triangles: Vec::new(),
     })
 }
 

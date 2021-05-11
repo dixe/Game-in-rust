@@ -174,8 +174,7 @@ fn run() -> Result<(), failure::Error> {
         }
 
         if ctx.controls.reset {
-            //let physics = entity::Physics::new(ctx.player_id);
-            //ctx.ecs.set_physics(ctx.player_id, physics);
+            ctx.entities.player.physics = entity::Physics::new();
         }
 
         unsafe {
@@ -302,6 +301,25 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::H) {
         Some(true) => {
             ctx.render_hitboxes = true;
+        },
+        _ => {
+        }
+
+    };
+
+    //HIT BOXES
+    match ctx.controls.keys.get(&sdl2::keyboard::Keycode::P) {
+        Some(true) => {
+            for hitbox_base in &ctx.entities.player.hit_boxes {
+                let hitbox = hitbox_base.make_transformed(ctx.entities.player.physics.pos, ctx.entities.player.physics.rotation);
+
+                println!("hitbox max_x, min_x, max_y, min_y, max_z, min_z {} {} {} {} {} {}",
+                         hitbox.max_x(), hitbox.min_x(),
+                         hitbox.max_y(), hitbox.min_y(),
+                         hitbox.max_z(), hitbox.min_z() );
+                println!("player_pos x y z {} {} {}", ctx.entities.player.physics.pos.x, ctx.entities.player.physics.pos.y, ctx.entities.player.physics.pos.z);
+                println!("player_rot {:?}", ctx.entities.player.physics.rotation.to_euler_angles());
+            }
         },
         _ => {
         }

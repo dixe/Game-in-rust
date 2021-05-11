@@ -1,12 +1,11 @@
-
 use crate::render_gl::{self, buffer};
+use crate::physics::{Triangle};
 use gl;
 
 pub struct SkinnedMesh {
     mesh: Mesh,
-    pub inverse_bind_poses: Vec<na::Matrix4<f32>>,
+    inverse_bind_poses: Vec<na::Matrix4<f32>>, // TODO maybe remove this, since we don't use them
 }
-
 
 pub struct Mesh {
     vao: buffer::VertexArray,
@@ -152,6 +151,41 @@ impl GltfMeshes {
 
         }
 
+        res
+    }
+
+    pub fn triangles(&self, name: &str) -> Vec::<Triangle> {
+        let mut res = Vec::new();
+        for mesh_data in self.meshes.iter().filter(|kv| kv.0 == name).map(|kv| kv.1) {
+            // meshes are triangu
+
+            for i in (0..mesh_data.indices_data.len()).step_by(3) {
+                let v0_i = mesh_data.indices_data[i];
+                let v1_i = mesh_data.indices_data[i + 1];
+                let v2_i = mesh_data.indices_data[i + 2];
+
+                let v0 = mesh_data.pos_data[v0_i as usize];
+                let v1 = mesh_data.pos_data[v1_i as usize];
+                let v2 = mesh_data.pos_data[v2_i as usize];
+
+                let n0 = mesh_data.normal_data[v0_i as usize];
+                let n1 = mesh_data.normal_data[v1_i as usize];
+                let n2 = mesh_data.normal_data[v2_i as usize];
+                let normal = ((na::Vector3::new(n0[0], n0[1], n0[2]) + na::Vector3::new(n0[0], n0[1], n0[2]) + na::Vector3::new(n2[0], n2[1], n2[2])) / 3.0).normalize();
+
+
+                // use v0 to find d
+                let d = -(normal.x * v0.x + normal.y * v0.y + normal.z * v0.z);
+                let t = Triangle { v0, v1, v2, normal, d};
+
+                res.push(t);
+
+
+                println!("{:#?}", normal);
+
+            }
+
+        }
 
         res
     }
@@ -281,7 +315,6 @@ fn load_gltf_mesh_data(mesh: &gltf::mesh::Mesh, buffers: &Vec<gltf::buffer::Data
 
     }
 
-
     let vertex_weights = reduce_to_2_joints(&joints_data, &weights_data);
 
     Ok(GltfMesh {
@@ -291,8 +324,9 @@ fn load_gltf_mesh_data(mesh: &gltf::mesh::Mesh, buffers: &Vec<gltf::buffer::Data
         indices_data,
         tex_data, vertex_weights
     })
-
 }
+
+
 
 
 
