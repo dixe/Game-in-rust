@@ -2,7 +2,7 @@ use crate::camera::camera::{Camera, CameraMode};
 
 #[derive(Copy, Clone, Debug)]
 pub struct FollowCamera {
-    pub pos: na::Vector3::<f32>,
+    pos: na::Vector3::<f32>,
     pub target: na::Vector3::<f32>,
     pub look_dir: na::Vector3::<f32>,
     pub up: na::Vector3::<f32>,
@@ -23,7 +23,7 @@ impl FollowCamera {
 
         let pos = na::Vector3::new(-5.0, 0.0, 5.0);
         let target = na::Vector3::new(0.0, 0.0, 2.0);
-        let look_dir = na::Vector3::new(0.0, 0.0, 0.0);
+        let look_dir = na::Vector3::new(1.0, 0.0, 0.0);
         let up = na::Vector3::new(0.0, 0.0, 1.0);
         let right = na::Vector3::new(1.0, 0.0, 0.0);
 
@@ -98,14 +98,11 @@ impl Camera for FollowCamera {
         self.target = target;
         let new_dist = (self.target - self.pos).magnitude();
 
-
-
         if new_dist > self.max_dist {
             self.pos = self.target - self.look_dir * self.max_dist;
-
         }
-        else if new_dist < self.min_dist {
-
+        let new_dist = (self.target - self.pos).magnitude();
+        if new_dist < self.min_dist {
             self.pos = self.target - self.look_dir * self.min_dist;
         }
         else {

@@ -242,6 +242,7 @@ pub struct AxisBox {
 }
 
 
+#[derive(Debug)]
 pub enum CollisionResult {
     NoCollision,
     Collision(na::Vector3::<f32>),

@@ -6,7 +6,7 @@ use crate::entity;
 pub fn update_velocity(entity: &mut entity::Physics, velocity_change: na::Vector3::<f32>,)  {
 
     if velocity_change.x == 0.0 && velocity_change.y == 0.0 && velocity_change.z == 0.0 {
-        entity.velocity = na::Vector3::new(0.0, 0.0, 0.0);
+        entity.velocity = na::Vector3::new(0.0, 0.0, entity.velocity.z);
         return;
     }
 
@@ -16,11 +16,13 @@ pub fn update_velocity(entity: &mut entity::Physics, velocity_change: na::Vector
 
     // avoid jittering
     if speed < 0.1 {
-        entity.velocity *= 0.0;
+        entity.velocity.x *= 0.0;
+        entity.velocity.y *= 0.0;
     }
 
     if speed > entity.max_speed {
-        entity.velocity *= entity.max_speed / speed;
+        entity.velocity.x *= entity.max_speed / speed;
+        entity.velocity.y *= entity.max_speed / speed;
     }
 }
 

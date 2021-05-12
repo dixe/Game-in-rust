@@ -41,40 +41,48 @@ fn update_entities_position(ctx: &mut game::Context) {
     let delta = ctx.get_delta_time();
 
 
-    for entity in ctx.entities.values_mut() {
-        // maybe there is root_motion
-        let mut update_with_vel = true;
+    //for entity in ctx.entities.values_mut() {
+    let entity  = &mut ctx.entities.player;
+    // maybe there is root_motion
+    let mut update_with_vel = true;
 
-        match entity.animation_player.as_mut() {
-            Some(animation_player) => {
-                match animation_player.current_root_motion() {
-                    Some(root_motion) =>
-                    {
-                        update_with_vel = false;
+    match entity.animation_player.as_mut() {
+        Some(animation_player) => {
+            match animation_player.current_root_motion() {
+                Some(root_motion) =>
+                {
+                    update_with_vel = false;
 
-                        // This should not be camera or controls dependent as it will also need to work for
-                        // enemies and other non player entities.
-                        // Maybe have a root_motion_rotation on entity, that can be set but entity
-                        // Or animaiton player, for the relavant animaiton
-                        let z_rot = entity.physics.rotation.euler_angles().2;
+                    // This should not be camera or controls dependent as it will also need to work for
+                    // enemies and other non player entities.
+                    // Maybe have a root_motion_rotation on entity, that can be set but entity
+                    // Or animaiton player, for the relavant animaiton
+                    let z_rot = entity.physics.rotation.euler_angles().2;
 
-                        let rot_mat = na::Matrix3::new_rotation(z_rot);
-                        let offset = rot_mat * root_motion;
+                    let rot_mat = na::Matrix3::new_rotation(z_rot);
+                    let offset = rot_mat * root_motion;
 
 
-                        entity.physics.pos += offset;
-                    },
-                    None => {}
-                }
-            },
-            _ => {}
-        }
-
-        if update_with_vel {
-            entity.physics.pos += entity.physics.velocity * delta;
-        }
+                    // maybe still apply z for gravity
+                    entity.physics.pos += offset;
+                },
+                None => {}
+            }
+        },
+        _ => {}
     }
 
+    if update_with_vel {
+        entity.physics.pos += entity.physics.velocity * delta;
+    }
+
+    // APPLY GRAVITY -- results in jancky motion down hill
+    let v = entity.physics.velocity.z;
+
+    let a = -400.0;
+    let gravity = v * delta + (1.0/2.0 * a * delta * delta);
+
+    //entity.physics.velocity.z += gravity;
 }
 
 

@@ -11,7 +11,7 @@ pub struct Entity {
     state: EntityState,
     pub bones: Vec::<na::Matrix4::<f32>>,
     pub skeleton: render_gl::Skeleton,
-    pub hit_boxes: Vec::<physics::CollisionBox>,
+    pub hitboxes: Vec::<physics::CollisionBox>,
     pub weapon_id: usize,
     pub is_hit: bool,
     pub queued_action: Option<EntityState>,
@@ -50,7 +50,7 @@ impl Entity {
                 joints: Vec::new(),
             },
             weapon_id: 9999999,
-            hit_boxes: Vec::<physics::CollisionBox>::new(),
+            hitboxes: Vec::<physics::CollisionBox>::new(),
             is_hit: false,
             queued_action: None
         }

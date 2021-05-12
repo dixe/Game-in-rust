@@ -310,7 +310,7 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
     //HIT BOXES
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::P) {
         Some(true) => {
-            for hitbox_base in &ctx.entities.player.hit_boxes {
+            for hitbox_base in &ctx.entities.player.hitboxes {
                 let hitbox = hitbox_base.make_transformed(ctx.entities.player.physics.pos, ctx.entities.player.physics.rotation);
 
                 println!("hitbox max_x, min_x, max_y, min_y, max_z, min_z {} {} {} {} {} {}",

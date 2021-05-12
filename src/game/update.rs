@@ -80,10 +80,10 @@ fn resolve_player_hit_enemy(_player: &entity::Entity, _enemy: &mut entity::Entit
 fn entity_collision(entity_1: &entity::Entity, entity_2: &entity::Entity) -> bool{
 
     // TODO make this more optimized, by calculation each transformed hitbox only once
-    for e1_hitbox_base in &entity_1.hit_boxes {
+    for e1_hitbox_base in &entity_1.hitboxes {
         let e1_hitbox = e1_hitbox_base.make_transformed(entity_1.physics.pos, entity_1.physics.rotation);
 
-        for e2_hitbox_base in &entity_2.hit_boxes {
+        for e2_hitbox_base in &entity_2.hitboxes {
             let e2_hitbox = e2_hitbox_base.make_transformed(entity_2.physics.pos, entity_2.physics.rotation);
             let collision_res = physics::check_collision(&e1_hitbox, &e2_hitbox);
             if collision_res.has_collision() {
@@ -142,6 +142,8 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
             let z_rot = camera.z_rotation();
 
             let rot_mat = na::Matrix3::new_rotation(z_rot);
+            let y = -controls.movement_dir.y;
+            let x = controls.movement_dir.x;
             let player_move_dir = rot_mat * na::Vector3::new(-controls.movement_dir.y, controls.movement_dir.x, 0.0);
 
             game::update_velocity(&mut player.physics, player_move_dir);
@@ -251,7 +253,7 @@ fn update_player_state(player: &mut entity::Entity) {
 
 fn update_enemies_death(_ctx: &mut game::Context) {
     /*
-    let mut deaths = Vec::new();
+    let mut deaths =  Vec::new();
     for e in &ctx.state.enemies {
     let enemy_hp = match ctx.ecs.get_health(*e) {
     Some(e_hp) => *e_hp,

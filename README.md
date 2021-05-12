@@ -43,7 +43,8 @@ A game in rust to learn rust and some opengl
 - [ ] Move most of data from game Context into scenes. Game context should be stuff like window, current scene, inputs. But entities, models, shaders, animaiton, action, and more should be in scene. This also makes reloading scene, fx when .glb files are written easier
 - [ ] Have base animaiton, and have weapon just overwrite the onces they have. Fx all should use same dodge, and maybe also idle
 - [x] Rework camera to behave like ashen, when player walks towads is. Camera should keep a minumums distance and not pivot around
-
+- [x] World collision using the terrain triangles.
+- [ ] Walk downhill
 
 # Cool stuff
 distortion shader fx https://lindenreid.wordpress.com/2018/03/05/heat-distortion-shader-tutorial/#:~:text=The%20basic%20premise%20of%20the,uses%20to%20sample%20that%20texture.

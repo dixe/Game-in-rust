@@ -192,6 +192,11 @@ impl Context {
         player.skeleton = skeleton;
         player.bones = bones;
 
+
+        for hitbox in &player.hitboxes {
+            println!("{:?}",  hitbox.name);
+        }
+
         self.entities.player = player;
 
 
@@ -338,7 +343,7 @@ impl Context {
                 false => self.hitbox_shader.set_vec3(&self.render_context.gl, "color", na::Vector3::new(1.0, 1.0, 1.0))
             };
 
-            for hitbox in &entity.hit_boxes {
+            for hitbox in &entity.hitboxes {
                 let col_box = hitbox.make_transformed(entity.physics.pos, entity.physics.rotation);
 
                 let clr = na::Vector3::new(1.0, 1.0, 0.0);
