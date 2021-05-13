@@ -123,10 +123,8 @@ impl Context {
         let glb_path = "E:/repos/Game-in-rust/blender_models/hammer.glb";
 
         let (skeleton, index_map) = render_gl::Skeleton::from_gltf(&glb_path)?;
-
-        let _gltf_meshes = render_gl::meshes_from_gltf(&glb_path, &self.render_context.gl, &index_map)?;
-
-        let animations = load_animations(&glb_path, &skeleton).unwrap();
+        let base_animations = Some(&self.entities.player.animation_player.as_ref().unwrap().animations);
+        let animations = load_animations(&glb_path, &skeleton, base_animations).unwrap();
 
         let gltf_meshes = render_gl::meshes_from_gltf(&glb_path, &self.render_context.gl, &index_map)?;
         let model_name = "hammer";
@@ -146,7 +144,7 @@ impl Context {
 
     fn setup_world(&mut self) -> Result<(), failure::Error>  {
 
-        let world_glb_path = "E:/repos/Game-in-rust/blender_models/world_2.glb";
+        let world_glb_path = "E:/repos/Game-in-rust/blender_models/world_1.glb";
 
         let index_map = std::collections::HashMap::new();
 
@@ -169,7 +167,7 @@ impl Context {
 
         let (skeleton, index_map) = render_gl::Skeleton::from_gltf(&player_glb_path)?;
 
-        let animations = load_animations(&player_glb_path, &skeleton).unwrap();
+        let animations = load_animations(&player_glb_path, &skeleton, None).unwrap();
 
         self.animations.insert("player".to_string(), animations.clone());
 
@@ -454,9 +452,9 @@ fn empty() -> Result<Context, failure::Error> {
     })
 }
 
-fn load_animations(file_path: &str, skeleton: &render_gl::Skeleton) -> Option<render_gl::PlayerAnimations>{
+fn load_animations(file_path: &str, skeleton: &render_gl::Skeleton, base_animations: Option<&render_gl::PlayerAnimations>) -> Option<render_gl::PlayerAnimations>{
 
-    let animations = match render_gl::load_animations(file_path, &skeleton) {
+    let animations = match render_gl::load_animations(file_path, &skeleton, base_animations) {
         Ok(key_frames) => key_frames,
         Err(err) => {           //
             println!("Error loading key_frames: {:#?}", err);

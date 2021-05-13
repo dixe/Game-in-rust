@@ -76,13 +76,15 @@ fn update_entities_position(ctx: &mut game::Context) {
         entity.physics.pos += entity.physics.velocity * delta;
     }
 
-    // APPLY GRAVITY -- results in jancky motion down hill
-    let v = entity.physics.velocity.z;
+    if entity.physics.falling {
+        // APPLY GRAVITY -- results in jancky motion down hill
+        let v = entity.physics.velocity.z;
 
-    let a = -400.0;
-    let gravity = v * delta + (1.0/2.0 * a * delta * delta);
+        let a = -400.0;
+        let gravity = v * delta + (1.0/2.0 * a * delta * delta);
 
-    //entity.physics.velocity.z += gravity;
+        entity.physics.velocity.z += gravity;
+    }
 }
 
 

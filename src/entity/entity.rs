@@ -15,6 +15,7 @@ pub struct Entity {
     pub weapon_id: usize,
     pub is_hit: bool,
     pub queued_action: Option<EntityState>,
+
 }
 
 
@@ -52,7 +53,7 @@ impl Entity {
             weapon_id: 9999999,
             hitboxes: Vec::<physics::CollisionBox>::new(),
             is_hit: false,
-            queued_action: None
+            queued_action: None,
         }
     }
 

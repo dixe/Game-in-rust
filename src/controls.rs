@@ -88,6 +88,7 @@ impl Controls {
             self.movement_dir.z = 0.0;
         }
 
+        self.roll = false;
         self.attack = false;
         self.next_weapon = false;
 
@@ -140,10 +141,6 @@ impl Controls {
                         Some(sdl2::keyboard::Keycode::Q) =>  {
                             self.q = false;
                         },
-                        Some(sdl2::keyboard::Keycode::Space) =>  {
-                            self.roll = false;
-                        },
-
                         Some(sdl2::keyboard::Keycode::Left) =>  {
                             self.left = false;
                         },
@@ -274,6 +271,7 @@ impl Controls {
                     match button {
                         sdl2::controller::Button::RightShoulder => self.attack = true,
                         sdl2::controller::Button::Y => self.reset = true,
+                        sdl2::controller::Button::B => self.roll = true,
                         _ => {}
 
                     }

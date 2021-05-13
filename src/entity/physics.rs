@@ -11,6 +11,7 @@ pub struct Physics {
     //
     pub inverse_mass: f32,
     pub anchor_id: Option<usize>,
+    pub falling: bool,
 }
 
 impl Physics {
@@ -23,7 +24,8 @@ impl Physics {
             max_speed: 5.0,
             inverse_mass: 1.0,
             scale: 1.0,
-            anchor_id: None
+            anchor_id: None,
+            falling: true,
         }
     }
 

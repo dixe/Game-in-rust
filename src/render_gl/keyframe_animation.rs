@@ -63,74 +63,78 @@ pub struct PlayerAnimations {
 }
 
 
-
-pub fn load_animations(file_path: &str, skeleton: &Skeleton) -> Result<PlayerAnimations, Error> {
+pub fn load_animations(file_path: &str, skeleton: &Skeleton, base_animations: Option<&PlayerAnimations>) -> Result<PlayerAnimations, Error> {
 
     let animations = key_frames_from_gltf(file_path, skeleton)?;
 
     // This is not the FPS is will be played back at, by used to normalise longer and shorter animaions
     // to be invariant of keyframes
-    let frame_normalize = 40.0;
-    let t_pose_frames = animations.get("t_pose").unwrap();
-    let walk_frames = animations.get("walk").unwrap();
-    let idle_frames = animations.get("idle").unwrap();
-    let attack_frames = animations.get("attack").unwrap();
-    let attack_follow_frames = animations.get("attack_follow").unwrap();
+
+    let t_pose_frames = animations.get("t_pose");
+    let walk_frames = animations.get("walk");
+    let idle_frames = animations.get("idle");
+    let attack_frames = animations.get("attack");
+    let attack_follow_frames = animations.get("attack_follow");
+
+    let mut roll_frames = animations.get("roll");
+
+    let t_pose = create_animation(t_pose_frames, base_animations.map(|fb| &fb.t_pose), true);
+    let walk = create_animation(walk_frames, base_animations.map(|fb| &fb.walk), true);
+    let idle = create_animation(idle_frames, base_animations.map(|fb| &fb.idle), true);
+    let attack = create_animation(attack_frames, base_animations.map(|fb| &fb.attack), false);
+    let attack_follow = create_animation(attack_follow_frames, base_animations.map(|fb| &fb.attack_follow), false);
 
 
-    let mut roll_frames_res = animations.get("roll");
-
-
-    match roll_frames_res {
-        Some(roll_frames) => {
-            let base = roll_frames[0].joints[0].translation;
-
-            for frame in roll_frames {
-                //println!("{:#?}", frame.joints[0].translation - base);
-            }
-        },
-        _ => {}
-    };
-
-    let t_pose = KeyframeAnimation::new(t_pose_frames.len() as f32 / frame_normalize, t_pose_frames.clone(), true, None);
-    let walk = KeyframeAnimation::new(walk_frames.len() as f32 / frame_normalize, walk_frames.clone(), true, None);
-    let idle = KeyframeAnimation::new(idle_frames.len() as f32 / frame_normalize, idle_frames.clone(), true, None);
-    let attack = KeyframeAnimation::new(attack_frames.len()  as f32 / frame_normalize, attack_frames.clone(), false, None);
-    let attack_follow = KeyframeAnimation::new(attack_frames.len()  as f32 / frame_normalize, attack_follow_frames.clone(), false, None);
-
-    let roll = match roll_frames_res {
-        Some(rf) => {
-
-            let mut roll_frames = rf.clone();
-            // get root_motion into vec
-            // remove movement from animation
-            // so playing it without movement results in inplace animaiton
-            let base = roll_frames[0].joints[0].translation;
-
-            let root_motion = (&mut roll_frames).last().unwrap().joints[0].translation  - base;
-            for frame in roll_frames.iter_mut() {
-                frame.joints[0].translation.x = 0.0;
-                frame.joints[0].translation.y = 0.0;
-            }
-
-            KeyframeAnimation::new(roll_frames.len()  as f32 / frame_normalize, roll_frames.clone(), false, Some(root_motion))
-        },
-        _ => {
-            idle.clone()
-        }
-    };
+    let roll = create_root_motion_animation(roll_frames, base_animations.map(|fb| &fb.roll), false);
 
     Ok(PlayerAnimations {
         t_pose,
         walk,
         idle,
         attack,
-        attack_follow, roll
+        attack_follow,
+        roll
     })
 }
 
 
-fn key_frames_from_gltf(file_path: &str, skeleton: &Skeleton) -> Result<HashMap<String,Vec<KeyFrame>>, Error> {
+fn create_root_motion_animation(frames: Option<&Vec::<KeyFrame>>, fall_back: Option<&KeyframeAnimation>, cyclic: bool) -> KeyframeAnimation {
+    let frame_normalize = 40.0;
+
+
+    match frames {
+        Some(fs) => {
+            let mut new_frames = fs.clone();
+            // get root_motion into vec
+            // remove movement from animation
+            // so playing it without movement results in inplace animaiton
+            let base = new_frames[0].joints[0].translation;
+
+            let root_motion = (&mut new_frames).last().unwrap().joints[0].translation  - base;
+            for frame in new_frames.iter_mut() {
+                frame.joints[0].translation.x = 0.0;
+                frame.joints[0].translation.y = 0.0;
+            }
+
+            KeyframeAnimation::new(new_frames.len() as f32 / frame_normalize, new_frames.clone(), cyclic, Some(root_motion))
+
+        },
+        None => fall_back.unwrap().clone(),
+    }
+}
+
+fn create_animation(frames: Option<&Vec::<KeyFrame>>, fall_back: Option<&KeyframeAnimation>, cyclic: bool,) -> KeyframeAnimation {
+    let frame_normalize = 40.0;
+
+    match frames {
+        Some(fs) => {
+            KeyframeAnimation::new(fs.len() as f32 / frame_normalize, fs.clone(), cyclic, None)
+        },
+        None => fall_back.unwrap().clone(),
+    }
+}
+
+fn key_frames_from_gltf(file_path: &str, skeleton: &Skeleton) -> Result<HashMap<String, Vec<KeyFrame>>, Error> {
     // should be in resources, but atm the file is not in resources
     let (gltf, buffers, _) = gltf::import(file_path)?;
 

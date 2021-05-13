@@ -102,18 +102,15 @@ impl CollisionBox {
 
     pub fn make_transformed(&self, translation: na::Vector3::<f32>, rotation: na::UnitQuaternion::<f32>) -> CollisionBox {
 
-        let center = (self.v0 + self.v1 + self.v2 + self.v3 + self.v4 + self.v5 + self.v6 + self.v7) / 8.0;
-
-        //println!("v0 ROT: {:?}", rotation *  (self.v7 - center)  + translation + center);
         CollisionBox {
-            v0:  rotation *  (self.v0 - center)  + translation + center,
-            v1:  rotation *  (self.v1 - center)  + translation + center,
-            v2:  rotation *  (self.v2 - center)  + translation + center,
-            v3:  rotation *  (self.v3 - center)  + translation + center,
-            v4:  rotation *  (self.v4 - center)  + translation + center,
-            v5:  rotation *  (self.v5 - center)  + translation + center,
-            v6:  rotation *  (self.v6 - center)  + translation + center,
-            v7:  rotation *  (self.v7 - center)  + translation + center,
+            v0: rotation * self.v0  + translation,
+            v1: rotation * self.v1  + translation,
+            v2: rotation * self.v2  + translation,
+            v3: rotation * self.v3  + translation,
+            v4: rotation * self.v4  + translation,
+            v5: rotation * self.v5  + translation,
+            v6: rotation * self.v6  + translation,
+            v7: rotation * self.v7  + translation,
             name: "".to_string()
         }
     }
