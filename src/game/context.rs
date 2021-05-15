@@ -101,20 +101,39 @@ impl Context {
     }
 
     fn setup_enemy(&mut self) -> Result<(), failure::Error>  {
-        let player_glb_path = "E:/repos/Game-in-rust/blender_models/player.glb";
 
-        let (_skeleton, index_map) = render_gl::Skeleton::from_gltf(&player_glb_path)?;
+        let enemy_glb_path = "E:/repos/Game-in-rust/blender_models/enemy1.glb";
 
-        let gltf_meshes = render_gl::meshes_from_gltf(&player_glb_path, &self.render_context.gl, &index_map)?;
+        let (skeleton, index_map) = render_gl::Skeleton::from_gltf(&enemy_glb_path)?;
 
-        let model_name = "targetDummy";
-        self.add_model(model_name, &gltf_meshes);
+        let animations = load_animations(&enemy_glb_path, &skeleton, None).unwrap();
 
-        let mut dummy = entity::Entity::new(None, model_name.to_string());
-        self.setup_hitboxes(&mut dummy, &gltf_meshes);
-        dummy.physics.pos.x += 5.0;
-        self.entities.enemies.add(dummy);
+        self.animations.insert("enemy1".to_string(), animations.clone());
 
+        let animation_player = render_gl::AnimationPlayer::new(render_gl::Animation::Idle, animations);
+        let gltf_meshes = render_gl::meshes_from_gltf(&enemy_glb_path, &self.render_context.gl, &index_map)?;
+
+        let mut bones = Vec::new();
+        let joint_count = skeleton.joints.len();
+        for _ in 0..joint_count {
+            bones.push(na::Matrix4::identity());
+        }
+
+        // MODELS
+        let model_name = "enemy";
+        self.add_skinned_model(model_name, &gltf_meshes);
+
+        let mut enemy = entity::Entity::new(Some(animation_player), model_name.to_string());
+        self.setup_hitboxes(&mut enemy, &gltf_meshes);
+
+        enemy.skeleton = skeleton;
+        enemy.bones = bones;
+
+        enemy.physics.pos.x += 5.0;
+
+        enemy.queued_action = Some(entity::EntityState::Idle);
+        enemy.next_action();
+        self.entities.enemies.add(enemy);
         Ok(())
     }
 
@@ -136,6 +155,8 @@ impl Context {
 
         self.animations.insert(model_name.to_string(), animations);
         self.entities.weapons.add(weapon);
+
+
 
         Ok(())
     }
@@ -282,6 +303,9 @@ impl Context {
     pub fn update_animations(&mut self) {
         let delta = self.get_delta_time();
         self.entities.player.update_animations(delta);
+        for enemy in self.entities.enemies.values_mut() {
+            enemy.update_animations(delta);
+        }
 
     }
 
