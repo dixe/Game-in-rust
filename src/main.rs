@@ -166,6 +166,7 @@ fn run() -> Result<(), failure::Error> {
 
     'main: loop{
         ctx.update_delta();
+        let delta = ctx.get_delta_time();
         ctx.handle_inputs();
 
 
@@ -174,7 +175,7 @@ fn run() -> Result<(), failure::Error> {
         }
 
         if ctx.controls.reset {
-            ctx.entities.player.physics = entity::Physics::new();
+            ctx.scene.entities.player.physics = entity::Physics::new();
         }
 
         unsafe {
@@ -182,32 +183,31 @@ fn run() -> Result<(), failure::Error> {
         }
 
 
-        game::run_ai(&mut ctx);
+        game::run_ai(&mut ctx.scene);
 
         //PHYSICS PROCESSING
-        let collisions = physics::process(&mut ctx);
+        let collisions = physics::process(&mut ctx.scene, delta);
 
         // SPAWN PROJECTILES, HANDLE COLLISION THAT WAS NOT WITH ENVIROMENT
-        game::update_game_state(&mut ctx, &collisions);
+        game::update_game_state(&mut ctx.scene, &ctx.controls, &collisions);
 
 
         //UPDATE CAMERA IF FOLLOW MODE
 
-        let mode = ctx.camera().mode();
+        let mode = ctx.scene.camera().mode();
         match mode {
             camera::CameraMode::Free => {
-                update_free_camera(&mut ctx);
+                update_free_camera(&mut ctx, delta);
             },
             camera::CameraMode::Follow => {
-                update_follow_camera(&mut ctx);
+                update_follow_camera(&mut ctx.scene, &ctx.controls);
             },
         };
 
 
-
         //PHYSICS TEST
-        physics_test.update(&ctx.controls, ctx.get_delta_time());
-        physics_test.render(&ctx, &collision_shader);
+        physics_test.update(&ctx.controls, delta);
+        physics_test.render(&ctx.render_context.gl, &ctx.scene, &collision_shader);
 
 
 
@@ -215,9 +215,9 @@ fn run() -> Result<(), failure::Error> {
         debug_keys(&mut ctx, &bone_cube);
 
         // ANIMATIONS UPDATE
-        ctx.update_animations();
+        ctx.scene.update_animations(delta);
         // RENDERING
-        ctx.render();
+        ctx.scene.render(&mut ctx.render_context);
 
         ctx.render_context.gl_swap_window();
 
@@ -229,7 +229,7 @@ fn run() -> Result<(), failure::Error> {
                 Command::ReloadActions => {
                     println!("Reload action");
 
-                    ctx.reload_shaders();
+                    ctx.scene.reload_shaders(&ctx.render_context);
 
 
                 },
@@ -238,12 +238,12 @@ fn run() -> Result<(), failure::Error> {
                 },
 
                 Command::DecrementWalkTime => {
-                    let player = &mut ctx.entities.player;
+                    let player = &mut ctx.scene.entities.player;
                     player.animation_player.as_mut().map(|ap| ap.animations.walk.duration -= 0.1);
                     println!("{:#?}", player.animation_player.as_ref().map(|ap| ap.animations.walk.duration));
                 },
                 Command::IncrementWalkTime => {
-                    let player = &mut ctx.entities.player;
+                    let player = &mut ctx.scene.entities.player;
                     player.animation_player.as_mut().map(|ap| ap.animations.walk.duration += 0.1);
                     println!("{:#?}", player.animation_player.as_ref().map(|ap| ap.animations.walk.duration));
                 },
@@ -259,7 +259,7 @@ fn run() -> Result<(), failure::Error> {
 
 fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
 
-    let player = &mut ctx.entities.player;
+    let player = &mut ctx.scene.entities.player;
 
     let animation_player = player.animation_player.as_mut().unwrap();
 
@@ -300,7 +300,7 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
     //HIT BOXES
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::H) {
         Some(true) => {
-            ctx.render_hitboxes = true;
+            ctx.scene.render_hitboxes = true;
         },
         _ => {
         }
@@ -310,15 +310,15 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
     //HIT BOXES
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::P) {
         Some(true) => {
-            for hitbox_base in &ctx.entities.player.hitboxes {
-                let hitbox = hitbox_base.make_transformed(ctx.entities.player.physics.pos, ctx.entities.player.physics.rotation);
+            for hitbox_base in &ctx.scene.entities.player.hitboxes {
+                let hitbox = hitbox_base.make_transformed(ctx.scene.entities.player.physics.pos, ctx.scene.entities.player.physics.rotation);
 
                 println!("hitbox max_x, min_x, max_y, min_y, max_z, min_z {} {} {} {} {} {}",
                          hitbox.max_x(), hitbox.min_x(),
                          hitbox.max_y(), hitbox.min_y(),
                          hitbox.max_z(), hitbox.min_z() );
-                println!("player_pos x y z {} {} {}", ctx.entities.player.physics.pos.x, ctx.entities.player.physics.pos.y, ctx.entities.player.physics.pos.z);
-                println!("player_rot {:?}", ctx.entities.player.physics.rotation.to_euler_angles());
+                println!("player_pos x y z {} {} {}", ctx.scene.entities.player.physics.pos.x, ctx.scene.entities.player.physics.pos.y, ctx.scene.entities.player.physics.pos.z);
+                println!("player_rot {:?}", ctx.scene.entities.player.physics.rotation.to_euler_angles());
             }
         },
         _ => {
@@ -329,23 +329,23 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
     match ctx.controls.keys.get(&sdl2::keyboard::Keycode::V) {
         Some(true) => {
 
-            ctx.cube_shader.set_used();
+            ctx.scene.cube_shader.set_used();
 
 
-            let proj = ctx.camera().projection();
-            let view = ctx.camera().view();
-            ctx.cube_shader.set_projection_and_view(&ctx.render_context.gl, proj, view);
+            let proj = ctx.scene.camera().projection();
+            let view = ctx.scene.camera().view();
+            ctx.scene.cube_shader.set_projection_and_view(&ctx.render_context.gl, proj, view);
             let mut scale_mat = na::Matrix4::identity();
             scale_mat = scale_mat * 0.2;
             scale_mat[15] = 1.0;
 
 
             for joint in &skeleton.joints {
-                bone_cube.render(&ctx.render_context.gl, &ctx.cube_shader, joint.world_matrix * scale_mat);
+                bone_cube.render(&ctx.render_context.gl, &ctx.scene.cube_shader, joint.world_matrix * scale_mat);
             }
 
-            ctx.hitbox_shader.set_used();
-            ctx.hitbox_shader.set_projection_and_view(&ctx.render_context.gl, proj, view);
+            ctx.scene.hitbox_shader.set_used();
+            ctx.scene.hitbox_shader.set_projection_and_view(&ctx.render_context.gl, proj, view);
 
 
         },
@@ -360,9 +360,9 @@ fn set_t_pose(bones: &mut [na::Matrix4::<f32>]) {
     }
 }
 
-fn update_follow_camera(ctx: &mut game::Context) {
+fn update_follow_camera(scene: &mut game::Scene, controls: &controls::Controls) {
 
-    let player = &ctx.entities.player;
+    let player = &scene.entities.player;
 
     let mut physics = player.physics;
 
@@ -371,22 +371,22 @@ fn update_follow_camera(ctx: &mut game::Context) {
 
 
     // readjust to player
-    ctx.camera_mut().update_target(physics.pos);
+    scene.camera_mut().update_target(physics.pos);
 
     // camera movement by stick
-    ctx.controls.right_stick.map(|right_stick| {
-        ctx.camera_mut().update_movement(right_stick.x, right_stick.y);
+    controls.right_stick.map(|right_stick| {
+        scene.camera_mut().update_movement(right_stick.x, right_stick.y);
     });
 
 }
 
-fn update_free_camera(ctx: &mut game::Context) {
+fn update_free_camera(ctx: &mut game::Context, delta: f32) {
 
     use sdl2::keyboard::Keycode;
 
     let mut move_dir = ctx.controls.movement_dir;
 
-    if ctx.camera().mode() == camera::CameraMode::Free {
+    if ctx.scene.camera().mode() == camera::CameraMode::Free {
         ctx.controls.keys.get(&Keycode::LShift).map(|is_set| {
             if *is_set {
                 move_dir.z += 1.0;
@@ -400,11 +400,10 @@ fn update_free_camera(ctx: &mut game::Context) {
         });
     }
 
-    let delta = ctx.get_delta_time();
-    ctx.camera_mut().move_camera(move_dir, delta);
+    ctx.scene.camera_mut().move_camera(move_dir, delta);
 
     let mouse_move = ctx.controls.mouse_move;
 
 
-    ctx.camera_mut().update_movement(mouse_move.x, mouse_move.y);
+    ctx.scene.camera_mut().update_movement(mouse_move.x, mouse_move.y);
 }

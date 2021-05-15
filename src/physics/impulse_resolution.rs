@@ -19,9 +19,9 @@ pub struct Manifold {
 
 
 
-pub fn do_impulse_correction(ctx: &mut game::Context) -> Vec<EntityCollision>{
+pub fn do_impulse_correction(scene: &mut game::Scene) -> Vec<EntityCollision>{
 
-    let (mut impulse_entities, collision_shapes, no_checks) = create_impulse_entities(ctx);
+    let (mut impulse_entities, collision_shapes, no_checks) = create_impulse_entities(scene);
 
     let manifolds = do_impulse_collisions(&mut impulse_entities, &collision_shapes, no_checks);
 
@@ -32,7 +32,7 @@ pub fn do_impulse_correction(ctx: &mut game::Context) -> Vec<EntityCollision>{
         // Find a better way to not update walls
         // and update entities in general
 
-        //ctx.entities.set_physics(e.entity_id, *e);
+        //scene.entities.set_physics(e.entity_id, *e);
 
     }
 
@@ -107,14 +107,14 @@ fn impulse_position_correction(entity_1: &mut entity::Physics, entity_2: &mut en
 
 
 
-fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<ConvexCollisionShape>, std::collections::HashSet<(usize,usize)>) {
+fn create_impulse_entities(scene: &game::Scene) -> (Vec<entity::Physics>, Vec<ConvexCollisionShape>, std::collections::HashSet<(usize,usize)>) {
 
     let mut entities = Vec::new();
     let mut collision_shapes = Vec::new();
     let no_checks = std::collections::HashSet::new();
 
     // Get some data out of enitiy component system
-    let player_physics = ctx.entities.player.physics;
+    let player_physics = scene.entities.player.physics;
     entities.push(player_physics);
     collision_shapes.push(ConvexCollisionShape::rectangle(&player_physics.pos, 1.0, 1.0, &player_physics));
 
@@ -122,8 +122,8 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
 
 
     /*
-    for enemy_id in &ctx.state.enemies {
-    match ctx.ecs.get_physics(*enemy_id) {
+    for enemy_id in &scene.state.enemies {
+    match scene.ecs.get_physics(*enemy_id) {
     Some(en) => {
     entities.push(*en);
     collision_shapes.push(ConvexCollisionShape::rectangle(&en.pos, 1.0, 1.0, en ));
@@ -133,11 +133,11 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
 }
 
     // ADD PLAYER PROJECTILES AS IMPULSE ENTITIES
-    for shot in &ctx.state.player_shots {
-    match ctx.ecs.get_physics(*shot) {
+    for shot in &scene.state.player_shots {
+    match scene.ecs.get_physics(*shot) {
     Some(proj) => {
 
-    no_checks.insert((ctx.player_id, proj.entity_id));
+    no_checks.insert((scene.player_id, proj.entity_id));
 
     entities.push(*proj);
     collision_shapes.push(ConvexCollisionShape::rectangle(&proj.pos, 1.0, 1.0, proj));
@@ -147,10 +147,10 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
 }
 
     // ADD PLAYER PROJECTILES AS IMPULSE ENTITIES
-    for shot in &ctx.state.enemy_shots {
-    match ctx.ecs.get_physics(*shot) {
+    for shot in &scene.state.enemy_shots {
+    match scene.ecs.get_physics(*shot) {
     Some(proj) => {
-    for e in &ctx.state.enemies {
+    for e in &scene.state.enemies {
     no_checks.insert((*e, proj.entity_id));
 
 }
@@ -161,7 +161,7 @@ fn create_impulse_entities(ctx: &game::Context) -> (Vec<entity::Physics>, Vec<Co
 }
 }
 
-    for w in ctx.scene.border_sides() {
+    for w in scene.scene.border_sides() {
     // todo have these stored in the scene along side the collision shapes
     let mut entity = entity::Physics::new(usize::MIN);
 

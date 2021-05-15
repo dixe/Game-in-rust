@@ -2,13 +2,13 @@ use crate::entity;
 use crate::game;
 use crate::physics::collision_3d::*;
 
-pub fn resolve_movement_collision(ctx: &mut game::Context) {
+pub fn resolve_movement_collision(scene: &mut game::Scene) {
 
-    for enemy in ctx.entities.enemies.entities.values_mut() {
-        resolve_movement_collision_entities(&mut ctx.entities.player, enemy);
+    for enemy in scene.entities.enemies.entities.values_mut() {
+        resolve_movement_collision_entities(&mut scene.entities.player, enemy);
     }
 
-    resolve_world_collision_entity(&mut ctx.entities.player, &ctx.world_triangles);
+    resolve_world_collision_entity(&mut scene.entities.player, &scene.world_triangles);
 
 
 }

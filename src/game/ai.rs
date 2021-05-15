@@ -3,7 +3,7 @@ use crate::entity;
 
 use nalgebra_glm as glm;
 
-pub fn run_ai(_ctx: &mut game::Context) {
+pub fn run_ai(scene: &mut game::Scene) {
     /*
     let player = match ctx.ecs.get_physics(ctx.player_id) {
     Some(e) => *e,

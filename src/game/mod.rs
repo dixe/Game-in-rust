@@ -1,5 +1,8 @@
 mod context;
-pub use self::context::{Context, Cameras};
+pub use self::context::{Context};
+
+mod scene;
+pub use self::scene::{Scene, Cameras};
 
 mod physics_functions;
 pub use self::physics_functions::*;

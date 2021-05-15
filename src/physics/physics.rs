@@ -12,18 +12,18 @@ pub struct EntityCollision {
 }
 
 
-pub fn process(ctx: &mut game::Context) -> Vec<EntityCollision> {
+pub fn process(scene: &mut game::Scene, delta: f32) -> Vec<EntityCollision> {
     // MOVE ENTITIES
 
-    update_entities_position(ctx);
-    update_entities_rotation(ctx);
+    update_entities_position(scene, delta);
+    update_entities_rotation(scene, delta);
 
 
     //DO IMPULSE COLLISION AND UPDATE
-    let impulse_collisions = do_impulse_correction(ctx);
+    let impulse_collisions = do_impulse_correction(scene);
 
 
-    resolve_movement_collision(ctx);
+    resolve_movement_collision(scene);
 
 
 
@@ -34,15 +34,13 @@ pub fn process(ctx: &mut game::Context) -> Vec<EntityCollision> {
 
 
 
-fn update_entities_position(ctx: &mut game::Context) {
+fn update_entities_position(scene: &mut game::Scene, delta: f32) {
     // Should this maybe be done more explicity
     // Maybe with a list of physics entities or something like that, or just go over all of them
     // and take the ones where we want physics
-    let delta = ctx.get_delta_time();
 
-
-    //for entity in ctx.entities.values_mut() {
-    let entity  = &mut ctx.entities.player;
+    //for entity in scene.entities.values_mut() {
+    let entity  = &mut scene.entities.player;
     // maybe there is root_motion
     let mut update_with_vel = true;
 
@@ -88,11 +86,9 @@ fn update_entities_position(ctx: &mut game::Context) {
 }
 
 
-fn update_entities_rotation (ctx: &mut game::Context) {
-    let delta = ctx.get_delta_time();
+fn update_entities_rotation (scene: &mut game::Scene, delta: f32) {
 
-
-    for entity in ctx.entities.values_mut() {
+    for entity in scene.entities.values_mut() {
 
         let mut physics = entity.physics;
         let target_r = f32::atan2(physics.target_dir.y, physics.target_dir.x);

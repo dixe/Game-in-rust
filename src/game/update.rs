@@ -22,14 +22,14 @@ fn format_matrix3(mat: &na::Matrix3::<f32>) {
     println!("{:.2} {:.2} {:.2} ", mat[6], mat[7], mat[8]);
 }
 
-pub fn update_game_state(ctx: &mut game::Context, _collisions: &Vec<physics::EntityCollision>) {
+pub fn update_game_state(scene: &mut game::Scene, controls: &controls::Controls,  _collisions: &Vec<physics::EntityCollision>) {
 
     // also "action" system update fx sword arc ect
-    //action_system::update_actions(&mut ctx.ecs.actions_info, &mut ctx.ecs.physics, &mut ctx.state, delta as f32, &ctx.actions);
+    //action_system::update_actions(&mut scene.ecs.actions_info, &mut scene.ecs.physics, &mut scene.state, delta as f32, &scene.actions);
 
 
     // PLAYER MOVEMENT
-    update_player(ctx.cameras.current(), &ctx.controls, &mut ctx.entities.player, &ctx.entities.weapons, &ctx.animations);
+    update_player(scene.cameras.current(), controls, &mut scene.entities.player, &scene.entities.weapons, &scene.animations);
 
 
     // make a function on player, weapon anchor mat and just use that as world_matrix
@@ -37,18 +37,18 @@ pub fn update_game_state(ctx: &mut game::Context, _collisions: &Vec<physics::Ent
     // not play nice with borrow checker
 
 
-    let world_mat = ctx.entities.player.skeleton.joints[14].world_matrix;
-    let player_model_mat = ctx.entities.player.physics.calculate_model_mat();
+    let world_mat = scene.entities.player.skeleton.joints[14].world_matrix;
+    let player_model_mat = scene.entities.player.physics.calculate_model_mat();
 
-    let player = &ctx.entities.player;
+    let player = &scene.entities.player;
 
-    let weapon = match ctx.entities.weapons.get_mut(player.weapon_id) {
+    let weapon = match scene.entities.weapons.get_mut(player.weapon_id) {
         Some(weapon) => weapon,
-        None => &mut ctx.entities.default_weapon // default weapon for player
+        None => &mut scene.entities.default_weapon // default weapon for player
     };
 
     weapon.physics.apply_transform(player_model_mat * world_mat);
-    let player = &ctx.entities.player;
+    let player = &scene.entities.player;
 
 
     // Weapon collisions
@@ -59,7 +59,7 @@ pub fn update_game_state(ctx: &mut game::Context, _collisions: &Vec<physics::Ent
 
         if current_frame >= info.hit_start_frame && current_frame <= info.hit_end_frame {
 
-            for dummy in ctx.entities.enemies.values_mut() {
+            for dummy in scene.entities.enemies.values_mut() {
                 dummy.is_hit = false;
                 if entity_collision(&weapon, dummy) {
                     resolve_player_hit_enemy(player, dummy);
@@ -251,11 +251,11 @@ fn update_player_state(player: &mut entity::Entity) {
 
 
 
-fn update_enemies_death(_ctx: &mut game::Context) {
+fn update_enemies_death(_scene: &mut game::Scene) {
     /*
     let mut deaths =  Vec::new();
-    for e in &ctx.state.enemies {
-    let enemy_hp = match ctx.ecs.get_health(*e) {
+    for e in &scene.state.enemies {
+    let enemy_hp = match scene.ecs.get_health(*e) {
     Some(e_hp) => *e_hp,
     None => continue,
 };
@@ -266,7 +266,7 @@ fn update_enemies_death(_ctx: &mut game::Context) {
 }
 
     for dead in deaths {
-    ctx.ecs.remove_entity(*dead);
+    scene.ecs.remove_entity(*dead);
 }
      */
 }

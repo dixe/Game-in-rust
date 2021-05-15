@@ -108,10 +108,10 @@ impl PhysicsTest {
     }
 
 
-    pub fn render(&self, ctx: &game::Context, shader: &render_gl::Shader) {
+    pub fn render(&self, gl: &gl::Gl, scene: &game::Scene, shader: &render_gl::Shader) {
 
         shader.set_used();
-        shader.set_projection_and_view(&ctx.render_context.gl, ctx.camera().projection(), ctx.camera().view());
+        shader.set_projection_and_view(gl, scene.camera().projection(), scene.camera().view());
 
         let model_static = na::Matrix4::new_translation(&self.static_pos);
 
@@ -120,8 +120,8 @@ impl PhysicsTest {
 
         // static cube
         let static_color = na::Vector3::new(1.0, 1.0, 1.0);
-        shader.set_vec3(&ctx.render_context.gl, "color", static_color);
-        self.static_cube.render(&ctx.render_context.gl, &ctx.cube_shader, model_static);
+        shader.set_vec3(gl, "color", static_color);
+        self.static_cube.render(gl, &scene.cube_shader, model_static);
 
 
         // dynamic cube
@@ -130,9 +130,8 @@ impl PhysicsTest {
         if self.col {
             color = na::Vector3::new(1.0, 0.0, 0.0);
         }
-        shader.set_vec3(&ctx.render_context.gl, "color", color);
-        self.cube.render(&ctx.render_context.gl, shader, model * rot_mat);
+        shader.set_vec3(gl, "color", color);
+        self.cube.render(gl, shader, model * rot_mat);
 
     }
-
 }
