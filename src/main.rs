@@ -183,7 +183,7 @@ fn run() -> Result<(), failure::Error> {
         }
 
 
-        game::run_ai(&mut ctx.scene);
+        game::run_ais(&mut ctx.scene);
 
         //PHYSICS PROCESSING
         let collisions = physics::process(&mut ctx.scene, delta);

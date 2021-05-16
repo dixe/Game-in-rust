@@ -28,46 +28,56 @@ pub fn update_game_state(scene: &mut game::Scene, controls: &controls::Controls,
     //action_system::update_actions(&mut scene.ecs.actions_info, &mut scene.ecs.physics, &mut scene.state, delta as f32, &scene.actions);
 
 
-    // PLAYER MOVEMENT
+    // MOVEMENT AND STATES
     update_player(scene.cameras.current(), controls, &mut scene.entities.player, &scene.entities.weapons, &scene.animations);
+    update_enemies(scene);
 
 
-    // make a function on player, weapon anchor mat and just use that as world_matrix
-    // or a function to pass in the hammer reference, even though it might
-    // not play nice with borrow checker
+    // WEAPONS TRANSFORMS AND COLLISIONS
+    let player = &mut scene.entities.player;
+    update_entity_weapon_and_collisions(player, &mut scene.entities.weapons, &mut scene.entities.enemies.values_mut());
 
 
-    let world_mat = scene.entities.player.skeleton.joints[14].world_matrix;
-    let player_model_mat = scene.entities.player.physics.calculate_model_mat();
+}
 
-    let player = &scene.entities.player;
-
-    let weapon = match scene.entities.weapons.get_mut(player.weapon_id) {
+fn update_entity_weapon_and_collisions<'a, I>(entity: &mut entity::Entity, weapons: &mut entity::EntitiesCollection, targets: I) where
+    I: Iterator<Item = &'a mut entity::Entity> {
+    let weapon = match weapons.get_mut(entity.weapon_id) {
         Some(weapon) => weapon,
-        None => &mut scene.entities.default_weapon // default weapon for player
+        None => {
+            return ;
+        }
     };
 
-    weapon.physics.apply_transform(player_model_mat * world_mat);
-    let player = &scene.entities.player;
+    let world_mat = entity.skeleton.joints[14].world_matrix;
+    let model_mat = entity.physics.calculate_model_mat();
+
+    weapon.physics.apply_transform(model_mat * world_mat);
 
 
-    // Weapon collisions
-    // only if player is attacking and attack animation is in attack state
-    if let entity::EntityState::Attack(info) = player.get_state()  {
+    if let entity::EntityState::Attack(info) = entity.get_state() {
 
-        let current_frame = player.animation_player.as_ref().unwrap().current_frame_number();
+        let current_frame = entity.animation_player.as_ref().unwrap().current_frame_number();
 
         if current_frame >= info.hit_start_frame && current_frame <= info.hit_end_frame {
 
-            for dummy in scene.entities.enemies.values_mut() {
-                dummy.is_hit = false;
-                if entity_collision(&weapon, dummy) {
-                    resolve_player_hit_enemy(player, dummy);
-                    dummy.is_hit = true;
+            for target in targets {
+                target.is_hit = false;
+                if entity_collision(&weapon, target) {
+                    resolve_player_hit_enemy(entity, target);
+                    target.is_hit = true;
                 }
+
             }
         }
     }
+
+}
+
+
+
+fn update_enemies(scene: &mut game::Scene) {
+    update_enemies_states(scene);
 }
 
 
@@ -230,7 +240,7 @@ fn update_player_state(player: &mut entity::Entity) {
                 if player.queued_action == None {
                     player.queued_action = Some(entity::EntityState::Idle);
                 }
-                // check if animation is don
+
             }
         },
         entity::EntityState::Roll => {
@@ -249,6 +259,13 @@ fn update_player_state(player: &mut entity::Entity) {
     }
 }
 
+
+fn update_enemies_states(scene: &mut game::Scene) {
+
+    for enemy in scene.entities.enemies.values_mut() {
+        enemy.next_action();
+    }
+}
 
 
 fn update_enemies_death(_scene: &mut game::Scene) {

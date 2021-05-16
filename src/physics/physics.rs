@@ -4,6 +4,8 @@ use crate::physics::impulse_resolution::*;
 use crate::physics::projection_collision::*;
 use crate::physics::movement_collision::*;
 
+use crate::entity;
+
 
 #[derive(Copy, Clone, Debug)]
 pub struct EntityCollision {
@@ -41,6 +43,15 @@ fn update_entities_position(scene: &mut game::Scene, delta: f32) {
 
     //for entity in scene.entities.values_mut() {
     let entity  = &mut scene.entities.player;
+    update_entity_position(&mut scene.entities.player, delta);
+
+    for enemy in scene.entities.enemies.values_mut() {
+        update_entity_position(enemy, delta);
+    }
+}
+
+
+fn update_entity_position(entity: &mut entity::Entity, delta: f32) {
     // maybe there is root_motion
     let mut update_with_vel = true;
 
@@ -88,35 +99,43 @@ fn update_entities_position(scene: &mut game::Scene, delta: f32) {
 
 fn update_entities_rotation (scene: &mut game::Scene, delta: f32) {
 
-    for entity in scene.entities.values_mut() {
+    update_entity_rotation(&mut scene.entities.player, delta);
 
-        let mut physics = entity.physics;
-        let target_r = f32::atan2(physics.target_dir.y, physics.target_dir.x);
-
-        let mut diff = target_r - physics.rotation.euler_angles().2;
-
-        if diff < -std::f32::consts::PI {
-            diff += 2.0 * std::f32::consts::PI;
-        }
-        if diff > std::f32::consts::PI {
-            diff -= 2.0 * std::f32::consts::PI;
-        }
-
-        let dir = diff.signum();
-
-        let rotation_speed = 6.0;
-
-        let mut rot = dir * rotation_speed * delta;
-
-        if rot.abs() > diff.abs() {
-            rot = diff;
-        }
-
-        if diff.abs() > 0.01 {
-            let z_rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0, rot);
-            physics.rotation *=  z_rot;
-        }
-
-        entity.physics = physics;
+    for entity in scene.entities.enemies.values_mut() {
+        update_entity_rotation(entity, delta);
     }
+}
+
+
+
+fn update_entity_rotation(entity: &mut entity::Entity, delta: f32) {
+
+    let mut physics = entity.physics;
+    let target_r = f32::atan2(physics.target_dir.y, physics.target_dir.x);
+
+    let mut diff = target_r - physics.rotation.euler_angles().2;
+
+    if diff < -std::f32::consts::PI {
+        diff += 2.0 * std::f32::consts::PI;
+    }
+    if diff > std::f32::consts::PI {
+        diff -= 2.0 * std::f32::consts::PI;
+    }
+
+    let dir = diff.signum();
+
+    let rotation_speed = 6.0;
+
+    let mut rot = dir * rotation_speed * delta;
+
+    if rot.abs() > diff.abs() {
+        rot = diff;
+    }
+
+    if diff.abs() > 0.01 {
+        let z_rot = na::UnitQuaternion::from_euler_angles(0.0, 0.0, rot);
+        physics.rotation *=  z_rot;
+    }
+
+    entity.physics = physics;
 }

@@ -74,8 +74,6 @@ impl Entities {
 
         res.push(&self.player);
 
-
-
         // and weapons used
 
         match self.weapons.entities.get(&self.player.weapon_id) {
@@ -95,86 +93,5 @@ impl Entities {
 
     }
 
-    pub fn values_mut(&mut self) -> Vec::<&mut Entity>{
 
-
-        let mut res = Vec::new();
-
-        res.push(&mut self.player);
-
-        for w in self.weapons.entities.values_mut() {
-            res.push(w);
-        }
-
-        for e in &mut self.enemies.entities.values_mut() {
-            res.push(e);
-        }
-
-
-        res
-
-    }
-
-
-
-    /*
-
-    pub fn hammer(&self) -> &Entity {
-    match self.entities_map.get(&self.hammer_id) {
-    Some(e) => e,
-    None => panic!("No hammer set")
-}
-}
-
-    pub fn hammer_mut(&mut self) -> &mut Entity {
-    match self.entities_map.get_mut(&self.hammer_id) {
-    Some(e) => e,
-    None => panic!("No hammer set")
-}
-}
-
-    pub fn dummy(&self) -> &Entity {
-    match self.entities_map.get(&self.dummy_id) {
-    Some(e) => e,
-    None => panic!("No hammer set")
-}
-}
-
-
-
-    pub fn get(&self, entity_id: usize) -> Option<&Entity> {
-    self.entities_map.get(&entity_id)
-}
-
-    pub fn get_mut(&mut self, entity_id: usize) -> Option<&mut Entity> {
-    self.entities_map.get_mut(&entity_id)
-}
-
-    pub fn add(&mut self, entity: Entity) -> usize {
-
-    let id = self.next_id;
-    self.next_id += 1;
-
-    self.entities_map.insert(id, entity);
-    id
-}
-
-    pub fn values_mut(&mut self) -> std::collections::hash_map::ValuesMut<'_, usize, Entity> {
-    self.entities_map.values_mut()
-}
-
-
-    pub fn values(&self) -> std::collections::hash_map::Values<'_, usize, Entity> {
-    self.entities_map.values()
-}
-
-    pub fn set_physics(&mut self, entity_id: usize, physics: Physics) {
-
-    match self.entities_map.get_mut(&entity_id) {
-    Some(e) => {
-    e.physics = physics  }
-    _ => {}
-};
-}
-     */
 }

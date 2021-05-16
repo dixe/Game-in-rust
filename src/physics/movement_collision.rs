@@ -10,6 +10,9 @@ pub fn resolve_movement_collision(scene: &mut game::Scene) {
 
     resolve_world_collision_entity(&mut scene.entities.player, &scene.world_triangles);
 
+    for enemy in scene.entities.enemies.values_mut() {
+        resolve_world_collision_entity(enemy, &scene.world_triangles);
+    }
 
 }
 
