@@ -29,7 +29,6 @@ fn resolve_movement_collision_entities(e1: &mut entity::Entity, e2: &mut entity:
             let collision_res = check_collision(&e1_hitbox, &e2_hitbox);
             match collision_res {
                 CollisionResult::Collision(resolve_vec) => {
-                    println!("RESOLVE {:?}", resolve_vec);
                     e1.physics.pos -= resolve_vec;
                 },
                 _ => {}

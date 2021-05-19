@@ -111,7 +111,7 @@ fn update_entities_rotation (scene: &mut game::Scene, delta: f32) {
 fn update_entity_rotation(entity: &mut entity::Entity, delta: f32) {
 
     let mut physics = entity.physics;
-    let target_r = f32::atan2(physics.target_dir.y, physics.target_dir.x);
+    let target_r = f32::atan2(physics.facing_dir.y, physics.facing_dir.x);
 
     let mut diff = target_r - physics.rotation.euler_angles().2;
 

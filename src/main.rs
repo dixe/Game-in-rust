@@ -40,6 +40,7 @@ mod action_system;
 
 mod physics_test;
 
+use game::ai;
 #[derive(Copy, Clone, Debug)]
 enum Command {
     Nop,
@@ -183,7 +184,7 @@ fn run() -> Result<(), failure::Error> {
         }
 
 
-        game::run_ais(&mut ctx.scene);
+        game::ai::run_ais(&mut ctx.scene);
 
         //PHYSICS PROCESSING
         let collisions = physics::process(&mut ctx.scene, delta);

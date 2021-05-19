@@ -21,8 +21,9 @@ impl EntitiesCollection {
         }
     }
 
-    pub fn add(&mut self, entity: entity::Entity) -> usize {
+    pub fn add(&mut self, mut entity: entity::Entity) -> usize {
         let id = self.next_id;
+        entity.id = id;
         self.entities.insert(id, entity);
         id
     }

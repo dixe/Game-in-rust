@@ -159,7 +159,7 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
             game::update_velocity(&mut player.physics, player_move_dir);
 
             if player_move_dir.magnitude() > 0.0 {
-                player.physics.target_dir = player_move_dir.normalize();
+                player.physics.facing_dir = player_move_dir.normalize();
             }
 
             let mut target_state = entity::EntityState::Idle;

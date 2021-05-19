@@ -2,8 +2,10 @@ use crate::render_gl;
 use crate::entity::*;
 use crate::physics;
 
+
 #[derive(Clone)]
 pub struct Entity {
+    pub id: usize,
     pub physics: Physics,
     pub health: Health,
     pub model_name: String,
@@ -54,6 +56,7 @@ impl Entity {
             hitboxes: Vec::<physics::CollisionBox>::new(),
             is_hit: false,
             queued_action: None,
+            id: 0
         }
     }
 

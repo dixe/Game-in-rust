@@ -9,7 +9,7 @@ use crate::render_gl;
 use crate::camera;
 use crate::controls;
 use crate::action_system;
-
+use crate::game::ai;
 
 pub struct Cameras {
     free_camera: camera::FreeCamera,
@@ -56,6 +56,7 @@ pub struct Scene {
 
     pub render_hitboxes: bool,
 
+    pub ais: std::collections::HashMap<usize, ai::Ai>,
 
 }
 
@@ -115,7 +116,10 @@ impl Scene {
 
         enemy.queued_action = Some(entity::EntityState::Idle);
         enemy.next_action();
-        self.entities.enemies.add(enemy);
+        let id = self.entities.enemies.add(enemy);
+
+        self.ais.insert(id, ai::Ai::idle());
+
         Ok(())
     }
 
@@ -399,6 +403,7 @@ fn empty(render_context: &render_gl::context::Context) -> Result<Scene, failure:
         cameras,
         models: std::collections::HashMap::new(),
         animations: std::collections::HashMap::new(),
+        ais: std::collections::HashMap::new(),
         render_hitboxes: false,
         world_triangles: Vec::new(),
     })
