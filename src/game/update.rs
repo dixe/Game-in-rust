@@ -174,7 +174,11 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
             }
         },
 
-        camera::CameraMode::Free => {},
+        camera::CameraMode::Free => {
+            let player_move_dir = na::Vector3::new(controls.movement_dir.y, 0.0, 0.0);
+
+            game::update_velocity(&mut player.physics, player_move_dir);
+        },
     }
 }
 

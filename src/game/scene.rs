@@ -64,23 +64,21 @@ impl Scene {
 
     pub fn new(render_context: &render_gl::context::Context) -> Result<Scene, failure::Error> {
 
-        let mut ctx = empty(render_context)?;
+        let mut scene = empty(render_context)?;
 
         println!("Setup world");
-        ctx.setup_world(&render_context.gl)?;
+        scene.setup_world(&render_context.gl)?;
 
         println!("Setup player");
-        ctx.setup_player(&render_context.gl)?;
+        scene.setup_player(&render_context.gl)?;
 
         println!("Setup weapon");
-        ctx.load_weapon(&render_context.gl)?;
+        scene.load_weapon(&render_context.gl)?;
 
         println!("Setup enemy");
-        ctx.setup_enemy(&render_context.gl)?;
+        //scene.setup_enemy(&render_context.gl)?;
 
-
-
-        Ok(ctx)
+        Ok(scene)
     }
 
     fn setup_enemy(&mut self, gl: &gl::Gl) -> Result<(), failure::Error>  {
@@ -304,8 +302,77 @@ impl Scene {
         if self.render_hitboxes {
             self.render_hitboxes(render_context);
         }
+
+        self.render_ik_targets(render_context);
     }
 
+
+    fn render_ik_targets(&mut self, render_context: &mut render_gl::context::Context) {
+
+        let skeleton = &self.entities.player.skeleton;
+        let gl = &render_context.gl;
+
+        let ik = &skeleton.left_leg.as_ref().unwrap();
+
+
+        let clr = na::Vector3::new(1.0, 0.0, 0.0);
+        let cube_model = cube::Cube::new(clr, gl);
+
+        let mut scale_mat = na::Matrix4::identity();
+
+
+        scale_mat = scale_mat * 0.2;
+        scale_mat[15] = 1.0;
+
+        self.cube_shader.set_used();
+        let proj = self.camera().projection();
+        let view = self.camera().view();
+        self.cube_shader.set_projection_and_view(gl, proj, view);
+
+        // maybe do this and translation to the ik.target.translation and rotation
+        // so render is just ik.target.translation for tran, and . rotation for rot
+        // As it is now we might forget go get it in correct spot at some point
+        // on the other hand no, we need to store base target anyways
+
+        let rot_mat = self.entities.player.physics.rotation.to_homogeneous();
+        let trans_mat = na::Matrix4::new_translation(&ik.current_target.translation);
+
+        cube_model.render(gl, &self.cube_shader, trans_mat * rot_mat * scale_mat);
+
+        self.render_pos(render_context, &(ik.joint_pos(0, &skeleton.joints) + self.entities.player.physics.pos));
+
+        self.render_pos(render_context, &(ik.joint_pos(1, &skeleton.joints) + self.entities.player.physics.pos));
+
+        self.render_pos(render_context, &(ik.joint_pos(2, &skeleton.joints) + self.entities.player.physics.pos));
+
+        //self.render_pos(render_context, &ik.target.translation);
+
+    }
+
+    fn render_pos(&self, render_context: &mut render_gl::context::Context, pos: &na::Vector3::<f32>) {
+
+        let gl = &render_context.gl;
+
+        let clr = na::Vector3::new(0.0, 1.0, 0.0);
+        let cube_model = cube::Cube::new(clr, gl);
+
+        let mut scale_mat = na::Matrix4::identity();
+
+
+        scale_mat = scale_mat * 0.1;
+        scale_mat[15] = 1.0;
+
+        self.cube_shader.set_used();
+        let proj = self.camera().projection();
+        let view = self.camera().view();
+        self.cube_shader.set_projection_and_view(gl, proj, view);
+
+        let trans_mat_world = na::Matrix4::new_translation(&pos);
+
+
+        cube_model.render(gl, &self.cube_shader, trans_mat_world * scale_mat);
+
+    }
 
     fn render_hitboxes(&mut self, render_context: &mut render_gl::context::Context) {
         let mut switched = false;

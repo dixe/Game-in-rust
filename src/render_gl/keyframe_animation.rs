@@ -322,14 +322,9 @@ impl KeyframeAnimation {
     }
 
 
-    pub fn move_to_key_frame(&mut self, bones: &mut [na::Matrix4::<f32>], skeleton: &mut Skeleton, next_keyframe: usize, t: f32) {
+    pub fn update_skeleton_to_key_frame(&mut self, skeleton: &mut Skeleton, next_keyframe: usize, t: f32) {
 
         // interpolate joints new transformation
-
-        let mut world_matrices = Vec::new();
-
-        //println!("Frame {:#?}", keyframe);
-
         for i in 0..skeleton.joints.len() {
 
             let current_transformation = match next_keyframe {
@@ -348,19 +343,7 @@ impl KeyframeAnimation {
 
             let translation = current_transformation.translation * (1.0 - t) + target_joint.translation * t;
 
-            let local_matrix  = skeleton.joints[i].get_local_matrix_data(rotation, translation);
-
-            let mut world_matrix = local_matrix;
-
-            let parent_index = skeleton.joints[i].parent_index;
-            if parent_index  != 255 {
-                world_matrix = world_matrices[parent_index] * local_matrix;
-            }
-
-            world_matrices.push(world_matrix);
-
-            skeleton.joints[i].world_matrix = world_matrix;
-            bones[i] = world_matrix * skeleton.joints[i].inverse_bind_pose;
+            Skeleton::update_joint_matrices(&mut skeleton.joints, i, rotation, translation)
 
         }
     }

@@ -76,8 +76,6 @@ fn empty() -> Result<Context, failure::Error> {
 
     let delta_time = deltatime::Deltatime::new();
 
-
-
     Ok(Context {
         scene,
         controls,

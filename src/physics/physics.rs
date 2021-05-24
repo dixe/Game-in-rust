@@ -18,7 +18,7 @@ pub fn process(scene: &mut game::Scene, delta: f32) -> Vec<EntityCollision> {
     // MOVE ENTITIES
 
     update_entities_position(scene, delta);
-    update_entities_rotation(scene, delta);
+    //update_entities_rotation(scene, delta);
 
 
     //DO IMPULSE COLLISION AND UPDATE

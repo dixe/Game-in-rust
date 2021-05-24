@@ -331,11 +331,11 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
         Some(true) => {
 
             ctx.scene.cube_shader.set_used();
-
-
             let proj = ctx.scene.camera().projection();
             let view = ctx.scene.camera().view();
             ctx.scene.cube_shader.set_projection_and_view(&ctx.render_context.gl, proj, view);
+
+
             let mut scale_mat = na::Matrix4::identity();
             scale_mat = scale_mat * 0.2;
             scale_mat[15] = 1.0;
@@ -344,10 +344,6 @@ fn debug_keys(ctx: &mut game::Context, bone_cube: &cube::Cube) {
             for joint in &skeleton.joints {
                 bone_cube.render(&ctx.render_context.gl, &ctx.scene.cube_shader, joint.world_matrix * scale_mat);
             }
-
-            ctx.scene.hitbox_shader.set_used();
-            ctx.scene.hitbox_shader.set_projection_and_view(&ctx.render_context.gl, proj, view);
-
 
         },
         _ => {}
@@ -401,7 +397,7 @@ fn update_free_camera(ctx: &mut game::Context, delta: f32) {
         });
     }
 
-    ctx.scene.camera_mut().move_camera(move_dir, delta);
+    //ctx.scene.camera_mut().move_camera(move_dir, delta);
 
     let mouse_move = ctx.controls.mouse_move;
 

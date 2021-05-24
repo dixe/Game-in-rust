@@ -179,9 +179,6 @@ impl GltfMeshes {
 
                 res.push(t);
 
-
-                println!("{:#?}", normal);
-
             }
 
         }

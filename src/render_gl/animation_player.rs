@@ -68,7 +68,7 @@ impl AnimationPlayer {
         self.animations = animations;
     }
 
-    pub fn set_frame_bones(&mut self, bones: &mut Vec::<na::Matrix4::<f32>>, skeleton: &mut Skeleton, delta: f32) {
+    pub fn update_skeleton(&mut self, skeleton: &mut Skeleton, delta: f32) {
 
         let (t, next_frame_index) = self.current_t();
 
@@ -96,7 +96,7 @@ impl AnimationPlayer {
             Animation::Transition(ref mut anim) => anim
         };
 
-        current_animation.move_to_key_frame(bones, skeleton, next_frame_index, t);
+        current_animation.update_skeleton_to_key_frame(skeleton, next_frame_index, t);
 
         if self.elapsed > current_animation.duration {
             match self.next_animation {
@@ -116,8 +116,6 @@ impl AnimationPlayer {
             }
         }
     }
-
-
 
 
     fn transition_into_next(&mut self, animation: Animation, skeleton: &Skeleton) {

@@ -1,9 +1,11 @@
 use crate::render_gl::{Transformation};
+use crate::render_gl::{Ik};
 
 #[derive(Debug, Clone)]
 pub struct Skeleton {
     pub name: String,
     pub joints: Vec<Joint>,
+    pub left_leg: Option<Ik>
 }
 
 #[derive(Debug, Clone)]
@@ -32,7 +34,7 @@ impl Joint {
         }
     }
 
-    pub fn get_local_matrix(&self) -> na::Matrix4::<f32> {
+    fn get_local_matrix(&self) -> na::Matrix4::<f32> {
         let rot_mat = self.rotation.to_homogeneous();
 
         let trans_mat = na::Matrix4::new_translation(&self.translation);
@@ -100,11 +102,6 @@ impl Skeleton {
 
             // fill the array with joints data
             let mut hip_index = 0;
-            /*
-            for node in skin.joints() {
-            println!("{:#?} {}", node.name(), node.index());
-        }
-             */
 
             for node in skin.joints() {
 
@@ -124,10 +121,12 @@ impl Skeleton {
                     hip_index = index;
                 }
 
+
+
                 let children: Vec::<usize> = node.children().map(|c| c.index()).collect();
 
 
-                joints_data.insert(index,(children, node.name().unwrap(), Transformation {
+                joints_data.insert(index, (children, node.name().unwrap(), Transformation {
                     translation,
                     rotation
                 }));
@@ -139,22 +138,54 @@ impl Skeleton {
             let mut skeleton = Skeleton {
                 name: skin.name().unwrap().to_string(),
                 joints: Vec::new(),
+                left_leg: None,
             };
 
             let mut index_map = std::collections::HashMap::<u16,usize>::new();
             load_joints(&mut skeleton, &joints_data, hip_index, 255, &mut index_map);
 
+            for i in 0..skeleton.joints.len() {
+                println!("{:?} {}", skeleton.joints[i].name, i);
+            }
+
             if !index_map.contains_key(&0) {
                 index_map.insert(0, 0);
             }
+            let mut walk_target = joints_data[&23].2;
+            walk_target.translation.x -= 0.4;
+            walk_target.translation.z += 0.1;
+
+            //TODO remove this hardcoded, and find a way to do it more generally
 
             skeleton.calc_t_pose();
+
+            let left_leg = Ik::new(vec![15, 16, 17], walk_target, joints_data[&24].2, &skeleton.joints);
+
+            skeleton.left_leg = Some(left_leg);
 
             return Ok((skeleton, index_map));
 
         }
 
         panic!("NO SKELETON LOADED");
+    }
+
+    pub fn set_bones_from_skeleton(&self, bones: &mut [na::Matrix4::<f32>]) {
+        for i in 0..self.joints.len() {
+            bones[i] = self.joints[i].world_matrix * self.joints[i].inverse_bind_pose;
+        }
+    }
+
+    pub fn update_joint_matrices(joints: &mut Vec::<Joint>, joint: usize, rotation: na::UnitQuaternion::<f32>, translation: na::Vector3::<f32>) {
+        joints[joint].rotation = rotation;
+        joints[joint].translation = translation;
+
+        joints[joint].world_matrix = joints[joint].get_local_matrix();
+
+        let parent_index = joints[joint].parent_index;
+        if parent_index != 255 {
+            joints[joint].world_matrix = joints[parent_index].world_matrix * joints[joint].world_matrix;
+        }
     }
 }
 

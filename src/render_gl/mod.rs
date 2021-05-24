@@ -42,3 +42,8 @@ pub use self::mesh::{Mesh, SkinnedMesh, GltfMeshes, meshes_from_gltf};
 
 mod skeleton;
 pub use self::skeleton::{Skeleton, Joint};
+
+
+
+pub mod inverse_kinematics;
+pub use self::inverse_kinematics::{Ik, update_ik};
