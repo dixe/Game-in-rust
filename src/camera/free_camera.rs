@@ -119,5 +119,7 @@ impl Camera for FreeCamera {
         self.up
     }
 
-
+    fn set_pos(&mut self, new_pos: na::Vector3::<f32>) {
+        self.pos = new_pos;
+    }
 }

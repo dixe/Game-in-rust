@@ -151,9 +151,9 @@ impl Skeleton {
             if !index_map.contains_key(&0) {
                 index_map.insert(0, 0);
             }
-            let mut walk_target = joints_data[&23].2;
-            walk_target.translation.x -= 0.4;
-            walk_target.translation.z += 0.1;
+            let mut walk_target = joints_data[&23].2.translation;
+            walk_target.x += 1.0;
+            walk_target.z += 0.1;
 
             //TODO remove this hardcoded, and find a way to do it more generally
 

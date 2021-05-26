@@ -190,6 +190,7 @@ impl Scene {
         self.add_skinned_model(gl, model_name, &gltf_meshes);
 
         let mut player = entity::Entity::new(Some(animation_player), model_name.to_string());
+
         self.setup_hitboxes(gl, &mut player, &gltf_meshes);
 
         player.skeleton = skeleton;
@@ -335,25 +336,31 @@ impl Scene {
         // on the other hand no, we need to store base target anyways
 
         let rot_mat = self.entities.player.physics.rotation.to_homogeneous();
-        let trans_mat = na::Matrix4::new_translation(&ik.current_target.translation);
+        let trans_mat = na::Matrix4::new_translation(&ik.current_target);
 
-        cube_model.render(gl, &self.cube_shader, trans_mat * rot_mat * scale_mat);
+        // Current next target, and relative target
+        self.render_pos(na::Vector3::new(1.0, 1.0, 1.0), render_context, &ik.current_target);
 
-        self.render_pos(render_context, &(ik.joint_pos(0, &skeleton.joints) + self.entities.player.physics.pos));
+        self.render_pos(na::Vector3::new(0.0, 0.0, 0.0), render_context, &ik.next_target);
 
-        self.render_pos(render_context, &(ik.joint_pos(1, &skeleton.joints) + self.entities.player.physics.pos));
+        //self.render_pos(na::Vector3::new(0.0, 0.0, 1.0), render_context, &(ik.relative_target + self.entities.player.physics.pos));
 
-        self.render_pos(render_context, &(ik.joint_pos(2, &skeleton.joints) + self.entities.player.physics.pos));
+
+        // skeleton joints positions
+        self.render_pos(na::Vector3::new(0.0, 1.0, 0.0), render_context, &(ik.joint_pos(1, &skeleton.joints) + self.entities.player.physics.pos));
+
+        self.render_pos(na::Vector3::new(0.0, 1.0, 0.0), render_context, &(ik.joint_pos(2, &skeleton.joints) + self.entities.player.physics.pos));
+
+
 
         //self.render_pos(render_context, &ik.target.translation);
 
     }
 
-    fn render_pos(&self, render_context: &mut render_gl::context::Context, pos: &na::Vector3::<f32>) {
+    fn render_pos(&self, clr: na::Vector3::<f32>, render_context: &mut render_gl::context::Context, pos: &na::Vector3::<f32>) {
 
         let gl = &render_context.gl;
 
-        let clr = na::Vector3::new(0.0, 1.0, 0.0);
         let cube_model = cube::Cube::new(clr, gl);
 
         let mut scale_mat = na::Matrix4::identity();

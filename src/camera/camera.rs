@@ -47,4 +47,6 @@ pub trait Camera {
 
         na::Matrix::look_at_rh(&point_pos, &target, &self.up())
     }
+
+    fn set_pos(&mut self, new_pos: na::Vector3::<f32>);
 }

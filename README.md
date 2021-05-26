@@ -49,6 +49,11 @@ A game in rust to learn rust and some opengl
 - [ ] Enemy ai to hit player
 - [ ] register hits, both from and to player. Only register once pr swing/attack
 - [ ] Lockon camera
+- [ ] Ik create current and next target/pole dependent on the char movement. This way we can start to transition to next target when the current target is not longer reachable for the foot. ie. we move too far past it
+- [x] Render Ik current and next target
+
+
+
 # Cool stuff
 distortion shader fx https://lindenreid.wordpress.com/2018/03/05/heat-distortion-shader-tutorial/#:~:text=The%20basic%20premise%20of%20the,uses%20to%20sample%20that%20texture.
 

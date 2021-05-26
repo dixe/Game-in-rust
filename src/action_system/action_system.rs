@@ -3,7 +3,7 @@ use core::fmt::Debug;
 
 use crate::entity;
 use crate::action_system;
-
+use crate::math::*;
 
 pub fn update_actions(actions: &mut std::collections::HashMap<usize, entity::ActionsInfo>, physics: &mut std::collections::HashMap<usize, entity::Physics>, delta: f32, impls: &ActionsImpl) {
     for action in actions.values_mut() {
@@ -79,9 +79,6 @@ impl BezierAction {
     }
 }
 
-fn clamp01(t: f32, min: f32, max: f32) -> f32{
-    f32::max(f32::min(1.0, (t - min) / (max - min)), 0.0)
-}
 
 impl Action for BezierAction {
     fn update(&self, time_passed: f32, physics: &mut entity::Physics, init: &entity::Physics) {
