@@ -20,8 +20,9 @@ impl Physics {
             rotation: na::UnitQuaternion::identity(),
             pos: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
-            facing_dir: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
-            max_speed: 1.0,
+            facing_dir:
+            na::Vector3::<f32>::new(0.0, 0.0, 0.0),
+            max_speed: 2.0,
             inverse_mass: 1.0,
             scale: 1.0,
             anchor_id: None,

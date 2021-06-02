@@ -46,4 +46,4 @@ pub use self::skeleton::{Skeleton, Joint};
 
 
 pub mod inverse_kinematics;
-pub use self::inverse_kinematics::{Ik, update_ik};
+pub use self::inverse_kinematics::{Ik, IkLegs, update_ik};

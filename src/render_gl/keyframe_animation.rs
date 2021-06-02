@@ -324,6 +324,7 @@ impl KeyframeAnimation {
 
     pub fn update_skeleton_to_key_frame(&mut self, skeleton: &mut Skeleton, next_keyframe: usize, t: f32) {
 
+        let ik_joints = &skeleton.legs.as_ref().unwrap().ik_bones();
         // interpolate joints new transformation
         for i in 0..skeleton.joints.len() {
 
@@ -343,7 +344,9 @@ impl KeyframeAnimation {
 
             let translation = current_transformation.translation * (1.0 - t) + target_joint.translation * t;
 
-            Skeleton::update_joint_matrices(&mut skeleton.joints, i, rotation, translation)
+            if !ik_joints.contains(&i) {
+                Skeleton::update_joint_matrices(&mut skeleton.joints, i, rotation, translation)
+            }
 
         }
     }

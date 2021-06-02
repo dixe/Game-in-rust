@@ -177,6 +177,7 @@ fn run() -> Result<(), failure::Error> {
 
         if ctx.controls.reset {
             ctx.scene.entities.player.physics = entity::Physics::new();
+            ctx.scene.entities.player.skeleton.reset_ik();
         }
 
         unsafe {
@@ -404,6 +405,7 @@ fn update_free_camera(ctx: &mut game::Context, delta: f32) {
     let mut new_pos = ctx.scene.camera_mut().pos();
 
     new_pos.x = ctx.scene.entities.player.physics.pos.x;
+
     ctx.scene.camera_mut().set_pos(new_pos);
 
     ctx.scene.camera_mut().update_movement(mouse_move.x, mouse_move.y);

@@ -20,7 +20,7 @@ impl FreeCamera {
     pub fn new() -> FreeCamera {
 
         let pos = na::Vector3::new(0.0, 3.8, 2.5);
-        let front = na::Vector3::new(0.0, -1.0, 0.0);
+        let front = na::Vector3::new(1.0, 1.0, 0.0);
         let up = na::Vector3::new(0.0, 1.0, 1.0);
         let right = na::Vector3::new(1.0, 0.0, 0.0);
 

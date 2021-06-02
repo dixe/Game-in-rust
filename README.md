@@ -51,6 +51,7 @@ A game in rust to learn rust and some opengl
 - [ ] Lockon camera
 - [ ] Ik create current and next target/pole dependent on the char movement. This way we can start to transition to next target when the current target is not longer reachable for the foot. ie. we move too far past it
 - [x] Render Ik current and next target
+- [ ] left and right leg move one at a time
 
 
 

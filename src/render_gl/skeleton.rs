@@ -1,11 +1,11 @@
 use crate::render_gl::{Transformation};
-use crate::render_gl::{Ik};
+use crate::render_gl::{Ik, IkLegs};
 
 #[derive(Debug, Clone)]
 pub struct Skeleton {
     pub name: String,
     pub joints: Vec<Joint>,
-    pub left_leg: Option<Ik>
+    pub legs: Option<IkLegs>,
 }
 
 #[derive(Debug, Clone)]
@@ -138,7 +138,7 @@ impl Skeleton {
             let mut skeleton = Skeleton {
                 name: skin.name().unwrap().to_string(),
                 joints: Vec::new(),
-                left_leg: None,
+                legs: None
             };
 
             let mut index_map = std::collections::HashMap::<u16,usize>::new();
@@ -151,9 +151,10 @@ impl Skeleton {
             if !index_map.contains_key(&0) {
                 index_map.insert(0, 0);
             }
+
             let mut walk_target = joints_data[&23].2.translation;
             walk_target.x += 1.0;
-            walk_target.z += 0.1;
+            walk_target.z += 0.0;
 
             //TODO remove this hardcoded, and find a way to do it more generally
 
@@ -161,7 +162,14 @@ impl Skeleton {
 
             let left_leg = Ik::new(vec![15, 16, 17], walk_target, joints_data[&24].2, &skeleton.joints);
 
-            skeleton.left_leg = Some(left_leg);
+            //TODO get pole for right leg
+            let right_leg = Ik::new(vec![18, 19, 20], walk_target, joints_data[&24].2, &skeleton.joints);
+
+
+            skeleton.legs = Some(IkLegs {
+                left_leg,
+                right_leg,
+            });
 
             return Ok((skeleton, index_map));
 
@@ -186,6 +194,11 @@ impl Skeleton {
         if parent_index != 255 {
             joints[joint].world_matrix = joints[parent_index].world_matrix * joints[joint].world_matrix;
         }
+    }
+
+    pub fn reset_ik(&mut self) {
+
+        self.legs.as_mut().unwrap().reset();
     }
 }
 

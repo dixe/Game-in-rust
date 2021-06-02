@@ -51,7 +51,7 @@ impl Entity {
             skeleton: render_gl::Skeleton {
                 name: "empty".to_string(),
                 joints: Vec::new(),
-                left_leg: None,
+                legs: None,
             },
             weapon_id: 9999999,
             hitboxes: Vec::<physics::CollisionBox>::new(),
@@ -68,7 +68,7 @@ impl Entity {
 
     pub fn update_animations(&mut self, delta: f32) {
         if let Some(animation_player) = &mut self.animation_player {
-            //animation_player.update_skeleton(&mut self.skeleton, delta);
+            animation_player.update_skeleton(&mut self.skeleton, delta);
         }
 
         render_gl::inverse_kinematics::update_ik(&mut self.skeleton, &self.physics, delta);

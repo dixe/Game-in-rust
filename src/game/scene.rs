@@ -40,6 +40,7 @@ pub struct Scene {
     // MEHES AND SHADERS
     pub cube_shader: render_gl::Shader,
     pub mesh_shader: render_gl::Shader,
+    pub world_shader: render_gl::Shader,
     pub hitbox_shader: render_gl::Shader,
 
 
@@ -291,13 +292,20 @@ impl Scene {
         self.mesh_shader.set_vec3(gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
         self.mesh_shader.set_projection_and_view(gl, self.camera().projection(), self.camera().view());
 
-        let model = &self.models["world"];
-        render_gl::render_world(model, gl, &self.mesh_shader);
 
         for entity in self.entities.values() {
             let model = &self.models[&entity.model_name];
             render_gl::render_entity(&entity, model, gl, &self.mesh_shader);
         }
+
+        self.world_shader.set_used();
+        self.world_shader.set_vec3(gl, "lightPos", na::Vector3::new(1.0, 0.0, 7.0));
+        self.world_shader.set_vec3(gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
+        self.world_shader.set_projection_and_view(gl, self.camera().projection(), self.camera().view());
+
+
+        let model = &self.models["world"];
+        render_gl::render_world(model, gl, &self.world_shader);
 
 
         if self.render_hitboxes {
@@ -313,8 +321,7 @@ impl Scene {
         let skeleton = &self.entities.player.skeleton;
         let gl = &render_context.gl;
 
-        let ik = &skeleton.left_leg.as_ref().unwrap();
-
+        let ik_legs = &skeleton.legs.as_ref().unwrap();
 
         let clr = na::Vector3::new(1.0, 0.0, 0.0);
         let cube_model = cube::Cube::new(clr, gl);
@@ -335,25 +342,37 @@ impl Scene {
         // As it is now we might forget go get it in correct spot at some point
         // on the other hand no, we need to store base target anyways
 
-        let rot_mat = self.entities.player.physics.rotation.to_homogeneous();
-        let trans_mat = na::Matrix4::new_translation(&ik.current_target);
-
-        // Current next target, and relative target
-        self.render_pos(na::Vector3::new(1.0, 1.0, 1.0), render_context, &ik.current_target);
-
-        self.render_pos(na::Vector3::new(0.0, 0.0, 0.0), render_context, &ik.next_target);
-
-        //self.render_pos(na::Vector3::new(0.0, 0.0, 1.0), render_context, &(ik.relative_target + self.entities.player.physics.pos));
+        // Current next target, and relative target for left leg
+        self.render_pos(na::Vector3::new(1.0, 1.0, 1.0), render_context, &ik_legs.left_leg.current_target());
 
 
-        // skeleton joints positions
-        self.render_pos(na::Vector3::new(0.0, 1.0, 0.0), render_context, &(ik.joint_pos(1, &skeleton.joints) + self.entities.player.physics.pos));
+        match ik_legs.next_targets() {
+            (Some(left_target), Some(right_target)) => {
+                self.render_pos(na::Vector3::new(0.0, 0.0, 0.0), render_context, &left_target);
+                self.render_pos(na::Vector3::new(0.0, 0.0, 0.0), render_context, &right_target);
+            },
+            (None, Some(right_target)) => {
+                self.render_pos(na::Vector3::new(0.0, 0.0, 0.0), render_context, &right_target);
 
-        self.render_pos(na::Vector3::new(0.0, 1.0, 0.0), render_context, &(ik.joint_pos(2, &skeleton.joints) + self.entities.player.physics.pos));
+            },
+            (Some(left_target), None) => {
+                self.render_pos(na::Vector3::new(0.0, 0.0, 0.0), render_context, &left_target);
+            },
+            _ => {}
+        };
+
+
+        //self.render_pos(na::Vector3::new(0.0, 0.0, 1.0), render_context, &(ik_legs.relative_target + self.entities.player.physics.pos));
+
+
+        // skeleton joints positions left leg
+        self.render_pos(na::Vector3::new(0.0, 1.0, 0.0), render_context, &(ik_legs.left_leg.joint_pos(1, &skeleton.joints) + self.entities.player.physics.pos));
+
+        self.render_pos(na::Vector3::new(0.0, 1.0, 0.0), render_context, &(ik_legs.left_leg.joint_pos(2, &skeleton.joints) + self.entities.player.physics.pos));
 
 
 
-        //self.render_pos(render_context, &ik.target.translation);
+        //self.render_pos(render_context, &ik_legs.target.translation);
 
     }
 
@@ -422,7 +441,9 @@ impl Scene {
 
     pub fn reload_shaders(&mut self, render_context: &render_gl::context::Context) {
 
-        let shaders = vec![ ("mesh_shader", &mut self.mesh_shader), ("hitbox_shader", &mut self.hitbox_shader)];
+        let shaders = vec![("world_shader", &mut self.world_shader),
+                           ("mesh_shader", &mut self.mesh_shader),
+                           ("hitbox_shader", &mut self.hitbox_shader)];
 
         for (name, shader) in shaders {
             match render_gl::Shader::new(name, &render_context.res, &render_context.gl) {
@@ -457,6 +478,8 @@ fn empty(render_context: &render_gl::context::Context) -> Result<Scene, failure:
 
     let mesh_shader = render_gl::Shader::new("mesh_shader", &render_context.res, &render_context.gl)?;
 
+    let world_shader = render_gl::Shader::new("world_shader", &render_context.res, &render_context.gl)?;
+
     let hitbox_shader = render_gl::Shader::new("hitbox_shader", &render_context.res, &render_context.gl)?;
 
     let actions = action_system::load_player_actions(&render_context.res)?;
@@ -470,6 +493,7 @@ fn empty(render_context: &render_gl::context::Context) -> Result<Scene, failure:
 
     Ok(Scene {
         mesh_shader,
+        world_shader,
         actions,
         cube_shader,
         hitbox_shader,
