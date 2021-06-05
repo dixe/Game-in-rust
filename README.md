@@ -54,10 +54,18 @@ A game in rust to learn rust and some opengl
 - [ ] left and right leg move one at a time
 
 
+# New models
+
+## Weapon
+
+fx a hammer
+* Model with name "hammer" all lower case, and inner model name "model"
+* Hitbox objects that are child of "hammer" model: "hammer_hitbox_01", "hammer_hitbox_02" both model name and mesh data name
+* weapons gets grapped at world origin 0,0,0
+
 
 # Cool stuff
 distortion shader fx https://lindenreid.wordpress.com/2018/03/05/heat-distortion-shader-tutorial/#:~:text=The%20basic%20premise%20of%20the,uses%20to%20sample%20that%20texture.
-
 
 ## future improvments/ challanges
 - [ ] Hitboxes from bones/some bones. fx arms and legs

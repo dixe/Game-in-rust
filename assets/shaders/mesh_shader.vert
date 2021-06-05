@@ -48,7 +48,8 @@ void main()
 
     // This is called normal matrix, maybe do on cpu( the transpose and invere part)
     // and send it in as a uniform
-    OUT.Normal = mat3(transpose(inverse(model))) * (model * bt * vec4(Normal, 1.0)).xyz;
+
+    OUT.Normal = mat3(transpose(inverse(model * bt))) * vec4(Normal, 1.0).xyz;
 
     OUT.TexCord = TexCord;
 

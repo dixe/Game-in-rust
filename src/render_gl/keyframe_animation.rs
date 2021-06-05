@@ -230,11 +230,8 @@ fn key_frames_from_gltf(file_path: &str, skeleton: &Skeleton) -> Result<HashMap<
                         }
                     },
                     gltf::animation::util::ReadOutputs::MorphTargetWeights(mtws) => {
-
-
                         println!("{:#?}", mtws);
                     }
-
 
                 }
             }
@@ -244,8 +241,6 @@ fn key_frames_from_gltf(file_path: &str, skeleton: &Skeleton) -> Result<HashMap<
     }
 
     println!("Animations loaded:\n{:#?}", res.keys());
-
-
 
     Ok(res)
 }
@@ -324,7 +319,11 @@ impl KeyframeAnimation {
 
     pub fn update_skeleton_to_key_frame(&mut self, skeleton: &mut Skeleton, next_keyframe: usize, t: f32) {
 
-        let ik_joints = &skeleton.legs.as_ref().unwrap().ik_bones();
+        let ik_joints = match skeleton.legs.as_ref() {
+            None => Vec::new(),
+            Some(ref legs) => legs.ik_bones(),
+        };
+
         // interpolate joints new transformation
         for i in 0..skeleton.joints.len() {
 

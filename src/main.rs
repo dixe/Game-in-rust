@@ -398,15 +398,18 @@ fn update_free_camera(ctx: &mut game::Context, delta: f32) {
         });
     }
 
-    //ctx.scene.camera_mut().move_camera(move_dir, delta);
+    ctx.scene.camera_mut().move_camera(move_dir, delta);
 
     let mouse_move = ctx.controls.mouse_move;
 
+    /*
     let mut new_pos = ctx.scene.camera_mut().pos();
 
     new_pos.x = ctx.scene.entities.player.physics.pos.x;
 
     ctx.scene.camera_mut().set_pos(new_pos);
+
+     */
 
     ctx.scene.camera_mut().update_movement(mouse_move.x, mouse_move.y);
 }

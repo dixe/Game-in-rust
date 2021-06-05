@@ -165,12 +165,12 @@ impl Skeleton {
             //TODO get pole for right leg
             let right_leg = Ik::new(vec![18, 19, 20], walk_target, joints_data[&24].2, &skeleton.joints);
 
-
+            /*
             skeleton.legs = Some(IkLegs {
-                left_leg,
-                right_leg,
-            });
-
+            left_leg,
+            right_leg,
+        });
+             */
             return Ok((skeleton, index_map));
 
         }
@@ -198,7 +198,12 @@ impl Skeleton {
 
     pub fn reset_ik(&mut self) {
 
-        self.legs.as_mut().unwrap().reset();
+        match self.legs {
+            Some(ref mut legs) => {
+                legs.reset();
+            },
+            _ => {}
+        }
     }
 }
 

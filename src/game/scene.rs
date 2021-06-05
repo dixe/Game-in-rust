@@ -124,14 +124,14 @@ impl Scene {
 
 
     fn load_weapon(&mut self, gl: &gl::Gl) ->  Result<(), failure::Error>  {
-        let glb_path = "E:/repos/Game-in-rust/blender_models/hammer.glb";
+        let glb_path = "E:/repos/Game-in-rust/blender_models/sword.glb";
 
         let (skeleton, index_map) = render_gl::Skeleton::from_gltf(&glb_path)?;
         let base_animations = Some(&self.entities.player.animation_player.as_ref().unwrap().animations);
         let animations = load_animations(&glb_path, &skeleton, base_animations).unwrap();
 
         let gltf_meshes = render_gl::meshes_from_gltf(&glb_path, gl, &index_map)?;
-        let model_name = "hammer";
+        let model_name = "sword";
 
         self.add_model(gl, model_name, &gltf_meshes);
 
@@ -279,8 +279,11 @@ impl Scene {
         // RENDER SCENE WITH CUBE SHADER
         self.cube_shader.set_used();
 
+
+        let lightPos = na::Vector3::new(0.0, 0.0, 100.0);
+
         // CAN BE MOVED OUTSIDE THE LOOP
-        self.cube_shader.set_vec3(gl, "lightPos", na::Vector3::new(0.0, 0.0, 5.0));
+        self.cube_shader.set_vec3(gl, "lightPos", lightPos);
         self.cube_shader.set_vec3(gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
 
         self.cube_shader.set_projection_and_view(gl, self.camera().projection(), self.camera().view());
@@ -288,8 +291,10 @@ impl Scene {
         // RENDER WITH MESH SHADER
 
         self.mesh_shader.set_used();
-        self.mesh_shader.set_vec3(gl, "lightPos", na::Vector3::new(1.0, 0.0, 7.0));
+        self.mesh_shader.set_vec3(gl, "lightPos", lightPos);
         self.mesh_shader.set_vec3(gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
+        self.mesh_shader.set_vec3(gl, "viewPos", self.camera().pos());
+
         self.mesh_shader.set_projection_and_view(gl, self.camera().projection(), self.camera().view());
 
 
@@ -299,7 +304,7 @@ impl Scene {
         }
 
         self.world_shader.set_used();
-        self.world_shader.set_vec3(gl, "lightPos", na::Vector3::new(1.0, 0.0, 7.0));
+        self.world_shader.set_vec3(gl, "lightPos", lightPos);
         self.world_shader.set_vec3(gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
         self.world_shader.set_projection_and_view(gl, self.camera().projection(), self.camera().view());
 
@@ -321,7 +326,10 @@ impl Scene {
         let skeleton = &self.entities.player.skeleton;
         let gl = &render_context.gl;
 
-        let ik_legs = &skeleton.legs.as_ref().unwrap();
+        let ik_legs = match skeleton.legs {
+            None =>  {return;},
+            Some(ref legs) => legs
+        };
 
         let clr = na::Vector3::new(1.0, 0.0, 0.0);
         let cube_model = cube::Cube::new(clr, gl);
@@ -344,7 +352,6 @@ impl Scene {
 
         // Current next target, and relative target for left leg
         self.render_pos(na::Vector3::new(1.0, 1.0, 1.0), render_context, &ik_legs.left_leg.current_target());
-
 
         match ik_legs.next_targets() {
             (Some(left_target), Some(right_target)) => {

@@ -15,19 +15,20 @@ uniform sampler2D Texture;
 out vec4 Color;
 
 
-
 void main()
 {
+  float ambientStrength = 0.5;
+  vec3 ambient = ambientStrength * lightColor;
 
-  //TODO set this in uniform
-  vec3 color = vec3(0.0);
+  vec3 norm = normalize(IN.Normal);
+  vec3 lightDir = normalize(lightPos - IN.FragPos);
+  float diff = max(dot(norm, lightDir), 0.0);
+  vec3 diffuse = (diff * lightColor) * 0.7;
 
 
-  float st = fract(IN.FragPos.x*2);
+  vec3 color = texture(Texture, IN.TexCord).rgb;
+  Color =  vec4( (ambient + diffuse) * color, 1.0f);
 
-  color = vec3(st,st,st);
-
-  gl_FragColor = vec4(texture(Texture, IN.TexCord).rgb, 1.0f);
 
   // dispplay the bones influences
   //Color =  vec4( IN.Color.xyz, 1.0f);
