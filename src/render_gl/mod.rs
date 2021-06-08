@@ -38,12 +38,13 @@ mod animation_player;
 pub use self::animation_player::{AnimationPlayer, Animation};
 
 mod mesh;
-pub use self::mesh::{Mesh, SkinnedMesh, GltfMeshes, meshes_from_gltf};
+pub use self::mesh::{Mesh, SkinnedMesh, GltfMeshes, GltfMesh, meshes_from_gltf};
+
+mod generated_mesh;
+pub use self::generated_mesh::{triangle};
 
 mod skeleton;
 pub use self::skeleton::{Skeleton, Joint};
-
-
 
 pub mod inverse_kinematics;
 pub use self::inverse_kinematics::{Ik, IkLegs, update_ik};

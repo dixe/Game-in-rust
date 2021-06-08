@@ -40,8 +40,10 @@ impl AnimationPlayer {
         let should_transition = match animation {
             Animation::Attack => false,
             Animation::Roll => false,
+            Animation::AttackFollow => false,
             _ => true,
         };
+
 
         if should_transition {
             self.transition_into_next(animation, skeleton);

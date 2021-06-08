@@ -197,18 +197,14 @@ fn perform_attack(entity: &mut entity::Entity) {
 
             let current_frame = entity.animation_player.as_ref().unwrap().current_frame_number();
 
-            // this is to not buffer for too long, otherwise it feels as if
-            // the attack was not indented
-            if current_frame >= info.hit_start_frame {
+            let attack_info = entity::AttackInfo {
+                combo_num: 1 - info.combo_num,
+                hit_start_frame: 9,
+                hit_end_frame: 20,
+            };
 
-                let attack_info = entity::AttackInfo {
-                    combo_num: 1 - info.combo_num,
-                    hit_start_frame: 9,
-                    hit_end_frame: 20,
-                };
+            entity.queued_action = Some(entity::EntityState::Attack(attack_info));
 
-                entity.queued_action = Some(entity::EntityState::Attack(attack_info));
-            }
         },
         _ => {
             let attack_info = entity::AttackInfo {

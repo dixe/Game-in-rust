@@ -9,22 +9,44 @@ pub struct SkinnedMesh {
 
 pub struct Mesh {
     vao: buffer::VertexArray,
-    _vbo: buffer::ArrayBuffer,
-    _ebo: buffer::ElementArrayBuffer,
+    vbo: buffer::ArrayBuffer,
+    ebo: buffer::ElementArrayBuffer,
     pub indices_count: i32,
 }
 
 impl Mesh {
 
+
+    pub fn empty(gl: &gl::Gl) -> Self {
+
+        let vbo = buffer::ArrayBuffer::new(gl);
+        let vao = buffer::VertexArray::new(gl);
+        let ebo = buffer::ElementArrayBuffer::new(gl);
+
+        Mesh {
+            vao,
+            vbo,
+            ebo,
+            indices_count: 0
+        }
+
+    }
+
     pub fn new(gl: &gl::Gl, gltf_mesh: &GltfMesh) -> Self {
-        load_mesh_gltf(
+
+        let mut mesh = Mesh::empty(gl);
+
+        bind_mesh_data(
             gl,
             &gltf_mesh.pos_data,
             &gltf_mesh.normal_data,
             &gltf_mesh.indices_data,
             &gltf_mesh.tex_data,
+            &mut mesh,
             None
-        )
+        );
+
+        mesh
     }
 
     pub fn render(
@@ -50,7 +72,7 @@ impl Mesh {
 }
 
 #[derive(Debug, Copy, Clone)]
-struct VertexWeights {
+pub struct VertexWeights {
     // maybe keep the actual vertex index instead of having it just as the index in the vec this is stored in
     joints: [usize; 2],
     weights: [f32; 2],
@@ -59,14 +81,15 @@ struct VertexWeights {
 impl SkinnedMesh {
     pub fn new(gl: &gl::Gl, gltf_mesh: &GltfMesh) -> Self {
 
-        //println!("CREATING SKINNED MESH: {:#?}", gltf_mesh.name);
+        let mut mesh = Mesh::empty(gl);
 
-        let mesh = load_mesh_gltf(
+        bind_mesh_data(
             gl,
             &gltf_mesh.pos_data,
             &gltf_mesh.normal_data,
             &gltf_mesh.indices_data,
             &gltf_mesh.tex_data,
+            &mut mesh,
             Some(&gltf_mesh.vertex_weights)
         );
 
@@ -105,12 +128,12 @@ impl SkinnedMesh {
 // alternative just load the data. and then we can instanciate it if needed
 
 pub struct GltfMesh {
-    name: String,
-    pos_data: Vec<na::Vector3::<f32>>,
-    normal_data: Vec<[f32; 3]>,
-    indices_data: Vec<u32>,
-    tex_data: Vec<[f32; 2]>,
-    vertex_weights: Vec<VertexWeights>
+    pub name: String,
+    pub pos_data: Vec<na::Vector3::<f32>>,
+    pub normal_data: Vec<[f32; 3]>,
+    pub indices_data: Vec<u32>,
+    pub tex_data: Vec<[f32; 2]>,
+    pub vertex_weights: Vec<VertexWeights>
 }
 
 pub struct GltfMeshes {
@@ -318,7 +341,8 @@ fn load_gltf_mesh_data(mesh: &gltf::mesh::Mesh, buffers: &Vec<gltf::buffer::Data
         pos_data,
         normal_data,
         indices_data,
-        tex_data, vertex_weights
+        tex_data,
+        vertex_weights
     })
 }
 
@@ -327,20 +351,20 @@ fn load_gltf_mesh_data(mesh: &gltf::mesh::Mesh, buffers: &Vec<gltf::buffer::Data
 
 
 
-fn load_mesh_gltf(
+fn bind_mesh_data(
     gl: &gl::Gl,
     pos_data: &Vec<na::Vector3::<f32>>,
     norm_data: &Vec<[f32; 3]>,
     ebo_data: &Vec<u32>,
     tex_data: &Vec<[f32; 2]>,
-    skinning_data: Option<&Vec<VertexWeights>>
-) -> Mesh {
-    let vbo = buffer::ArrayBuffer::new(gl);
-    let vao = buffer::VertexArray::new(gl);
+    mesh: &mut Mesh,
+    skinning_data: Option<&Vec<VertexWeights>>,
+
+) {
 
     let mut vertex_data = Vec::<f32>::new();
 
-    let ebo = buffer::ElementArrayBuffer::new(gl);
+
 
     let indices_count = ebo_data.len();
 
@@ -394,14 +418,14 @@ fn load_mesh_gltf(
     let stride = ((3 + 3 + 2 + 2 + 2) * std::mem::size_of::<f32>()) as gl::types::GLint;
     unsafe {
         // 1
-        vao.bind();
+        mesh.vao.bind();
 
         // 2.
-        vbo.bind();
-        vbo.static_draw_data(&vertex_data);
+        mesh.vbo.bind();
+        mesh.vbo.static_draw_data(&vertex_data);
 
         //3
-        ebo.bind();
+        mesh.ebo.bind();
         gl.BufferData(
             gl::ELEMENT_ARRAY_BUFFER,
             (ebo_data.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
@@ -470,14 +494,7 @@ fn load_mesh_gltf(
         gl.EnableVertexAttribArray(4);
     }
 
-    let mesh = Mesh {
-        vao,
-        _vbo: vbo,
-        _ebo: ebo,
-        indices_count: indices_count as i32,
-    };
-
-    mesh
+    mesh.indices_count = indices_count as i32;
 }
 
 fn reduce_to_2_joints(joints_data: &Vec<[usize; 4]>, weights_data: &Vec<[f32; 4]>) -> Vec<VertexWeights> {

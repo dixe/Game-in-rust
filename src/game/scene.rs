@@ -77,7 +77,7 @@ impl Scene {
         scene.load_weapon(&render_context.gl)?;
 
         println!("Setup enemy");
-        //scene.setup_enemy(&render_context.gl)?;
+        scene.setup_enemy(&render_context.gl)?;
 
         Ok(scene)
     }
@@ -280,7 +280,7 @@ impl Scene {
         self.cube_shader.set_used();
 
 
-        let lightPos = na::Vector3::new(0.0, 0.0, 100.0);
+        let lightPos = na::Vector3::new(0.0, 0.0, 10.0);
 
         // CAN BE MOVED OUTSIDE THE LOOP
         self.cube_shader.set_vec3(gl, "lightPos", lightPos);
@@ -303,14 +303,15 @@ impl Scene {
             render_gl::render_entity(&entity, model, gl, &self.mesh_shader);
         }
 
+        /*
         self.world_shader.set_used();
         self.world_shader.set_vec3(gl, "lightPos", lightPos);
         self.world_shader.set_vec3(gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
         self.world_shader.set_projection_and_view(gl, self.camera().projection(), self.camera().view());
-
+         */
 
         let model = &self.models["world"];
-        render_gl::render_world(model, gl, &self.world_shader);
+        render_gl::render_world(model, gl, &self.mesh_shader);
 
 
         if self.render_hitboxes {

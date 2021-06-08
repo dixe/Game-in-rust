@@ -82,7 +82,7 @@ pub fn load_animations(file_path: &str, skeleton: &Skeleton, base_animations: Op
     let walk = create_animation(walk_frames, base_animations.map(|fb| &fb.walk), true);
     let idle = create_animation(idle_frames, base_animations.map(|fb| &fb.idle), true);
     let attack = create_root_motion_animation(attack_frames, base_animations.map(|fb| &fb.attack), false);
-    let attack_follow = create_animation(attack_follow_frames, base_animations.map(|fb| &fb.attack_follow), false);
+    let attack_follow = create_root_motion_animation(attack_follow_frames, base_animations.map(|fb| &fb.attack_follow), false);
 
 
     let roll = create_root_motion_animation(roll_frames, base_animations.map(|fb| &fb.roll), false);
