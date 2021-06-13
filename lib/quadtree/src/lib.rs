@@ -84,19 +84,34 @@ impl QuadNode {
             count: 0
         }
     }
+}
 
 
+pub enum Query {
+    Point(QuadPoint),
+    Rect(QuadRect)
+}
+
+impl Query {
+    pub fn point(x: i32, y: i32) -> Self {
+        Query::Point(QuadPoint { x, y })
+    }
+
+    pub fn rect(rect: QuadRect) -> Self {
+        Query::Rect(rect)
+    }
 }
 
 #[derive(Debug, Clone)]
-struct QuadRect {
+pub struct QuadRect {
     pub left: i32,
     pub top: i32,
     pub right: i32,
     pub bottom: i32
 }
+
 #[derive(Debug)]
-struct QuadPoint {
+pub struct QuadPoint {
     pub x: i32,
     pub y: i32
 }
@@ -112,6 +127,7 @@ impl QuadRect {
             bottom: i32::min(p1.y, p2.y),
         }
     }
+
     fn location_quad(&self, i: usize) -> QuadRect {
 
         let node_middle_x = (self.right - self.left) / 2 + self.left;
@@ -124,6 +140,7 @@ impl QuadRect {
             1 => QuadRect::new(middle_point, QuadPoint{x: self.right, y: self.top}),
             // BL
             2 => QuadRect::new(middle_point, QuadPoint{x: self.left, y: self.bottom}),
+            // BR
             3 => QuadRect::new(middle_point, QuadPoint{x: self.right, y: self.bottom}),
             _ => panic!("Location {} is not a valid location. Valid locations are: 0,1,2,3", i),
         }
@@ -138,28 +155,28 @@ impl QuadRect {
         let node_middle_y = (node_rect.top - node_rect.bottom) / 2 + node_rect.bottom;
 
         // check is it inside on X and Y
-        let tl = point.x < node_middle_x &&
-            point.x > node_rect.left &&
-            point.y > node_middle_y &&
-            point.y < node_rect.top;
+        let tl = point.x <= node_middle_x &&
+            point.x >= node_rect.left &&
+            point.y >= node_middle_y &&
+            point.y <= node_rect.top;
 
 
-        let tr = point.x > node_middle_x &&
-            point.x < node_rect.right &&
-            point.y > node_middle_y &&
-            point.y < node_rect.top;
+        let tr = point.x >= node_middle_x &&
+            point.x <= node_rect.right &&
+            point.y >= node_middle_y &&
+            point.y <= node_rect.top;
 
 
-        let bl = point.x < node_middle_x &&
-            point.x > node_rect.left &&
-            point.y < node_middle_y &&
-            point.y > node_rect.bottom;
+        let bl = point.x <= node_middle_x &&
+            point.x >= node_rect.left &&
+            point.y <= node_middle_y &&
+            point.y >= node_rect.bottom;
 
 
-        let br = point.x > node_middle_x &&
-            point.x < node_rect.right &&
-            point.y < node_middle_y &&
-            point.y > node_rect.bottom;
+        let br = point.x >= node_middle_x &&
+            point.x <= node_rect.right &&
+            point.y <= node_middle_y &&
+            point.y >= node_rect.bottom;
 
 
         [tl, tr, bl, br]
@@ -175,28 +192,28 @@ impl QuadRect {
 
 
         // check is it inside on X and Y
-        let tl = element_rect.left < node_middle_x &&
-            element_rect.right > node_rect.left &&
-            element_rect.top > node_middle_y &&
-            element_rect.bottom < node_rect.top;
+        let tl = element_rect.left <= node_middle_x &&
+            element_rect.right >= node_rect.left &&
+            element_rect.top >= node_middle_y &&
+            element_rect.bottom <= node_rect.top;
 
 
-        let tr = element_rect.right > node_middle_x &&
-            element_rect.left < node_rect.right &&
-            element_rect.top > node_middle_y &&
-            element_rect.bottom < node_rect.top;
+        let tr = element_rect.right >= node_middle_x &&
+            element_rect.left <= node_rect.right &&
+            element_rect.top >= node_middle_y &&
+            element_rect.bottom <= node_rect.top;
 
 
-        let bl = element_rect.left < node_middle_x &&
-            element_rect.right > node_rect.left &&
-            element_rect.bottom < node_middle_y &&
-            element_rect.top > node_rect.bottom;
+        let bl = element_rect.left <= node_middle_x &&
+            element_rect.right >= node_rect.left &&
+            element_rect.bottom <= node_middle_y &&
+            element_rect.top >= node_rect.bottom;
 
 
-        let br = element_rect.right > node_middle_x &&
-            element_rect.left < node_rect.right &&
-            element_rect.bottom < node_middle_y &&
-            element_rect.top > node_rect.bottom;
+        let br = element_rect.right >= node_middle_x &&
+            element_rect.left <= node_rect.right &&
+            element_rect.bottom <= node_middle_y &&
+            element_rect.top >= node_rect.bottom;
 
 
         [tl, tr, bl, br]
@@ -251,7 +268,7 @@ impl<'a, T> QuadTree<T> {
             data: Vec::new(),
             root_rect: rect,
             free_node: 0,
-            max_depth: 10,
+            max_depth: 1000,
             nodes_per_cell: 2
         }
     }
@@ -279,7 +296,7 @@ impl<'a, T> QuadTree<T> {
 
     fn insert_elm(&mut self, element_id: i32,  node_index: usize, element_rect: &QuadRect, node_rect: &QuadRect, depth: i32) {
 
-        println!("node_index = {} depth = {} {:?}", node_index, depth, self.nodes[node_index]);
+        //println!("node_index = {} depth = {} {:?}", node_index, depth, self.nodes[node_index]);
 
         // Check if leaf
         if self.nodes[node_index].count > -1 {
@@ -291,7 +308,7 @@ impl<'a, T> QuadTree<T> {
             // make this into not a leaf, but a branch
             else {
 
-                println!("SPLITTING NODE_INDEX: {}", node_index);
+                //println!("SPLITTING NODE_INDEX: {}", node_index);
 
                 self.split(node_index, node_rect);
 
@@ -322,8 +339,6 @@ impl<'a, T> QuadTree<T> {
 
                 let new_rect = node_rect.location_quad(i);
 
-                println!("quad for {}: {:?}", i, &new_rect);
-
                 self.insert_elm(element_id, new_node_index, element_rect, &new_rect, depth + 1);
             }
         }
@@ -345,7 +360,6 @@ impl<'a, T> QuadTree<T> {
 
         let mut next_child = self.nodes[node_index].first_child;
 
-        println!("\n\nLOOPING OVER CHILDREN");
         while next_child != -1 {
 
             //println!("Reallocate element {:?}", self.element_nodes[next_child].element);
@@ -359,28 +373,18 @@ impl<'a, T> QuadTree<T> {
             let child_rect = &self.elements[reallocated_id].element.rect;
             let locations = QuadRect::element_quad_locations(node_rect, child_rect);
 
-            println!("CHILD WITH RECT: {:?}", child_rect);
-
             for i in 0..4 {
                 if locations[i] {
-                    println!("SPLIT INSERT INDEX: base_index={} i={}  new_index={}  {:?}", new_first_child, i, new_first_child + i, self.nodes[new_first_child + i]);
+                    //println!("SPLIT INSERT INDEX: base_index={} i={}  new_index={}  {:?}", new_first_child, i, new_first_child + i, self.nodes[new_first_child + i]);
                     QuadEltNode::insert(reallocated_id, &mut self.nodes[new_first_child + i], &mut self.element_nodes);
                 }
-            }
-
-            if !(locations[0] ||
-                 locations[1] ||
-                 locations[2] ||
-                 locations[3]) {
-
-                println!("No quad for {:?}", child_rect);
             }
 
             next_child = new_next_child;
 
         }
 
-        println!("FINISHED CHILDREN\n\n");
+
 
         // set first child as the first quadnode TL
         // and set count to -1 to indicate it is a branch
@@ -389,31 +393,31 @@ impl<'a, T> QuadTree<T> {
     }
 
 
-    pub fn query_point(&self, x: i32, y: i32) -> Vec::<&T> {
 
+    pub fn query(&self, query: &Query) -> Vec::<&T> {
 
-        let rect = self.root_rect.clone();
+        let root_rect = self.root_rect.clone();
+
         let mut element_ids = std::collections::HashSet::new();
-        self.query_node(0, &rect, x, y, &mut element_ids);
+        self.query_node_box(0, &root_rect, query, &mut element_ids);
 
         let mut res = Vec::new();
 
-        // TODO keep track of already returned elements to only return each once
         for index in element_ids.into_iter() {
             res.push(&self.data[index as usize]);
         }
         res
+
     }
 
 
-    fn query_node(&self, node_index: usize, node_rect: &QuadRect, x: i32, y: i32, data_vec: &mut std::collections::HashSet::<i32>) {
-
+    fn query_node_box(&self, node_index: usize, node_rect: &QuadRect, query: &Query, data_vec: &mut std::collections::HashSet::<i32>) {
         // leaf, return  all elements
         if self.nodes[node_index].count > -1 {
+
             let mut child_index = self.nodes[node_index].first_child;
 
             while child_index != -1 {
-                println!("Query {:?}",self.element_nodes[child_index].element);
                 data_vec.insert(self.elements[self.element_nodes[child_index].element.element].element.id);
 
                 child_index = self.element_nodes[child_index].element.next;
@@ -421,24 +425,26 @@ impl<'a, T> QuadTree<T> {
             }
         }
         else {
-            self.query_branch(node_index, node_rect, x, y, data_vec);
+            self.query_branch(node_index, node_rect, query, data_vec);
         }
-
-
     }
 
-    fn query_branch(&self, node_index: usize, node_rect: &QuadRect, x: i32, y: i32, data_vec: &mut std::collections::HashSet::<i32>) {
 
-        let locations = QuadRect::point_quad_locations(node_rect, &QuadPoint{ x, y });
+    fn query_branch(&self, node_index: usize, node_rect: &QuadRect, query: &Query, data_vec: &mut std::collections::HashSet::<i32>) {
+
+        let locations = match query {
+            Query::Point(p) => QuadRect::point_quad_locations(node_rect, p),
+            Query::Rect(b) => QuadRect::element_quad_locations(node_rect, b )
+        };
 
         for i in 0..4 {
             if locations[i] {
                 // point is inside this rect
-                self.query_node((self.nodes[node_index].first_child as usize) + i, &node_rect.location_quad(i), x, y, data_vec);
-
+                self.query_node_box((self.nodes[node_index].first_child as usize) + i, &node_rect.location_quad(i), query, data_vec);
             }
         }
     }
+
 
 
     fn print(&self) -> String {
@@ -521,7 +527,7 @@ mod test {
     #[test]
     fn node_locations_all() {
 
-        let node_rect = QuadRect::new(QuadPoint {x: -100, y: -100}, QuadPoint { x: 100, y: 100} );
+        let node_rect = QuadRect::new(QuadPoint {x: -128, y: -128}, QuadPoint { x: 128, y: 128} );
 
         let element_rect = QuadRect::new(QuadPoint {x: -10, y: -10}, QuadPoint { x: 20, y: 20} );
 
@@ -538,7 +544,7 @@ mod test {
     #[test]
     fn node_locations_tl() {
 
-        let node_rect = QuadRect::new(QuadPoint {x: -100, y: -100}, QuadPoint { x: 100, y: 100} );
+        let node_rect = QuadRect::new(QuadPoint {x: -128, y: -128}, QuadPoint { x: 128, y: 128} );
 
         let element_rect = QuadRect::new(QuadPoint {x: -10, y: 10}, QuadPoint { x: -20, y: 20} );
 
@@ -554,7 +560,7 @@ mod test {
     #[test]
     fn node_locations_tr() {
 
-        let node_rect = QuadRect::new(QuadPoint {x: -100, y: -100}, QuadPoint { x: 100, y: 100} );
+        let node_rect = QuadRect::new(QuadPoint {x: -128, y: -128}, QuadPoint { x: 128, y: 128} );
 
         let element_rect = QuadRect::new(QuadPoint {x: 10, y: 10}, QuadPoint { x: 20, y: 20} );
 
@@ -569,7 +575,7 @@ mod test {
     #[test]
     fn node_locations_bl() {
 
-        let node_rect = QuadRect::new(QuadPoint {x: -100, y: -100}, QuadPoint { x: 100, y: 100} );
+        let node_rect = QuadRect::new(QuadPoint {x: -128, y: -128}, QuadPoint { x: 128, y: 128} );
 
         let element_rect = QuadRect::new(QuadPoint {x: -10, y: -10}, QuadPoint { x: -20, y: -20} );
 
@@ -585,7 +591,7 @@ mod test {
     #[test]
     fn node_locations_br() {
 
-        let node_rect = QuadRect::new(QuadPoint {x: -100, y: -100}, QuadPoint { x: 100, y: 100} );
+        let node_rect = QuadRect::new(QuadPoint {x: -128, y: -128}, QuadPoint { x: 128, y: 128} );
 
         let element_rect = QuadRect::new(QuadPoint {x: 10, y: -10}, QuadPoint { x: 20, y: -20} );
 
@@ -600,7 +606,7 @@ mod test {
     #[test]
     fn insert_2_elm() {
 
-        let rect = QuadRect::new(QuadPoint {x: -100, y: -100}, QuadPoint { x: 100, y: 100} );
+        let rect = QuadRect::new(QuadPoint {x: -128, y: -128}, QuadPoint { x: 128, y: 128} );
 
         let mut qt = QuadTree::<f32>::new(rect);
 
@@ -613,7 +619,7 @@ mod test {
         let elm2_rect = QuadRect::new(QuadPoint {x: -10, y: -10}, QuadPoint { x: -20, y: -20} );
         qt.insert(elm2_id, elm2_rect);
 
-        let mut points0 = qt.query_point(15,15);
+        let mut points0 = qt.query(&Query::point(15,15));
         points0.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         assert!(*points0[0] == 1.0);
@@ -621,7 +627,7 @@ mod test {
         assert!(points0.len() == 2);
 
 
-        let mut points1 = qt.query_point(-1,-1);
+        let mut points1 = qt.query(&Query::point(-1,-1));
         points1.sort_by(|a, b| a.partial_cmp(b).unwrap());
         assert!(*points1[0] == 1.0);
         assert!(*points1[1] == 2.0);
@@ -632,7 +638,7 @@ mod test {
     #[test]
     fn insert_3_elm() {
 
-        let rect = QuadRect::new(QuadPoint {x: -100, y: -100}, QuadPoint { x: 100, y: 100} );
+        let rect = QuadRect::new(QuadPoint {x: -128, y: -128}, QuadPoint { x: 128, y: 128} );
 
         let mut qt = QuadTree::<f32>::new(rect);
 
@@ -656,7 +662,7 @@ mod test {
 
         println!("\n\ntree:{:?}\n\n", qt);
 
-        let mut points0 = qt.query_point(15,15);
+        let mut points0 = qt.query(&Query::point(15, 15));
 
         points0.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -665,18 +671,49 @@ mod test {
         assert!(points0.len() == 2);
 
 
-        let mut points1 = qt.query_point(-1,-1);
+        let mut points1 = qt.query(&Query::point(-1,-1));
         points1.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         assert!(*points1[0] == 1.0);
         assert!(*points1[1] == 2.0);
         assert!(points1.len() == 2);
 
-        let mut points2 = qt.query_point(-1, 1);
+        let mut points2 = qt.query(&Query::point(-1, 1));
         points2.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         assert!(*points2[0] == 2.0);
         assert!(points2.len() == 1);
 
+    }
+
+
+    #[test]
+    fn insert_neg_50_50_elm() {
+
+        let rect = QuadRect::new(QuadPoint {x: -128, y: -128}, QuadPoint { x: 128, y: 128} );
+
+        let mut qt = QuadTree::<(i32, i32)>::new(rect);
+
+
+        for i in (-51..49).step_by(2) {
+            for j in (-51..49).step_by(2) {
+                let rect = QuadRect::new(QuadPoint {x: i, y: j}, QuadPoint { x: i, y: j } );
+                qt.insert((i,j), rect);
+            }
+        }
+
+        let points15_15 = qt.query(&Query::point(15, 15));
+
+        println!("{:?}", points15_15);
+
+        assert!(points15_15.len() == 1);
+
+        let points0_0 = qt.query(&Query::point(0, 0));
+        assert!(points0_0.len() == 4);
+
+        let search_rect = QuadRect::new(QuadPoint {x: -10, y: -10}, QuadPoint { x: 10, y: 10} );
+        let points = qt.query(&Query::rect(search_rect));
+
+        assert!(points.len() == 144)
     }
 }
