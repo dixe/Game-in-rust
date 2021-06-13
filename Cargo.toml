@@ -24,6 +24,9 @@ walkdir = "2.1"
 tobj = "2.0.4"
 image = "0.23.14"
 freetype-rs = "0.28.0"
+noise = "0.7.0"
+perlin_noise = "1.0.1"
+
 
 [dependencies.gltf]
 version = "0.15.2"

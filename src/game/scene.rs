@@ -133,15 +133,13 @@ impl Scene {
         let gltf_meshes = render_gl::meshes_from_gltf(&glb_path, gl, &index_map)?;
         let model_name = "sword";
 
-        self.add_model(gl, model_name, &gltf_meshes);
+        self.add_model(gl, model_name, &gltf_meshes.meshes[model_name]);
 
         let mut weapon = entity::Entity::new(None, model_name.to_string());
         self.setup_hitboxes(gl, &mut weapon, &gltf_meshes);
 
         self.animations.insert(model_name.to_string(), animations);
         self.entities.weapons.add(weapon);
-
-
 
         Ok(())
     }
@@ -150,17 +148,15 @@ impl Scene {
 
     fn setup_world(&mut self, gl: &gl::Gl) -> Result<(), failure::Error>  {
 
-        let world_glb_path = "E:/repos/Game-in-rust/blender_models/world_1.glb";
-
-        let index_map = std::collections::HashMap::new();
-
-        let gltf_meshes = render_gl::meshes_from_gltf(&world_glb_path, gl, &index_map)?;
-
         let model_name = "world";
 
-        self.world_triangles = gltf_meshes.triangles(model_name);
+        let generated = render_gl::perlin_field();
 
-        self.add_model(gl, model_name, &gltf_meshes);
+        //let generated = render_gl::triangle();
+
+        self.world_triangles = generated.triangles();
+
+        self.add_model(gl, model_name, &generated);
 
         Ok(())
 
@@ -217,7 +213,7 @@ impl Scene {
         let entity = entity::add_hitbox_to_entity(entity, &hitboxes);
 
         for hb_kv in &hitboxes {
-            self.add_model(gl, &hb_kv.0, &gltf_meshes);
+            self.add_model(gl, &hb_kv.0, &gltf_meshes.meshes[&hb_kv.0]);
         }
     }
 
@@ -234,13 +230,14 @@ impl Scene {
     }
 
 
-    fn add_model(&mut self, gl: &gl::Gl, name: &str, gltf_meshes: &render_gl::GltfMeshes) {
-        //println!("Add Model: {:#?}", name);
-        let model_mesh = render_gl::Mesh::new(gl, &gltf_meshes.meshes[name]);
+    fn add_model(&mut self, gl: &gl::Gl, name: &str, gltf_mesh: &render_gl::GltfMesh) {
+
+        println!("Adding model {:?}", name);
+
+        let model_mesh = render_gl::Mesh::new(gl, gltf_mesh);
+
 
         let model = entity::Model::mesh(model_mesh);
-
-        let _model_name = name.to_string();
 
         self.models.insert(name.to_string(), model);
     }

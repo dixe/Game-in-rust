@@ -136,6 +136,36 @@ pub struct GltfMesh {
     pub vertex_weights: Vec<VertexWeights>
 }
 
+impl GltfMesh {
+    pub fn triangles(&self) -> Vec::<Triangle> {
+        let mut res = Vec::new();
+        for i in (0..self.indices_data.len()).step_by(3) {
+            let v0_i = self.indices_data[i];
+            let v1_i = self.indices_data[i + 1];
+            let v2_i = self.indices_data[i + 2];
+
+            let v0 = self.pos_data[v0_i as usize];
+            let v1 = self.pos_data[v1_i as usize];
+            let v2 = self.pos_data[v2_i as usize];
+
+            let n0 = self.normal_data[v0_i as usize];
+            let n1 = self.normal_data[v1_i as usize];
+            let n2 = self.normal_data[v2_i as usize];
+            let normal = ((na::Vector3::new(n0[0], n0[1], n0[2]) + na::Vector3::new(n0[0], n0[1], n0[2]) + na::Vector3::new(n2[0], n2[1], n2[2])) / 3.0).normalize();
+
+
+            // use v0 to find d
+            let d = -(normal.x * v0.x + normal.y * v0.y + normal.z * v0.z);
+            let t = Triangle { v0, v1, v2, normal, d};
+
+            res.push(t);
+        }
+
+        res
+    }
+}
+
+
 pub struct GltfMeshes {
     pub meshes: std::collections::HashMap::<String, GltfMesh>
 }
@@ -179,31 +209,9 @@ impl GltfMeshes {
     pub fn triangles(&self, name: &str) -> Vec::<Triangle> {
         let mut res = Vec::new();
         for mesh_data in self.meshes.iter().filter(|kv| kv.0 == name).map(|kv| kv.1) {
-            // meshes are triangu
+            // meshes are triangulated
 
-            for i in (0..mesh_data.indices_data.len()).step_by(3) {
-                let v0_i = mesh_data.indices_data[i];
-                let v1_i = mesh_data.indices_data[i + 1];
-                let v2_i = mesh_data.indices_data[i + 2];
-
-                let v0 = mesh_data.pos_data[v0_i as usize];
-                let v1 = mesh_data.pos_data[v1_i as usize];
-                let v2 = mesh_data.pos_data[v2_i as usize];
-
-                let n0 = mesh_data.normal_data[v0_i as usize];
-                let n1 = mesh_data.normal_data[v1_i as usize];
-                let n2 = mesh_data.normal_data[v2_i as usize];
-                let normal = ((na::Vector3::new(n0[0], n0[1], n0[2]) + na::Vector3::new(n0[0], n0[1], n0[2]) + na::Vector3::new(n2[0], n2[1], n2[2])) / 3.0).normalize();
-
-
-                // use v0 to find d
-                let d = -(normal.x * v0.x + normal.y * v0.y + normal.z * v0.z);
-                let t = Triangle { v0, v1, v2, normal, d};
-
-                res.push(t);
-
-            }
-
+            res = mesh_data.triangles();
         }
 
         res

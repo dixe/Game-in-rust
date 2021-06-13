@@ -8,10 +8,10 @@ pub fn resolve_movement_collision(scene: &mut game::Scene) {
         resolve_movement_collision_entities(&mut scene.entities.player, enemy);
     }
 
-    resolve_world_collision_entity(&mut scene.entities.player, &scene.world_triangles);
+    resolve_world_collision_entity(&mut scene.entities.player, &scene.world_triangles[0..25]);
 
     for enemy in scene.entities.enemies.values_mut() {
-        resolve_world_collision_entity(enemy, &scene.world_triangles);
+        //resolve_world_collision_entity(enemy, &scene.world_triangles[0..10]);
     }
 
 }
@@ -52,7 +52,7 @@ fn resolve_world_collision_entity(e1: &mut entity::Entity, world: &[Triangle] ) 
         let collision_slope_res = check_collision_triangles(&slope_hitbox, world);
 
         match (collision_res, collision_slope_res) {
-            (CollisionResult::Collision(resolve_vec),_) => {
+            (CollisionResult::Collision(resolve_vec), a) => {
                 let resolve_threshold = 0.001;
                 //println!("regular resolve VEC {:?}", resolve_vec);
 
@@ -74,22 +74,22 @@ fn resolve_world_collision_entity(e1: &mut entity::Entity, world: &[Triangle] ) 
                 //println!("angle_dot {:?}", angle_dot);
                 // 0.8 is about 64 degrees, acos(0.8) = 0.64 rad = 36 deg. 90-34 = 54
                 // or asin(0.8) = 92 rad = 54 deg
-                if resolve_vec.z.abs() > resolve_threshold && (angle_dot > 0.8 || angle_dot < 0.0) {
+                //if resolve_vec.z.abs() > resolve_threshold && (angle_dot > 0.8 || angle_dot < 0.0) {
                     e1.physics.pos.z += resolve_vec.z;
-                }
+                //}
 
 
 
-                e1.physics.falling = true;
+                e1.physics.falling = false;
                 e1.physics.velocity.z = 0.0;
             },
 
             (CollisionResult::NoCollision, CollisionResult::Collision(resolve_vec)) => {
 
-                let diff  = 0.4 - resolve_vec.z;
-                //if diff > 0.1 {
-                e1.physics.pos.z -= diff;
-                //                }
+               let diff  = 0.4 - resolve_vec.z;
+                if diff > 0.1 {
+                    e1.physics.pos.z -= diff;
+                }
                 //println!("floting by stil touching MAG {} VEC {:?}", diff, resolve_vec);
                 e1.physics.falling = false;
                 e1.physics.velocity.z = 0.0;

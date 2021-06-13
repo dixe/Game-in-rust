@@ -66,6 +66,61 @@ impl Triangle {
             },
         ]
     }
+
+
+    /*
+
+    // Own old impl
+    pub fn inside(&self,point: &na::Vector3::<f32>) -> bool {
+
+    let mut inside = true;
+
+
+    for edge_norm in self.edge_normals() {
+
+    let inter_proj = projection(point, &edge_norm.normal).dot(&edge_norm.normal);
+    let mut edge_vertex_proj = projection(&edge_norm.v0, &edge_norm.normal).dot(&edge_norm.normal);
+
+    let sign = edge_vertex_proj.signum();
+
+    edge_vertex_proj = edge_vertex_proj;
+
+    inside &= inter_proj <= edge_vertex_proj;
+
+}
+
+    inside
+
+}
+
+     */
+    pub fn project_point(&self, point: &na::Vector3::<f32>) -> na::Vector3::<f32> {
+
+        let projection_s = self.normal.dot(&point) - self.d;
+
+        point - self.normal * projection_s
+
+    }
+
+
+    fn same_side(point1: &na::Vector3::<f32>, point2: &na::Vector3::<f32>, a: &na::Vector3::<f32>, b: &na::Vector3::<f32>) -> bool {
+
+        let cross1 = (b-a).cross(&(point1 - a));
+
+        let cross2 = (b-a).cross(&(point2 - a));
+        cross1.dot(&cross2) >= 0.0
+
+    }
+
+    // assume point lies on the triangle plane, i.e from calling project_point
+    pub fn inside(&self, point: &na::Vector3::<f32>) -> bool {
+        // FROM: https://blackpawn.com/texts/pointinpoly/
+        // Can be optimized
+        Triangle::same_side(point, &self.v0, &self.v1, &self.v2)
+            && Triangle::same_side(point, &self.v1, &self.v0, &self.v2)
+            && Triangle::same_side(point, &self.v2, &self.v0, &self.v1)
+    }
+
 }
 
 impl CollisionBox {
@@ -356,6 +411,9 @@ pub fn check_collision_triangles(box_1: &CollisionBox, triangles: &[Triangle]) -
             CollisionResult::NoCollision => {
             },
             CollisionResult::Collision(resolve) => {
+
+                let triangle_angle = f32::acos(triangle.normal.dot(&na::Vector3::<f32>::new(0.0, 0.0, 1.0)));
+
                 resolve_dir = resolve;
                 collision = true;
             }
@@ -417,32 +475,7 @@ fn triangle_box_collision(box_1: &CollisionBox, triangle: &Triangle) -> Collisio
 
         // check if intersect_p is inside triangle.
 
-        let mut inside = true;
-
-
-        for edge_norm in triangle.edge_normals() {
-
-            let inter_proj = projection(&intersect_p, &edge_norm.normal).dot(&edge_norm.normal);
-            let mut edge_vertex_proj = projection(&edge_norm.v0, &edge_norm.normal).dot(&edge_norm.normal);
-
-            let sign = edge_vertex_proj.signum();
-
-            edge_vertex_proj = edge_vertex_proj;
-
-            inside &= inter_proj <= edge_vertex_proj;
-
-            /*
-            if inter_proj > edge_vertex_proj {
-            //println!("NOT INS {:?} dot {}", edge_norm, edge_norm.normalize().dot(&intersect_p.normalize()));
-            println!("INSIDE EDGE POINTS {:?}", (edge_norm.v0, edge_norm.v1) );
-            println!("INTER POINT {:?}", intersect_p);
-            println!("EDGE NORMAL{:?}", edge_norm.normal);
-            println!("PROJECTIONS {}  {} {}", sign, inter_proj, edge_vertex_proj);
-            println!("");
-        }
-             */
-
-        }
+        let inside = triangle.inside(&intersect_p);
 
         if inside {
             // clear direction is normal, so find out which way is the shortest
@@ -760,45 +793,6 @@ mod tests {
         };
     }
 
-    #[test]
-    fn triangle_box_2 () {
-
-        let box_1 = CollisionBox {
-            name: "".to_string(),
-            v0: na::Vector3::new(-27.76655, -4.172013, 0.0031699687),
-            v1: na::Vector3::new(-28.096537, -4.4879, 0.0031699687),
-            v2: na::Vector3::new(-27.78065, -4.817886, 0.0031699687),
-            v3: na::Vector3::new(-27.450663, -4.501999, 0.0031699687),
-            v4: na::Vector3::new(-27.76655, -4.172013, 1.8767198),
-            v5: na::Vector3::new(-28.096537, -4.4879, 1.8767198),
-            v6: na::Vector3::new(-27.78065, -4.817886, 1.8767198),
-            v7: na::Vector3::new(-27.450663, -4.501999, 1.8767198)
-        };
-
-        let triangle = Triangle {
-            v0: na::Vector3::new(-37.73467, 14.662499, 2.730679),
-            v1: na::Vector3::new(-30.882118, -29.384829, 1.952274),
-            v2: na::Vector3::new(-26.58799, 26.58799, 0.),
-            normal: na::Vector3::new(0.24274935, 0.020625582, 0.9698698),
-            d: 6.209241
-        };
-
-        let col = triangle_box_collision(&box_1, &triangle);
-
-
-        match col {
-            CollisionResult::Collision(resolve_vec) => {
-                let depth = resolve_vec.magnitude();
-                println!("DEPTH {:#?}", depth);
-                assert!( (0.7 -depth).abs() < 0.001);
-            },
-            _ => {
-                println!("no collision it say");
-                assert!(false);
-            }
-        };
-    }
-
 
 
     #[test]
@@ -824,5 +818,77 @@ mod tests {
         assert!(true);
     }
 
+    #[test]
+    fn project_on_triangle_plane() {
 
+
+        let triangle = Triangle {
+            v0: na::Vector3::new(0.0, 0.0, 5.0),
+            v1: na::Vector3::new(0.0, 1.0, 5.0),
+            v2: na::Vector3::new(1.0, 1.0, 5.0),
+            normal: na::Vector3::new(0.0, 0.0, 1.0),
+            d: 5.0
+        };
+
+        let p = na::Vector3::new(10.0, 10.0, 20.0);
+
+        let projection  = triangle.project_point(&p);
+
+        println!("{:?}", projection);
+
+        assert!(projection.x == 10.0 && projection.y == 10.0 && projection.z == 5.0);
+    }
+
+    #[test]
+    fn not_inside_triangle() {
+
+
+        let triangle = Triangle {
+            v0: na::Vector3::new(0.0, 0.0, 5.0),
+            v1: na::Vector3::new(0.0, 1.0, 5.0),
+            v2: na::Vector3::new(1.0, 1.0, 5.0),
+            normal: na::Vector3::new(0.0, 0.0, 1.0),
+            d: 5.0
+        };
+
+        let p = na::Vector3::new(10.0, 10.0, 20.0);
+
+        let projection  = triangle.project_point(&p);
+
+        let inside = triangle.inside(&projection);
+
+        println!("{:?}", inside);
+
+
+        assert!(!inside)
+
+    }
+
+
+
+    #[test]
+    fn inside_triangle() {
+
+        let triangle = Triangle {
+            v0: na::Vector3::new(0.0, 0.0, 5.0),
+            v1: na::Vector3::new(0.0, 1.0, 5.0),
+            v2: na::Vector3::new(1.0, 1.0, 5.0),
+            normal: na::Vector3::new(0.0, 0.0, 1.0),
+            d: 5.0
+        };
+
+        let p = na::Vector3::new(0.5, 0.8, 20.0);
+
+        let projection  = triangle.project_point(&p);
+
+        println!("{:?}", projection);
+
+        let inside = triangle.inside(&projection);
+
+        println!("{:?}", inside);
+
+
+        assert!(inside)
+
+    }
 }
