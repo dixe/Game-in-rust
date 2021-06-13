@@ -11,6 +11,8 @@ use crate::controls;
 use crate::action_system;
 use crate::game::ai;
 
+use quadtree as qt;
+
 pub struct Cameras {
     free_camera: camera::FreeCamera,
     follow_camera: camera::FollowCamera,
@@ -46,6 +48,7 @@ pub struct Scene {
 
     // World
     pub world_triangles: Vec::<physics::Triangle>,
+    pub world_triangles_tree: qt::QuadTree::<usize>,
 
     // make this a struct that can keep track of it, with usize ids, but not as a vec index
     // but something where we can add and remove from
@@ -156,11 +159,15 @@ impl Scene {
 
         self.world_triangles = generated.triangles();
 
+
+        println!("Inserting triangles");
+        for i in 0..self.world_triangles.len() {
+            self.world_triangles_tree.insert(i, qt::QuadRect::from(self.world_triangles[i]));
+        }
+
         self.add_model(gl, model_name, &generated);
 
         Ok(())
-
-
     }
 
     fn setup_player(&mut self, gl: &gl::Gl) -> Result<(), failure::Error>  {
@@ -509,6 +516,7 @@ fn empty(render_context: &render_gl::context::Context) -> Result<Scene, failure:
         ais: std::collections::HashMap::new(),
         render_hitboxes: false,
         world_triangles: Vec::new(),
+        world_triangles_tree: qt::QuadTree::new(qt::QuadRect::new(qt::QuadPoint {x: -100, y: -100}, qt::QuadPoint{ x: 100, y: 100})),
     })
 }
 

@@ -50,9 +50,8 @@ pub fn perlin_field() -> GltfMesh {
 
     let mut pos_data = Vec::new();
 
-    let h = 500;
-    let w = 500;
-
+    let h = 100;
+    let w = 100;
 
     //let mut perlin = PerlinNoise::new();
     let mut perlin = Perlin::new();
@@ -67,15 +66,12 @@ pub fn perlin_field() -> GltfMesh {
             let j_f = (j as f64) / scale;
             let noise: f64  = perlin.get([i_f, j_f]);
 
-            let x = (i as f32);// - ((h/2) as f32);
-            let y = (j as f32); // - ((w/2) as f32);
+            let x = (i as f32) - ((h/2) as f32);
+            let y = (j as f32) - ((w/2) as f32);
 
             pos_data.push(v3::new(x, y, (noise * 5.0) as f32));
         }
     }
-
-
-
 
     let indices_data = indices_for_grid(h, w);
     let normal_data = normals_for_grid(&pos_data, &indices_data, h, w);

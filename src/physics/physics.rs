@@ -17,7 +17,6 @@ pub struct EntityCollision {
 pub fn process(scene: &mut game::Scene, delta: f32) -> Vec<EntityCollision> {
     // MOVE ENTITIES
 
-
     update_entities_position(scene, delta);
     update_entities_rotation(scene, delta);
 
@@ -25,10 +24,7 @@ pub fn process(scene: &mut game::Scene, delta: f32) -> Vec<EntityCollision> {
     //DO IMPULSE COLLISION AND UPDATE
     let impulse_collisions = do_impulse_correction(scene);
 
-
     resolve_movement_collision(scene);
-
-
 
     // TODO remove
     impulse_collisions
@@ -89,7 +85,6 @@ fn update_entity_position(entity: &mut entity::Entity, delta: f32) {
     if entity.physics.falling {
         // APPLY GRAVITY -- results in jancky motion down hill
         let v = entity.physics.velocity.z;
-
         let a = -400.0;
         let gravity = v * delta + (1.0/2.0 * a * delta * delta);
 

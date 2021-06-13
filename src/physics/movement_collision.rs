@@ -1,6 +1,7 @@
 use crate::entity;
 use crate::game;
 use crate::physics::collision_3d::*;
+use quadtree as qt;
 
 pub fn resolve_movement_collision(scene: &mut game::Scene) {
 
@@ -8,10 +9,33 @@ pub fn resolve_movement_collision(scene: &mut game::Scene) {
         resolve_movement_collision_entities(&mut scene.entities.player, enemy);
     }
 
-    resolve_world_collision_entity(&mut scene.entities.player, &scene.world_triangles[0..25]);
+    let mut triangle_indices = scene.world_triangles_tree.query(&qt::Query::point(scene.entities.player.physics.pos.x as i32, scene.entities.player.physics.pos.y as i32));
+
+    triangle_indices.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    // maybe use a free list stored on scene or something to avoid reallocating each frame
+    // or just give the function both a list of triangles and list of indices??
+    let mut triangles = Vec::new();
+    for i in &triangle_indices {
+        triangles.push(scene.world_triangles[**i]);
+    }
+
+    //println!(" ({}, {}) {:?} ", scene.entities.player.physics.pos.x as i32, scene.entities.player.physics.pos.y as i32, triangle_indices);
+
+    resolve_world_collision_entity(&mut scene.entities.player, &triangles);
+
 
     for enemy in scene.entities.enemies.values_mut() {
-        //resolve_world_collision_entity(enemy, &scene.world_triangles[0..10]);
+
+        let mut triangle_indices = scene.world_triangles_tree.query(&qt::Query::point(scene.entities.player.physics.pos.x as i32, scene.entities.player.physics.pos.y as i32));
+
+        triangle_indices.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        // maybe use a free list stored on scene or something to avoid reallocating each frame
+        // or just give the function both a list of triangles and list of indices??
+        let mut triangles = Vec::new();
+        for i in &triangle_indices {
+            triangles.push(scene.world_triangles[**i]);
+        }
+        resolve_world_collision_entity(enemy, &triangles);
     }
 
 }
@@ -75,7 +99,7 @@ fn resolve_world_collision_entity(e1: &mut entity::Entity, world: &[Triangle] ) 
                 // 0.8 is about 64 degrees, acos(0.8) = 0.64 rad = 36 deg. 90-34 = 54
                 // or asin(0.8) = 92 rad = 54 deg
                 //if resolve_vec.z.abs() > resolve_threshold && (angle_dot > 0.8 || angle_dot < 0.0) {
-                    e1.physics.pos.z += resolve_vec.z;
+                e1.physics.pos.z += resolve_vec.z;
                 //}
 
 
@@ -86,7 +110,7 @@ fn resolve_world_collision_entity(e1: &mut entity::Entity, world: &[Triangle] ) 
 
             (CollisionResult::NoCollision, CollisionResult::Collision(resolve_vec)) => {
 
-               let diff  = 0.4 - resolve_vec.z;
+                let diff  = 0.4 - resolve_vec.z;
                 if diff > 0.1 {
                     e1.physics.pos.z -= diff;
                 }

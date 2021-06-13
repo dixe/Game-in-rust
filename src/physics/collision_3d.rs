@@ -1,5 +1,7 @@
 use nalgebra as na;
 
+use quadtree as qt;
+
 use crate::physics::projection_collision::*;
 
 
@@ -37,6 +39,7 @@ pub struct EdgeWithNormal {
     pub normal: na::Vector3::<f32>,
 }
 
+
 impl Triangle {
     fn edges(&self) -> Vec<(na::Vector3::<f32>, na::Vector3::<f32>)> {
         vec! [
@@ -68,32 +71,7 @@ impl Triangle {
     }
 
 
-    /*
 
-    // Own old impl
-    pub fn inside(&self,point: &na::Vector3::<f32>) -> bool {
-
-    let mut inside = true;
-
-
-    for edge_norm in self.edge_normals() {
-
-    let inter_proj = projection(point, &edge_norm.normal).dot(&edge_norm.normal);
-    let mut edge_vertex_proj = projection(&edge_norm.v0, &edge_norm.normal).dot(&edge_norm.normal);
-
-    let sign = edge_vertex_proj.signum();
-
-    edge_vertex_proj = edge_vertex_proj;
-
-    inside &= inter_proj <= edge_vertex_proj;
-
-}
-
-    inside
-
-}
-
-     */
     pub fn project_point(&self, point: &na::Vector3::<f32>) -> na::Vector3::<f32> {
 
         let projection_s = self.normal.dot(&point) - self.d;
@@ -121,6 +99,20 @@ impl Triangle {
             && Triangle::same_side(point, &self.v2, &self.v0, &self.v1)
     }
 
+}
+
+
+impl From<Triangle> for qt::QuadRect {
+    fn from(t: Triangle) -> qt::QuadRect {
+        let left = i32::min(i32::min(t.v0.x as i32, t.v1.x as i32), t.v2.x as i32);
+        let right = i32::max(i32::max(t.v0.x as i32, t.v1.x as i32), t.v2.x as i32);
+        let top = i32::max(i32::max(t.v0.y as i32, t.v1.y as i32), t.v2.y as i32);
+        let bottom = i32::min(i32::min(t.v0.y as i32, t.v1.y as i32), t.v2.y as i32);
+
+        qt::QuadRect { left, right, top, bottom}
+
+
+    }
 }
 
 impl CollisionBox {

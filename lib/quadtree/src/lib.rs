@@ -1,7 +1,5 @@
 use std::fmt;
-
 mod free_list;
-
 use free_list::FreeList;
 
 
@@ -223,7 +221,7 @@ impl QuadRect {
 
 
 
-struct QuadTree<T> {
+pub struct QuadTree<T> {
 
     // All elements in quadTree
     elements: FreeList<QuadElt>,
@@ -268,8 +266,8 @@ impl<'a, T> QuadTree<T> {
             data: Vec::new(),
             root_rect: rect,
             free_node: 0,
-            max_depth: 1000,
-            nodes_per_cell: 2
+            max_depth: 10,
+            nodes_per_cell: 6
         }
     }
 
@@ -619,7 +617,9 @@ mod test {
         let elm2_rect = QuadRect::new(QuadPoint {x: -10, y: -10}, QuadPoint { x: -20, y: -20} );
         qt.insert(elm2_id, elm2_rect);
 
+
         let mut points0 = qt.query(&Query::point(15,15));
+
         points0.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         assert!(*points0[0] == 1.0);

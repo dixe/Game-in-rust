@@ -194,6 +194,8 @@ fn run() -> Result<(), failure::Error> {
         game::update_game_state(&mut ctx.scene, &ctx.controls, &collisions);
 
 
+
+        println!("FPS: {:?}", 1.0 / delta);
         //UPDATE CAMERA IF FOLLOW MODE
 
         let mode = ctx.scene.camera().mode();

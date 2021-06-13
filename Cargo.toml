@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 gl = { path = "lib/gl" }
+quadtree = { path = "lib/quadtree" }
 failure = "0.1"
 render_gl_derive = { path = "render_gl_derive" }
 entity_component_derive = { path = "entity_component_derive" }
