@@ -9,7 +9,6 @@ layout (location = 4) in vec2 TexCord;
 out VS_OUTPUT {
    vec3 Normal;
    vec3 FragPos;
-   vec2 TexCord;
    vec3 Color;
 } OUT;
 
@@ -19,7 +18,7 @@ uniform mat4 uBones[32];
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-
+uniform sampler2D Texture;
 
 
 mat4 boneTransform() {
@@ -51,10 +50,8 @@ void main()
 
     OUT.Normal = mat3(transpose(inverse(model * bt))) * vec4(Normal, 1.0).xyz;
 
-    OUT.TexCord = TexCord;
 
     int b = 16;
-
 
     OUT.Color = vec3(1.0,1.0,1.0);
 
@@ -63,6 +60,7 @@ void main()
       OUT.Color = vec3(0.0, 0.0, 0.0);
     }
 
+    OUT.Color = texture(Texture, TexCord).rgb;
 
     gl_Position =  projection * view * model  * bt * vec4(Position, 1.0);
 

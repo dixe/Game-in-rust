@@ -195,6 +195,9 @@ impl Scene {
 
         let mut player = entity::Entity::new(Some(animation_player), model_name.to_string());
 
+        player.physics.pos.x = 14.457796;
+        player.physics.pos.y = -7.9271455;
+
         self.setup_hitboxes(gl, &mut player, &gltf_meshes);
 
         player.skeleton = skeleton;

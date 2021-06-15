@@ -46,8 +46,6 @@ pub fn triangle() -> GltfMesh {
 
 pub fn perlin_field() -> GltfMesh {
 
-
-
     let mut pos_data = Vec::new();
 
     let h = 100;
@@ -59,7 +57,13 @@ pub fn perlin_field() -> GltfMesh {
     let scale = 20.3;
     //perlin.set_seed(42);
 
+
     // set pos data
+
+    let height_scale = 10.0;
+    let scale_x = 4.0;
+    let scale_y = 4.0;
+
     for i in 0..h {
         for j in 0..w {
             let i_f = (i as f64) / scale;
@@ -69,7 +73,7 @@ pub fn perlin_field() -> GltfMesh {
             let x = (i as f32) - ((h/2) as f32);
             let y = (j as f32) - ((w/2) as f32);
 
-            pos_data.push(v3::new(x, y, (noise * 5.0) as f32));
+            pos_data.push(v3::new(x * scale_x, y * scale_y, (noise * height_scale) as f32));
         }
     }
 
@@ -89,14 +93,6 @@ pub fn perlin_field() -> GltfMesh {
 
 }
 
-fn randomGradient(ix: u32, iy: u32) -> v2 {
-    let x = ix as f32;
-    let y = iy as f32;
-    // Random float. No precomputed gradients mean this works for any number of grid coordinates
-    let random = 2920.0 * f32::sin(x * 21942.0 + y * 171324.0 + 8912.0) * f32::cos(x * 23157.0 * y * 217832.0 + 9758.0);
-
-    v2::new(f32::cos(random), f32::sin(random))
-}
 
 fn normals_for_grid(pos_data: &Vec::<v3>, indices: &Vec::<u32>, h: u32, w: u32) -> Vec::<[f32; 3]> {
     let mut normal_data_vec = Vec::new();
@@ -157,14 +153,40 @@ fn indices_for_grid(h: u32, w: u32) -> Vec::<u32> {
 }
 
 
+
 fn tex_coord_for_grid(pos_data: &Vec::<v3>, h: u32, w: u32) -> Vec::<[f32; 2]> {
     let mut tex_data = Vec::new();
+
+
+    let step_size = 1.0/8.0;
+    let offset = 0.04;
+    let blue = v2::new(offset, step_size + offset);
+    let green = v2::new(step_size * 4.0 + offset, step_size + offset);
+    let white = v2::new(offset, step_size * 7.0  + offset);
+
+    let bright = v2::new(0.0, 0.0);
+    let light = v2::new(0.1, 0.0);
+    let dark = v2::new(0.2, 0.0);
+    let darker = v2::new(0.3, 0.0);
+
+    let mut tex_coords = std::collections::HashSet::new();
+
     for i in 0..h {
         for j in 0..w {
-            tex_data.push([0.7, 0.2]);
+
+            let color = match pos_data[to_index(i,j, w) as usize].z {
+                x if x <= 0.0 => blue + darker,
+                x if x >= 5.0 => white + light,
+                _ =>  green + dark,
+            };
+
+            tex_coords.insert(format!("{},{}", color.x, color.y));
+            tex_data.push([color.x, color.y]);
         }
     }
 
+    println!("{:?}", tex_coords);
+    //panic!();
     tex_data
 }
 

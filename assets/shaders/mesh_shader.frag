@@ -3,14 +3,12 @@
 in VS_OUTPUT {
     vec3 Normal;
     vec3 FragPos;
-    vec2 TexCord;
     vec3 Color;
 } IN;
 
 
 uniform vec3 lightColor;
 uniform vec3 lightPos;
-uniform sampler2D Texture;
 uniform vec3 viewPos;
 out vec4 Color;
 
@@ -52,9 +50,14 @@ void main()
   vec3 specular = specularStrength * spec * lightColor;
 
 
-  vec3 color = texture(Texture, IN.TexCord).rgb;
-  Color = vec4( (ambient + diffuse + specular) * color, 1.0f);
+  Color = vec4( (ambient + diffuse + specular) * IN.Color, 1.0f);
+
+  //Color = vec4( (ambient + diffuse + specular) * color, 1.0f);
   //Color = vec4( lightDir, 1.0f);
+
+  // dispplay the bones influences
+  //Color =  vec4( IN.Color.rgb, 1.0f);
+
 
 
 

@@ -41,6 +41,20 @@ pub struct EdgeWithNormal {
 
 
 impl Triangle {
+
+
+    pub fn new( v0: na::Vector3::<f32>, v1: na::Vector3::<f32>, v2: na::Vector3::<f32>,) -> Self {
+
+        let normal = ((v1 - v0).cross(&(v2 - v0))).normalize();
+
+
+        // use v0 to find d
+        let d = -(normal.x * v0.x + normal.y * v0.y + normal.z * v0.z);
+        Triangle { v0, v1, v2, normal, d}
+
+
+    }
+
     fn edges(&self) -> Vec<(na::Vector3::<f32>, na::Vector3::<f32>)> {
         vec! [
             (self.v0, self.v1),
@@ -70,6 +84,16 @@ impl Triangle {
         ]
     }
 
+
+    pub fn project_point_z_axis(&self, point: &na::Vector3::<f32>) -> na::Vector3::<f32> {
+
+        let proj_vec = na::Vector3::new(0.0, 0.0, 1.0);
+
+        let z_dist = ( (self.v0 - point).dot(&self.normal)) / (self.normal.dot(&proj_vec));
+
+        na::Vector3::new(point.x, point.y, point.z + z_dist)
+
+    }
 
 
     pub fn project_point(&self, point: &na::Vector3::<f32>) -> na::Vector3::<f32> {
@@ -832,16 +856,26 @@ mod tests {
     }
 
     #[test]
+    fn project_on_triangle_plane_2() {
+
+        let triangle = Triangle::new(na::Vector3::new(0.0, 0.0, 0.0), na::Vector3::new(0.0, 1.0, 1.0),na::Vector3::new(1.0, 1.0, 2.0));
+
+        let p = na::Vector3::new(0.0, 0.0, 11.0)
+            ;
+        let projection  = triangle.project_point_z_axis(&p);
+
+        println!("{:?}", projection);
+
+        println!("\n{:#?}", triangle);
+
+
+        assert!(projection.x == 00.0 && projection.y == 0.0 && projection.z == 0.0);
+    }
+
+    #[test]
     fn not_inside_triangle() {
 
-
-        let triangle = Triangle {
-            v0: na::Vector3::new(0.0, 0.0, 5.0),
-            v1: na::Vector3::new(0.0, 1.0, 5.0),
-            v2: na::Vector3::new(1.0, 1.0, 5.0),
-            normal: na::Vector3::new(0.0, 0.0, 1.0),
-            d: 5.0
-        };
+        let triangle = Triangle::new(na::Vector3::new(0.0, 0.0, 5.0), na::Vector3::new(0.0, 1.0, 5.0),na::Vector3::new(1.0, 1.0, 5.0));
 
         let p = na::Vector3::new(10.0, 10.0, 20.0);
 
@@ -861,13 +895,7 @@ mod tests {
     #[test]
     fn inside_triangle() {
 
-        let triangle = Triangle {
-            v0: na::Vector3::new(0.0, 0.0, 5.0),
-            v1: na::Vector3::new(0.0, 1.0, 5.0),
-            v2: na::Vector3::new(1.0, 1.0, 5.0),
-            normal: na::Vector3::new(0.0, 0.0, 1.0),
-            d: 5.0
-        };
+        let triangle = Triangle::new(na::Vector3::new(0.0, 0.0, 5.0), na::Vector3::new(0.0, 1.0, 5.0),na::Vector3::new(1.0, 1.0, 5.0));
 
         let p = na::Vector3::new(0.5, 0.8, 20.0);
 

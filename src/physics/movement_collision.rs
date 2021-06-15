@@ -35,7 +35,7 @@ pub fn resolve_movement_collision(scene: &mut game::Scene) {
         for i in &triangle_indices {
             triangles.push(scene.world_triangles[**i]);
         }
-        resolve_world_collision_entity(enemy, &triangles);
+        //resolve_world_collision_entity(enemy, &triangles);
     }
 
 }
@@ -72,11 +72,8 @@ fn resolve_world_collision_entity(e1: &mut entity::Entity, world: &[Triangle] ) 
 
         let collision_res = check_collision_triangles(&e1_hitbox, world);
 
-        let slope_hitbox = e1_hitbox_base.make_transformed(e1.physics.pos - na::Vector3::new(0.0, 0.0, 0.4), e1.physics.rotation);
-        let collision_slope_res = check_collision_triangles(&slope_hitbox, world);
-
-        match (collision_res, collision_slope_res) {
-            (CollisionResult::Collision(resolve_vec), a) => {
+        match collision_res {
+            CollisionResult::Collision(resolve_vec) => {
                 let resolve_threshold = 0.001;
                 //println!("regular resolve VEC {:?}", resolve_vec);
 
@@ -107,21 +104,28 @@ fn resolve_world_collision_entity(e1: &mut entity::Entity, world: &[Triangle] ) 
                 e1.physics.falling = false;
                 e1.physics.velocity.z = 0.0;
             },
-
-            (CollisionResult::NoCollision, CollisionResult::Collision(resolve_vec)) => {
-
-                let diff  = 0.4 - resolve_vec.z;
-                if diff > 0.1 {
-                    e1.physics.pos.z -= diff;
-                }
-                //println!("floting by stil touching MAG {} VEC {:?}", diff, resolve_vec);
-                e1.physics.falling = false;
-                e1.physics.velocity.z = 0.0;
-
-            },
-
             _ => {
-                e1.physics.falling = true;
+
+
+
+                let mut set_falling = true;
+                // If not falling and close to ground, snap to ground, to avoid jitter
+                if !e1.physics.falling {
+                    let p = e1.physics.pos;
+
+                    for triangle in world {
+                        let projection  = triangle.project_point_z_axis(&p);
+
+                        let inside = triangle.inside(&projection);
+
+
+                        if inside {
+                            set_falling = false;
+                        }
+                    }
+                }
+
+                e1.physics.falling = set_falling;
             }
         };
     }

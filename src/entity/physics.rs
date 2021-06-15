@@ -22,7 +22,7 @@ impl Physics {
             velocity: na::Vector3::<f32>::new(0.0, 0.0, 0.0),
             facing_dir:
             na::Vector3::<f32>::new(0.0, 0.0, 0.0),
-            max_speed: 2.0,
+            max_speed: 5.0,
             inverse_mass: 1.0,
             scale: 1.0,
             anchor_id: None,

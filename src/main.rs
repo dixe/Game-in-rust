@@ -177,6 +177,10 @@ fn run() -> Result<(), failure::Error> {
 
         if ctx.controls.reset {
             ctx.scene.entities.player.physics = entity::Physics::new();
+
+            ctx.scene.entities.player.physics.pos.x = 14.457796;
+            ctx.scene.entities.player.physics.pos.y = -7.9271455;
+
             ctx.scene.entities.player.skeleton.reset_ik();
         }
 
@@ -195,7 +199,9 @@ fn run() -> Result<(), failure::Error> {
 
 
 
-        println!("FPS: {:?}", 1.0 / delta);
+        //println!("FPS: {:?}", 1.0 / delta);
+        //println!("{:?}", ctx.scene.entities.player.physics.velocity.magnitude());
+
         //UPDATE CAMERA IF FOLLOW MODE
 
         let mode = ctx.scene.camera().mode();
