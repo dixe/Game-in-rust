@@ -1,6 +1,8 @@
 use crate::entity;
 use crate::game;
+use crate::types::*;
 use crate::physics::collision_3d::*;
+
 use quadtree as qt;
 
 pub fn resolve_movement_collision(scene: &mut game::Scene) {
@@ -35,7 +37,8 @@ pub fn resolve_movement_collision(scene: &mut game::Scene) {
         for i in &triangle_indices {
             triangles.push(scene.world_triangles[**i]);
         }
-        //resolve_world_collision_entity(enemy, &triangles);
+
+        resolve_world_collision_entity(enemy, &triangles);
     }
 
 }
@@ -88,18 +91,7 @@ fn resolve_world_collision_entity(e1: &mut entity::Entity, world: &[Triangle] ) 
                     e1.physics.pos.y += resolve_vec.y
                 }
 
-
-
-                // Close to 0 means steeper wall
-                let angle_dot = na::Vector3::new(0.0, 0.0, 1.0).dot(&resolve_vec.normalize());
-                //println!("angle_dot {:?}", angle_dot);
-                // 0.8 is about 64 degrees, acos(0.8) = 0.64 rad = 36 deg. 90-34 = 54
-                // or asin(0.8) = 92 rad = 54 deg
-                //if resolve_vec.z.abs() > resolve_threshold && (angle_dot > 0.8 || angle_dot < 0.0) {
                 e1.physics.pos.z += resolve_vec.z;
-                //}
-
-
 
                 e1.physics.falling = false;
                 e1.physics.velocity.z = 0.0;

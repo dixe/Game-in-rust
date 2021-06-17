@@ -9,7 +9,7 @@ layout (location = 4) in vec2 TexCord;
 out VS_OUTPUT {
    vec3 Normal;
    vec3 FragPos;
-   vec3 Color;
+   flat vec3 Color;
 } OUT;
 
 

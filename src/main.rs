@@ -22,6 +22,9 @@ use std::thread;
 pub mod render_gl;
 pub mod resources;
 
+pub mod text_render;
+pub mod types;
+
 pub mod triangle;
 pub mod square;
 pub mod cube;

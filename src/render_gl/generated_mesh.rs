@@ -1,11 +1,8 @@
 use crate::render_gl::mesh::{GltfMesh};
 use noise::{NoiseFn, Perlin, Seedable};
-use perlin_noise::PerlinNoise;
-
-type v3 = na::Vector3::<f32>;
-
-type v2 = na::Vector2::<f32>;
-
+use image::io::Reader as ImageReader;
+use crate::types::*;
+use rand::Rng;
 
 pub fn triangle() -> GltfMesh {
 
@@ -48,35 +45,42 @@ pub fn perlin_field() -> GltfMesh {
 
     let mut pos_data = Vec::new();
 
-    let h = 100;
-    let w = 100;
+    let h = 800;
+    let w = 800;
 
-    //let mut perlin = PerlinNoise::new();
+
     let mut perlin = Perlin::new();
 
-    let scale = 20.3;
-    //perlin.set_seed(42);
+    let mut rng = rand::thread_rng();
+
+    let random = rng.gen::<u32>();
+
+    perlin = perlin.set_seed(random);
+    println!("{:?}", perlin.seed());
+
+    let scale_x = 7.0;
+    let scale_y = 7.0;
 
 
     // set pos data
 
-    let height_scale = 10.0;
-    let scale_x = 4.0;
-    let scale_y = 4.0;
-
+    let mut min = 0.0;
     for i in 0..h {
         for j in 0..w {
-            let i_f = (i as f64) / scale;
-            let j_f = (j as f64) / scale;
+            let i_f = ((i as f64) / h as f64) * scale_y;
+            let j_f = ((j as f64) / w as f64) * scale_x;
             let noise: f64  = perlin.get([i_f, j_f]);
 
-            let x = (i as f32) - ((h/2) as f32);
-            let y = (j as f32) - ((w/2) as f32);
-
-            pos_data.push(v3::new(x * scale_x, y * scale_y, (noise * height_scale) as f32));
+            min = f64::min(min, noise);
+            pos_data.push(v3::new(i as f32, j as f32, noise as f32));
         }
     }
 
+    println!("random = {} seed = {} - min={:?}", random, perlin.seed(), min);
+
+    save_noise_to_image(&pos_data, h, w);
+
+    panic!();
     let indices_data = indices_for_grid(h, w);
     let normal_data = normals_for_grid(&pos_data, &indices_data, h, w);
     let tex_data = tex_coord_for_grid(&pos_data, h, w);
@@ -90,6 +94,33 @@ pub fn perlin_field() -> GltfMesh {
         tex_data,
         vertex_weights: Vec::new()
     }
+
+}
+
+fn save_noise_to_image(pos_data: &Vec::<v3>, h: u32, w: u32) -> Result<(), image::ImageError> {
+
+    let new_scale = 256.0 / 2.0;
+
+    let mut imgbuf = image::ImageBuffer::new(w, h);
+
+
+    for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
+
+        let index = to_index(x,y, w) as usize;
+        // + scale to make min 0
+        // Now max value is scale * 2
+
+
+        let r = ((pos_data[index].z) * new_scale) as u8;
+
+        *pixel = image::Rgb([r, r, r]);
+    }
+
+    imgbuf.save("E:/repos/Game-in-rust/noise_image.png").unwrap();
+
+    Ok(())
+
+
 
 }
 
@@ -175,7 +206,7 @@ fn tex_coord_for_grid(pos_data: &Vec::<v3>, h: u32, w: u32) -> Vec::<[f32; 2]> {
         for j in 0..w {
 
             let color = match pos_data[to_index(i,j, w) as usize].z {
-                x if x <= 0.0 => blue + darker,
+                x if x < 0.0 => blue + darker,
                 x if x >= 5.0 => white + light,
                 _ =>  green + dark,
             };

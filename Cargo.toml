@@ -27,6 +27,7 @@ image = "0.23.14"
 freetype-rs = "0.28.0"
 noise = "0.7.0"
 perlin_noise = "1.0.1"
+rand = "0.8.0"
 
 
 [dependencies.gltf]
