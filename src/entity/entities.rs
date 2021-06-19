@@ -16,7 +16,7 @@ pub struct EntitiesCollection {
 impl EntitiesCollection {
     pub fn new() -> Self {
         EntitiesCollection {
-            next_id: 0,
+            next_id: 1,
             entities: std::collections::HashMap::<usize, Entity>::new(),
         }
     }

@@ -1,15 +1,19 @@
-use crate::render_gl::mesh::{GltfMesh};
 use noise::{NoiseFn, Perlin, Seedable};
 use image::io::Reader as ImageReader;
 use crate::types::*;
 use rand::Rng;
 
+
+pub struct NoiseMap {
+
+}
+
 pub fn perlin_field() -> GltfMesh {
 
-    let mut noise_data = Vec::new();
+    let mut pos_data = Vec::new();
 
-    let h = 100;
-    let w = 100;
+    let h = 800;
+    let w = 800;
 
 
     let mut perlin = Perlin::new();
@@ -35,18 +39,16 @@ pub fn perlin_field() -> GltfMesh {
             let noise: f64  = perlin.get([i_f, j_f]);
 
             min = f64::min(min, noise);
-            noise_data.push(v3::new(i as f32, j as f32, noise as f32));
+            pos_data.push(v3::new(i as f32, j as f32, noise as f32));
         }
     }
 
     println!("random = {} seed = {} - min={:?}", random, perlin.seed(), min);
 
-    save_noise_to_image(&noise_data, h, w);
+    save_noise_to_image(&pos_data, h, w);
 
+    panic!();
     let indices_data = indices_for_grid(h, w);
-
-
-    let pos_data = pos_for_grid(&noise_data, h as f32, w as f32);
     let normal_data = normals_for_grid(&pos_data, &indices_data, h, w);
     let tex_data = tex_coord_for_grid(&pos_data, h, w);
 
@@ -88,19 +90,6 @@ fn save_noise_to_image(pos_data: &Vec::<v3>, h: u32, w: u32) -> Result<(), image
 
 
 }
-
-fn pos_for_grid(noise_data: &Vec::<v3>, h: f32, w: f32) -> Vec::<v3> {
-
-    let mut pos_data = Vec::new();
-    for sample in noise_data {
-        pos_data.push(v3::new( sample.x - (w/2.0), sample.y - (h/2.0), sample.z));
-    }
-
-    pos_data
-
-}
-
-
 
 
 fn normals_for_grid(pos_data: &Vec::<v3>, indices: &Vec::<u32>, h: u32, w: u32) -> Vec::<[f32; 3]> {

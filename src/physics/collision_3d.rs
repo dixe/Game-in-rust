@@ -468,6 +468,10 @@ fn triangle_box_collision(box_1: &CollisionBox, triangle: &Triangle) -> Collisio
         }
     }
 
+    if false {
+        println!("{:#?}", box_1);
+    }
+
     // no sign differ means box did not intersect plane
     if sign_differ.len() == 0 {
         return CollisionResult::NoCollision;

@@ -195,8 +195,8 @@ impl Scene {
 
         let mut player = entity::Entity::new(Some(animation_player), model_name.to_string());
 
-        player.physics.pos.x = 14.457796;
-        player.physics.pos.y = -7.9271455;
+        player.physics.pos.x = 0.0;
+        player.physics.pos.y = 0.0;
 
         self.setup_hitboxes(gl, &mut player, &gltf_meshes);
 
@@ -275,6 +275,12 @@ impl Scene {
     pub fn update_animations(&mut self, delta: f32) {
 
         self.entities.player.update_animations(delta);
+        println!("falling={} - player animation {:?} next animation {}",
+                 self.entities.player.physics.falling,
+                 self.entities.player.animation_player.as_ref().unwrap().current_animation_name(),
+                 self.entities.player.animation_player.as_ref().unwrap().next_animation_name()
+        );
+
         for enemy in self.entities.enemies.values_mut() {
             enemy.update_animations(delta);
         }

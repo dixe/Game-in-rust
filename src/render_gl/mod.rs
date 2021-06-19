@@ -41,7 +41,7 @@ mod mesh;
 pub use self::mesh::{Mesh, SkinnedMesh, GltfMeshes, GltfMesh, meshes_from_gltf};
 
 mod generated_mesh;
-pub use self::generated_mesh::{triangle, perlin_field};
+pub use self::generated_mesh::{perlin_field};
 
 mod skeleton;
 pub use self::skeleton::{Skeleton, Joint};

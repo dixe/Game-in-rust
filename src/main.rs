@@ -41,7 +41,7 @@ mod camera;
 mod physics;
 mod action_system;
 
-mod physics_test;
+mod test_physics;
 
 use game::ai;
 #[derive(Copy, Clone, Debug)]
@@ -159,7 +159,7 @@ fn run() -> Result<(), failure::Error> {
 
     let mut ctx = game::Context::new()?;
 
-    let mut physics_test = physics_test::PhysicsTest::new(&ctx.render_context.gl);
+    let mut physics_test = test_physics::PhysicsTest::new(&ctx.render_context.gl);
 
     let collision_shader = render_gl::Shader::new("collision_test_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
 
@@ -181,10 +181,15 @@ fn run() -> Result<(), failure::Error> {
         if ctx.controls.reset {
             ctx.scene.entities.player.physics = entity::Physics::new();
 
-            ctx.scene.entities.player.physics.pos.x = 14.457796;
-            ctx.scene.entities.player.physics.pos.y = -7.9271455;
+            ctx.scene.entities.player.physics.pos.x = 0.0;
+            ctx.scene.entities.player.physics.pos.y = 0.0;
 
             ctx.scene.entities.player.skeleton.reset_ik();
+
+            for enemy in ctx.scene.entities.enemies.values_mut() {
+                enemy.physics = entity::Physics::new();
+                enemy.skeleton.reset_ik();
+            }
         }
 
         unsafe {

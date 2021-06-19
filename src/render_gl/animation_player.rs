@@ -152,7 +152,22 @@ impl AnimationPlayer {
 
     pub fn current_animation_name(&self) -> &str {
 
-        match &self.current_animation {
+        self.animation_name(&self.current_animation)
+
+    }
+
+
+    pub fn next_animation_name(&self) -> &str {
+
+        match &self.next_animation {
+            None => "None",
+            Some(a) => self.animation_name(a),
+        }
+    }
+
+    fn animation_name(&self, animation: &Animation) -> &str {
+
+        match animation {
             Animation::TPose => "t_pose",
             Animation::Walk => "walk",
             Animation::Idle => "idle",

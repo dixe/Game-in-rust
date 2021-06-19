@@ -20,7 +20,6 @@ pub struct WalkToBehaviour {
 
 impl Behaviour for WalkToBehaviour {
 
-
     fn execute(&self, entity: &mut Entity) {
         match entity.get_state() {
             EntityState::Moving => {},
@@ -37,8 +36,6 @@ impl Behaviour for WalkToBehaviour {
         let mag = (entity.physics.pos.xy() - self.location.xy()).magnitude();
         mag < 0.01
     }
-
-
 
 }
 

@@ -8,6 +8,12 @@ pub fn move_to_point(entity: &mut Entity, new_point: na::Vector3<f32>) {
     // Error is that when stading on ground we are not a z = 0.0, but higer.
     // maybe also remove the rotation aspect, since walking sideways and backwards
 
+
+    if entity.physics.falling {
+        // TODO: maybe set animaiton, but better to set it some where else and not in here
+        return;
+    }
+
     let mut move_vec = new_point - entity.physics.pos;
 
     move_vec.z = 0.0;
