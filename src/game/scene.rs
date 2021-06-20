@@ -275,12 +275,19 @@ impl Scene {
     pub fn update_animations(&mut self, delta: f32) {
 
         self.entities.player.update_animations(delta);
+        /*
         println!("falling={} - player animation {:?} next animation {}",
-                 self.entities.player.physics.falling,
-                 self.entities.player.animation_player.as_ref().unwrap().current_animation_name(),
-                 self.entities.player.animation_player.as_ref().unwrap().next_animation_name()
-        );
-
+        self.entities.player.physics.falling,
+        self.entities.player.animation_player.as_ref().unwrap().current_animation_name(),
+        self.entities.player.animation_player.as_ref().unwrap().next_animation_name()
+    );
+         */
+        if self.entities.player.physics.falling {
+            println!("falling={} - player Pos={:?}",
+                     self.entities.player.physics.falling,
+                     self.entities.player.physics.pos,
+            );
+        }
         for enemy in self.entities.enemies.values_mut() {
             enemy.update_animations(delta);
         }

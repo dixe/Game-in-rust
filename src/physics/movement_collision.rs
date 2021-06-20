@@ -2,6 +2,7 @@ use crate::entity;
 use crate::game;
 use crate::types::*;
 use crate::physics::collision_3d::*;
+use crate::types::*;
 
 use quadtree as qt;
 
@@ -91,46 +92,90 @@ fn resolve_world_collision_entity(entity: &mut entity::Entity, world: &[Triangle
                     entity.physics.pos.y += resolve_vec.y
                 }
 
-                entity.physics.pos.z += resolve_vec.z;
+                if resolve_vec.z.abs() > resolve_threshold {
+                    entity.physics.pos.z += resolve_vec.z;
+                }
 
                 entity.physics.falling = false;
                 entity.physics.velocity.z = 0.0;
             },
             _ => {
 
-
-
-                let mut set_falling = true;
                 // If not falling and close to ground, snap to ground, to avoid jitter
                 if !entity.physics.falling {
-                    let p = entity.physics.pos;
 
-                    let mut max_z = 0.0;
-                    for triangle in world {
-                        let projection  = triangle.project_point_z_axis(&p);
+                    // TODO only have 1 movement hitbox for each entity
+                    for hitbox in &entity.hitboxes {
 
-                        // close to gorund maybe don't fall
-                        if projection.z < 0.01 {
-                            let inside = triangle.inside(&projection);
+                        let max_x = hitbox.max_x();
+                        let max_y = hitbox.max_y();
+                        let min_x = hitbox.min_x();
+                        let min_y = hitbox.min_y();
 
-                            if inside {
-                                set_falling = false;
-                                // to avoid jitter don't snap when too close to ground
-                                if projection.z > 0.001 {
-                                    max_z = f32::max(max_z, projection.z);
-                                }
+
+                        let mut fall_or_slide_res = FallOrSlide::Fall;
+
+                        fall_or_slide(&(entity.physics.pos + v3::new(max_x, max_y,0.0)), &world, &mut fall_or_slide_res);
+                        fall_or_slide(&(entity.physics.pos + v3::new(min_x, max_y,0.0)), &world, &mut fall_or_slide_res);
+                        fall_or_slide(&(entity.physics.pos + v3::new(max_x, min_y,0.0)), &world, &mut fall_or_slide_res);
+                        fall_or_slide(&(entity.physics.pos + v3::new(min_x, min_y,0.0)), &world, &mut fall_or_slide_res);
+
+                        match fall_or_slide_res {
+                            FallOrSlide::Fall => {
+                                entity.physics.falling = true;
+                            },
+                            FallOrSlide::Slide(z_dist) => {
+                                entity.physics.pos.z -= z_dist;
                             }
-                        }
+                        };
                     }
-
-                    if !set_falling {
-                        entity.physics.pos.z -= max_z;
-                    }
-
                 }
-
-                entity.physics.falling = set_falling;
             }
         };
     }
+}
+
+enum FallOrSlide {
+    Fall,
+    Slide(f32)
+}
+
+fn fall_or_slide(point: &v3, world: &[Triangle], res: &mut FallOrSlide) {
+    let mut set_falling = true;
+    // If not falling and close to ground, snap to ground, to avoid jitter
+
+    let mut max_z = 0.0;
+    for triangle in world {
+        let projection  = triangle.project_point_z_axis(&point);
+
+        let inside = triangle.inside(&projection);
+        let z_diff = point.z - projection.z;
+
+        // close to gorund maybe don't fall
+        // play with this fall heigt
+        if inside {
+            println!("InSide z_diff {:?}", z_diff);
+            if z_diff < 0.3 {
+
+                set_falling = false;
+                // to avoid jitter don't snap when too close to ground
+                if z_diff > 0.01 {
+                    max_z = f32::max(max_z, z_diff);
+                }
+            }
+        }
+    }
+
+
+    if !set_falling {
+        let mut new_dist = max_z;
+        match res {
+            FallOrSlide::Slide(z_dist) => {
+                new_dist = f32::min(*z_dist, max_z);
+            },
+            _ => {}
+        }
+        *res = FallOrSlide::Slide(new_dist);
+    }
+
 }

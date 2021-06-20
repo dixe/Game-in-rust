@@ -170,7 +170,9 @@ fn run() -> Result<(), failure::Error> {
 
     'main: loop{
         ctx.update_delta();
-        let delta = ctx.get_delta_time();
+        // For debugging always set delta to 0.016 (60fps) even when having long breaks in visualStudio
+        //let delta = ctx.get_delta_time();
+        let delta = 0.016;
         ctx.handle_inputs();
 
 

@@ -93,7 +93,7 @@ fn pos_for_grid(noise_data: &Vec::<v3>, h: f32, w: f32) -> Vec::<v3> {
 
     let mut pos_data = Vec::new();
     for sample in noise_data {
-        pos_data.push(v3::new( sample.x - (w/2.0), sample.y - (h/2.0), sample.z));
+        pos_data.push(v3::new( sample.x - (w/2.0), sample.y - (h/2.0), sample.z * 3.0));
     }
 
     pos_data
