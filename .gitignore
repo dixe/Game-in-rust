@@ -13,6 +13,7 @@ Cargo.lock
 *.mtl
 
 tmp*
+DynamicLibLoadExample*
 *.tmp
 *.json
 *.txt
