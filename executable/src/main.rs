@@ -187,6 +187,7 @@ fn run() -> Result<(), failure::Error> {
 
             ctx.scene.entities.player.base_entity.physics.pos.x = 0.0;
             ctx.scene.entities.player.base_entity.physics.pos.y = 0.0;
+            ctx.scene.entities.player.base_entity.physics.pos.z = 10.0;
 
             ctx.scene.entities.player.skeleton.reset_ik();
 

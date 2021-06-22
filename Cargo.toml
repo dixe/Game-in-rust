@@ -5,4 +5,5 @@ members = [
    "entity_component_derive",
    "lib/gl",
    "shared",
+   "ai",
 ]

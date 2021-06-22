@@ -1,6 +1,7 @@
 use nalgebra as na;
 use shared;
 
+
 use crate::physics;
 use crate::cube;
 use crate::entity;
@@ -59,8 +60,7 @@ pub struct Scene {
 
     pub render_hitboxes: bool,
 
-    pub ais: std::collections::HashMap<usize, ai::Ai>,
-
+    pub loaded_ais: ai::LoadedAis,
 }
 
 impl Scene {
@@ -117,9 +117,12 @@ impl Scene {
 
         enemy.base_entity.queued_action = Some(shared::EntityState::Idle);
         enemy.next_action();
+
+        enemy.ai = Some(ai::EntityAi::Empty);
+
         let id = self.entities.enemies.add(enemy);
 
-        self.ais.insert(id, ai::Ai::idle());
+
 
         Ok(())
     }
@@ -274,19 +277,15 @@ impl Scene {
     pub fn update_animations(&mut self, delta: f32) {
 
         self.entities.player.update_animations(delta);
+
         /*
-        println!("falling={} - player animation {:?} next animation {}",
-        self.entities.player.base_entity.physics.falling,
-        self.entities.player.animation_player.as_ref().unwrap().current_animation_name(),
-        self.entities.player.animation_player.as_ref().unwrap().next_animation_name()
-    );
-         */
         if self.entities.player.base_entity.physics.falling {
-            println!("falling={} - player Pos={:?}",
-                     self.entities.player.base_entity.physics.falling,
-                     self.entities.player.base_entity.physics.pos,
-            );
-        }
+        println!("falling={} - player Pos={:?}",
+        self.entities.player.base_entity.physics.falling,
+        self.entities.player.base_entity.physics.pos,
+    );
+    }
+         */
         for enemy in self.entities.enemies.values_mut() {
             enemy.update_animations(delta);
         }
@@ -511,6 +510,11 @@ fn empty(render_context: &render_gl::context::Context) -> Result<Scene, failure:
 
     let actions = action_system::load_player_actions(&render_context.res)?;
 
+
+    //TODO make single function to reload all ais
+    let loaded_ais = ai::load_ais();
+
+
     let cameras = Cameras {
         free_camera,
         follow_camera,
@@ -528,10 +532,11 @@ fn empty(render_context: &render_gl::context::Context) -> Result<Scene, failure:
         cameras,
         models: std::collections::HashMap::new(),
         animations: std::collections::HashMap::new(),
-        ais: std::collections::HashMap::new(),
+        loaded_ais,
         render_hitboxes: false,
         world_triangles: Vec::new(),
         world_triangles_tree: qt::QuadTree::new(qt::QuadRect::new(qt::QuadPoint {x: -100, y: -100}, qt::QuadPoint{ x: 100, y: 100})),
+
     })
 }
 

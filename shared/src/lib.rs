@@ -1,6 +1,6 @@
-mod behaviour;
+mod ai;
 
-pub use self::behaviour::{Behaviour};
+pub use self::ai::*;
 
 mod base_entity;
 
