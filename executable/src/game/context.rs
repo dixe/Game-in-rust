@@ -7,6 +7,8 @@ use crate::controls;
 use crate::deltatime;
 use crate::game;
 
+use crate::resources::Resources;
+use std::path::Path;
 
 pub struct Context {
 
@@ -16,6 +18,7 @@ pub struct Context {
 
     delta_time: deltatime::Deltatime,
 
+    pub res_dll: Resources,
 }
 
 impl Context {
@@ -63,17 +66,22 @@ fn empty() -> Result<Context, failure::Error> {
 
     background_color_buffer.set_used(&render_context.gl);
 
+
+    let res_dll = Resources::from_relative_exe_path(Path::new("")).unwrap();
+
     let event_pump = render_context.sdl.event_pump().unwrap();
     let controls = controls::Controls::new(event_pump);
 
-    let scene = game::Scene::new(&render_context).unwrap();
+    let scene = game::Scene::new(&render_context, &res_dll).unwrap();
 
     let delta_time = deltatime::Deltatime::new();
+
 
     Ok(Context {
         scene,
         controls,
         render_context,
         delta_time,
+        res_dll
     })
 }

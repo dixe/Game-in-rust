@@ -18,6 +18,6 @@ impl EmptyAi {
 impl Ai for EmptyAi {
 
     fn run(&self, entity: &mut BaseEntity) {
-        println!("Run empty ai");
+        println!("Rewrite");
     }
 }

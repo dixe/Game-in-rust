@@ -1,15 +1,13 @@
-use std::fs;
-use std::io;
 use crate::game;
 
 use nalgebra_glm as glm;
 use crate::shared::{Ai};
-
+use crate::resources::Resources;
 
 
 
 pub struct LoadedAis {
-    empty: AiPlugin,
+    pub empty: AiPlugin,
 }
 
 #[derive(Clone, Copy)]
@@ -19,7 +17,7 @@ pub enum EntityAi {
 
 pub struct AiPlugin {
     pub ai: Box<dyn shared::Ai>,
-    lib: libloading::Library,
+    pub lib: libloading::Library,
 }
 
 
@@ -32,20 +30,17 @@ impl shared::Ai for AiPlugin {
 }
 
 
-pub fn load_ais() -> LoadedAis {
+pub fn load_ais(res: &Resources) -> LoadedAis {
     LoadedAis {
-        empty: load_empty_ai()
+        empty: load_empty_ai(res)
     }
 }
 
 
-fn load_empty_ai() -> AiPlugin {
+fn load_empty_ai(res: &Resources) -> AiPlugin {
     // make a copy of dll so we can still build it
-    let res = fs::copy("target/debug/ai.dll", "target/debug/ai_load.dll");
-    println!("copy res = {:?}", res);
 
-    let lib = libloading::Library::new("target/debug/ai_load.dll")
-        .expect("load library");
+    let lib = res.copy_and_load_lib("ai.dll");
 
     let empty_ai: libloading::Symbol<extern "Rust" fn() ->  Box<dyn shared::Ai>> = unsafe { lib.get(b"empty_ai") }
     .expect("load symbol");
@@ -60,13 +55,21 @@ fn load_empty_ai() -> AiPlugin {
 
 pub fn run_ais(scene: &mut game::Scene) {
 
+    let ais = match &scene.loaded_ais {
+        Some(loaded) => loaded,
+        None => {
+            return;
+        }
+    };
+
     for enemy in scene.entities.enemies.values_mut() {
 
 
 
         let ai: &Ai = match &enemy.ai {
             Some(a) => match a {
-                EntityAi::Empty => &scene.loaded_ais.empty,
+                EntityAi::Empty => &ais.empty,
+
             }
             _ => {
                 continue;

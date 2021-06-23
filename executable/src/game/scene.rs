@@ -1,5 +1,7 @@
 use nalgebra as na;
+
 use shared;
+use quadtree as qt;
 
 
 use crate::physics;
@@ -10,8 +12,7 @@ use crate::camera;
 use crate::controls;
 use crate::action_system;
 use crate::game::ai;
-
-use quadtree as qt;
+use crate::resources::Resources;
 
 pub struct Cameras {
     free_camera: camera::FreeCamera,
@@ -60,14 +61,15 @@ pub struct Scene {
 
     pub render_hitboxes: bool,
 
-    pub loaded_ais: ai::LoadedAis,
+    pub loaded_ais: Option<ai::LoadedAis>,
+
 }
 
 impl Scene {
 
-    pub fn new(render_context: &render_gl::context::Context) -> Result<Scene, failure::Error> {
+    pub fn new(render_context: &render_gl::context::Context, res_dll: &Resources) -> Result<Scene, failure::Error> {
 
-        let mut scene = empty(render_context)?;
+        let mut scene = empty(render_context, res_dll)?;
 
         println!("Setup world");
         scene.setup_world(&render_context.gl)?;
@@ -465,6 +467,16 @@ impl Scene {
 
     }
 
+    pub fn reload_ais(&mut self, res_dll: &Resources) {
+
+        // Should trigger drop
+        self.loaded_ais = None;
+
+
+        self.loaded_ais = Some(ai::load_ais(res_dll));
+
+    }
+
     pub fn reload_shaders(&mut self, render_context: &render_gl::context::Context) {
 
         let shaders = vec![("world_shader", &mut self.world_shader),
@@ -490,7 +502,7 @@ impl Scene {
 
 
 
-fn empty(render_context: &render_gl::context::Context) -> Result<Scene, failure::Error> {
+fn empty(render_context: &render_gl::context::Context, res_dll: &Resources) -> Result<Scene, failure::Error> {
 
     let width = 700;
     let height = 800;
@@ -512,7 +524,7 @@ fn empty(render_context: &render_gl::context::Context) -> Result<Scene, failure:
 
 
     //TODO make single function to reload all ais
-    let loaded_ais = ai::load_ais();
+    let loaded_ais = Some(ai::load_ais(res_dll));
 
 
     let cameras = Cameras {

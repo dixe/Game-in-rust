@@ -50,7 +50,8 @@ use game::ai;
 enum Command {
     Nop,
     SwitchRenderMode,
-    ReloadActions,
+    ReloadAssets,
+    ReloadAi,
     Quit,
     DecrementWalkTime,
     IncrementWalkTime,
@@ -78,7 +79,7 @@ fn start_cmd_thread() {
                 let msg = match input.trim() {
                     "r" =>{
                         copy_assets();
-                        Command::ReloadActions
+                        Command::ReloadAssets
                     }
                     ,
                     "m" => Command::SwitchRenderMode,
@@ -95,7 +96,7 @@ fn start_cmd_thread() {
     });
 }
 
-fn start_notify_thread() {
+fn start_notify_thread_assets() {
     thread::spawn(move || {
         // Create a channel to receive the events.
         let (tx, rx) = channel();
@@ -114,7 +115,36 @@ fn start_notify_thread() {
                     println!("Updated on disk copy assets");
                     copy_assets();
                     unsafe {
-                        CMD = Command::ReloadActions;
+                        CMD = Command::ReloadAssets;
+                    }
+                },
+                Err(e) => println!("watch error: {:?}", e),
+            }
+        }
+    });
+}
+
+
+fn start_notify_thread_ais() {
+    thread::spawn(move || {
+        // Create a channel to receive the events.
+        let (tx, rx) = channel();
+
+        // Create a watcher object, delivering debounced events.
+        // The notification back-end is selected based on the platform.
+        let mut watcher = watcher(tx, Duration::from_secs(1)).unwrap();
+
+        // Add a path to be watched. All files and directories at that path and
+        // below will be monitored for changes.
+        watcher.watch("E:/repos/Game-in-rust/target/debug/ai.dll", RecursiveMode::Recursive).unwrap();
+
+        loop {
+            match rx.recv() {
+                Ok(_) => {
+                    println!("Updated AI disk copy assets");
+                    copy_assets();
+                    unsafe {
+                        CMD = Command::ReloadAi;
                     }
                 },
                 Err(e) => println!("watch error: {:?}", e),
@@ -125,13 +155,18 @@ fn start_notify_thread() {
 
 
 
+
+
 fn main() {
     // set up commands channel and thread
     start_cmd_thread();
 
 
     // monitor assets on disk and reload them
-    start_notify_thread();
+    start_notify_thread_assets();
+
+    // monitor ais on disk and reload them
+    start_notify_thread_ais();
 
     // start game
     if let Err(e) = run() {
@@ -249,12 +284,13 @@ fn run() -> Result<(), failure::Error> {
             match CMD {
                 Command::Nop => {continue},
                 Command::Quit => { break 'main},
-                Command::ReloadActions => {
-                    println!("Reload action");
-
+                Command::ReloadAssets => {
+                    println!("Reload assets");
                     ctx.scene.reload_shaders(&ctx.render_context);
-
-
+                },
+                Command::ReloadAi => {
+                    println!("Reload Ais");
+                    ctx.scene.reload_ais(&ctx.res_dll);
                 },
                 Command::SwitchRenderMode => {
                     ctx.render_context.switch_mode();

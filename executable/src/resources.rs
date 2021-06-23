@@ -1,5 +1,3 @@
-
-
 use image::io::Reader as ImageReader;
 use image;
 use std::ffi;
@@ -61,10 +59,33 @@ impl Resources {
         let exe_path = exe_file_name.parent()
             .ok_or(Error::FailedToGetExePath)?;
 
+        println!("relative resource pat{:?}", rel_path);
         Ok(Resources {
             root_path: exe_path.join(rel_path)
         })
     }
+
+
+    pub fn copy_and_load_lib(&self, name: &str) -> libloading::Library {
+
+        println!("{:?}", self.root_path);
+        let path_from = resource_name_to_path(&self.root_path, name);
+
+        let path_to = resource_name_to_path(&self.root_path, &name.replace(".dll", "_loaded.dll"));
+
+        let res = fs::copy(path_from, path_to);
+
+        let path_from = resource_name_to_path(&self.root_path, name);
+        println!("\n\ncopy res = {:?}, \n\nfrom path={:?}\n\n", res, path_from);
+
+        let path_to = resource_name_to_path(&self.root_path, &name.replace(".dll", "_loaded.dll"));
+        unsafe {
+            libloading::Library::new(path_to)
+                .expect("load library")
+        }
+
+    }
+
 
     pub fn list_files(&self, path: &str) -> Result<Vec<String>, Error> {
         let root_path = &self.root_path.to_str().ok_or(Error::NoneE)?;
