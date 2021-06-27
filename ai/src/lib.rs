@@ -4,6 +4,6 @@ use crate::ais::*;
 
 mod ais;
 #[no_mangle]
-pub extern "Rust" fn empty_ai() -> Box<dyn Ai> {
-    Box::new(EmptyAi::new())
+pub extern "Rust" fn regular_enemy_ai() -> Box<dyn Ai<shared::RegularEnemyState>> {
+    Box::new(RegularEnemyAi::new())
 }

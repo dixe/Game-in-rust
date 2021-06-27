@@ -1,5 +1,5 @@
 use crate::base_entity::*;
-
+use crate::ai::*;
 
 #[derive(Clone)]
 pub struct BaseEntity {
@@ -8,7 +8,6 @@ pub struct BaseEntity {
     pub state: EntityState,
     pub is_hit: bool,
     pub queued_action: Option<EntityState>,
-
 }
 
 
@@ -36,8 +35,6 @@ impl BaseEntity {
             physics: Physics::new(),
             health: Health::new(100.0),
             state: EntityState::Idle,
-
-
             is_hit: false,
             queued_action: None,
         }

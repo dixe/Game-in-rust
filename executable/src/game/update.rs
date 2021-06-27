@@ -125,7 +125,7 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
     }
 
     if !can_perform_action(player.get_state()) {
-        game::update_velocity(&mut player.base_entity.physics, na::Vector3::new(0.0, 0.0, 0.0));
+        shared::physics_functions::update_velocity(&mut player.base_entity.physics, na::Vector3::new(0.0, 0.0, 0.0));
         return;
     }
 
@@ -156,7 +156,7 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
             let x = controls.movement_dir.x;
             let player_move_dir = rot_mat * na::Vector3::new(-controls.movement_dir.y, controls.movement_dir.x, 0.0);
 
-            game::update_velocity(&mut player.base_entity.physics, player_move_dir);
+            shared::physics_functions::update_velocity(&mut player.base_entity.physics, player_move_dir);
 
             if player_move_dir.magnitude() > 0.0 {
                 player.base_entity.physics.facing_dir = player_move_dir.normalize();
@@ -178,7 +178,7 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
             return;
             let player_move_dir = na::Vector3::new(controls.movement_dir.y, 0.0, 0.0);
 
-            game::update_velocity(&mut player.base_entity.physics, player_move_dir);
+            shared::physics_functions::update_velocity(&mut player.base_entity.physics, player_move_dir);
         },
     }
 }

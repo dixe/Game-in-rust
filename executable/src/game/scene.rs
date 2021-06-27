@@ -120,10 +120,9 @@ impl Scene {
         enemy.base_entity.queued_action = Some(shared::EntityState::Idle);
         enemy.next_action();
 
-        enemy.ai = Some(ai::EntityAi::Empty);
+        enemy.ai = Some(shared::EntityAi::regular_enemy(10.0));
 
         let id = self.entities.enemies.add(enemy);
-
 
 
         Ok(())

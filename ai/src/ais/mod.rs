@@ -1,3 +1,3 @@
-mod empty_ai;
+mod regular_enemy;
 
-pub use self::empty_ai::*;
+pub use self::regular_enemy::*;

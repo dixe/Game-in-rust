@@ -4,6 +4,7 @@ use crate::physics;
 use crate::shared;
 use crate::game::ai;
 
+
 #[derive(Clone)]
 pub struct Entity {
     pub id: usize,
@@ -15,7 +16,7 @@ pub struct Entity {
     pub hitboxes: Vec::<physics::CollisionBox>,
     pub weapon_id: usize,
     pub is_hit: bool,
-    pub ai: Option<ai::EntityAi>
+    pub ai: Option<shared::EntityAi>
 }
 
 
