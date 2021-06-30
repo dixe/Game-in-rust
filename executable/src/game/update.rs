@@ -111,7 +111,7 @@ fn entity_collision(entity_1: &entity::Entity, entity_2: &entity::Entity) -> boo
 fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, player: &mut entity::Entity, weapons: &entity::EntitiesCollection, animations: &std::collections::HashMap<String, render_gl::PlayerAnimations>) {
 
     // UPDATE STATE, IE WHEN ATTACK IS DONE SET BACK TO IDLE
-    update_player_state(player);
+    update_entity_state(player);
 
     if controls.roll {
         perform_roll(player);
@@ -162,16 +162,6 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
                 player.base_entity.physics.facing_dir = player_move_dir.normalize();
             }
 
-            let mut target_state = shared::EntityState::Idle;
-
-            if player.base_entity.physics.velocity.magnitude() > 0.0 {
-
-                target_state = shared::EntityState::Moving;
-            }
-
-            if player.get_state() != target_state {
-                player.base_entity.queued_action = Some(target_state);
-            }
         },
 
         camera::CameraMode::Free => {
@@ -228,26 +218,37 @@ fn can_perform_action(state: shared::EntityState) -> bool {
 }
 
 
-fn update_player_state(player: &mut entity::Entity) {
+fn update_entity_state(entity: &mut entity::Entity) {
+
+    let mut target_state = shared::EntityState::Idle;
+
+    if entity.base_entity.physics.velocity.magnitude() > 0.0 {
+        target_state = shared::EntityState::Moving;
+    }
+
+    if entity.get_state() != target_state {
+        entity.base_entity.queued_action = Some(target_state);
+    }
+
     let mut next_action = false;
-    match player.get_state() {
+    match entity.get_state() {
         shared::EntityState::Attack(info) => {
             // CHECK IF WE ARE IN COMBO FRAME RANGE
-            let current_frame = player.animation_player.as_ref().unwrap().current_frame_number();
+            let current_frame = entity.animation_player.as_ref().unwrap().current_frame_number();
             next_action |= current_frame >= info.hit_end_frame;
 
-            if player.animation_player.as_ref().unwrap().has_repeated {
+            if entity.animation_player.as_ref().unwrap().has_repeated {
                 next_action = true;
-                if player.base_entity.queued_action == None {
-                    player.base_entity.queued_action = Some(shared::EntityState::Idle);
+                if entity.base_entity.queued_action == None {
+                    entity.base_entity.queued_action = Some(shared::EntityState::Idle);
                 }
 
             }
         },
         shared::EntityState::Roll => {
-            next_action = player.animation_player.as_ref().unwrap().has_repeated;
-            if player.base_entity.queued_action == None {
-                player.base_entity.queued_action = Some(shared::EntityState::Idle);
+            next_action = entity.animation_player.as_ref().unwrap().has_repeated;
+            if entity.base_entity.queued_action == None {
+                entity.base_entity.queued_action = Some(shared::EntityState::Idle);
             }
         },
         _ => {
@@ -256,7 +257,7 @@ fn update_player_state(player: &mut entity::Entity) {
     };
 
     if next_action {
-        player.next_action();
+        entity.next_action();
     }
 }
 
@@ -264,7 +265,7 @@ fn update_player_state(player: &mut entity::Entity) {
 fn update_enemies_states(scene: &mut game::Scene) {
 
     for enemy in scene.entities.enemies.values_mut() {
-        enemy.next_action();
+        update_entity_state(enemy);
     }
 }
 

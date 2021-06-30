@@ -1,6 +1,8 @@
 use shared::*;
 use shared::physics_functions;
 use nalgebra as na;
+use rand::Rng;
+use crate::behaviours;
 
 pub struct RegularEnemyAi {
 
@@ -19,7 +21,6 @@ impl Ai<RegularEnemyState> for RegularEnemyAi {
 
     fn run(&self, run_data: AiRunData, ai_data: &mut RegularEnemyState) {
 
-
         match ai_data.current_behaviour {
             shared::Behaviour::Empty => {
                 ai_data.current_behaviour = shared::Behaviour::KeepDistance;
@@ -28,37 +29,30 @@ impl Ai<RegularEnemyState> for RegularEnemyAi {
             },
             shared::Behaviour::KeepDistance => {
 
-                //TODO take all of this into a function to be shared between ais
+                let keep_dist_res = behaviours::keep_distance(ai_data.distance, run_data.entity, run_data.player);
 
-                let player_dist = (run_data.entity.physics.pos - run_data.player.physics.pos).magnitude();
+                // maybe engage in an attack
+                if keep_dist_res == behaviours::KeepDistanceResult::InDistance {
+                    let mut rng = rand::thread_rng();
 
-                let mut vel = run_data.entity.physics.pos - run_data.player.physics.pos;
-                println!("I am going to get you in {:?}", vel.magnitude());
-
-
-                let leway = 2.0;
-
-                if player_dist > (ai_data.distance - leway) && player_dist < (ai_data.distance + leway) {
-                    physics_functions::set_velocity(&mut run_data.entity.physics, na::Vector3::new(0.0, 0.0,0.0));
-                    println!("RETURN");
-                    return;
-                }
+                    let random = rng.gen::<f32>();
 
 
-                if player_dist < (ai_data.distance - leway) {
-                    physics_functions::set_velocity(&mut run_data.entity.physics, vel );
+                    if random > 0.99 {
+                        //println!("{:?}, attack", random);
+                        ai_data.current_behaviour = shared::Behaviour::Attack;
+                    }
 
                 }
 
-                if player_dist > (ai_data.distance + leway) {
-
-                    physics_functions::set_velocity(&mut run_data.entity.physics, -vel);
-                }
             },
             shared::Behaviour::Attack => {
+                println!("ATTACKED");
+                ai_data.current_behaviour = shared::Behaviour::KeepDistance;
+
+                //
+
             },
         }
-
-
     }
 }

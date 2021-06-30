@@ -71,7 +71,7 @@ pub fn setup(width: u32, height: u32) -> Result<Context, failure::Error>
 
     //sdl.mouse().show_cursor(false);
 
-    sdl.mouse().set_relative_mouse_mode(true);
+    //sdl.mouse().set_relative_mouse_mode(true);
 
     let controller_subsystem = sdl.game_controller().unwrap();
 
