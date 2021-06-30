@@ -1,6 +1,6 @@
 use crate::render_gl::mesh::{GltfMesh};
 use noise::{NoiseFn, Perlin, Seedable};
-use image::io::Reader as ImageReader;
+
 use crate::types::*;
 use rand::Rng;
 
@@ -106,8 +106,8 @@ fn pos_for_grid(noise_data: &Vec::<v3>, h: f32, w: f32) -> Vec::<v3> {
 fn normals_for_grid(pos_data: &Vec::<v3>, indices: &Vec::<u32>, h: u32, w: u32) -> Vec::<[f32; 3]> {
     let mut normal_data_vec = Vec::new();
 
-    for i in 0..h {
-        for j in 0..w {
+    for _i in 0..h {
+        for _j in 0..w {
             normal_data_vec.push(v3::new(0.0, 0.0, 0.0));
         }
     }
@@ -173,7 +173,7 @@ fn tex_coord_for_grid(pos_data: &Vec::<v3>, h: u32, w: u32) -> Vec::<[f32; 2]> {
     let green = v2::new(step_size * 4.0 + offset, step_size + offset);
     let white = v2::new(offset, step_size * 7.0  + offset);
 
-    let bright = v2::new(0.0, 0.0);
+    let _bright = v2::new(0.0, 0.0);
     let light = v2::new(0.1, 0.0);
     let dark = v2::new(0.2, 0.0);
     let darker = v2::new(0.3, 0.0);

@@ -45,7 +45,7 @@ mod action_system;
 
 mod test_physics;
 
-use game::ai;
+
 #[derive(Copy, Clone, Debug)]
 enum Command {
     Nop,

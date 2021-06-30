@@ -9,7 +9,7 @@ use crate::cube;
 use crate::entity;
 use crate::render_gl;
 use crate::camera;
-use crate::controls;
+
 use crate::action_system;
 use crate::game::ai;
 use crate::resources::Resources;
@@ -122,7 +122,7 @@ impl Scene {
 
         enemy.ai = Some(shared::EntityAi::regular_enemy(10.0));
 
-        let id = self.entities.enemies.add(enemy);
+        let _id = self.entities.enemies.add(enemy);
 
 
         Ok(())
@@ -223,7 +223,7 @@ impl Scene {
 
         let hitboxes = gltf_meshes.hitboxes(&entity.model_name);
 
-        let entity = entity::add_hitbox_to_entity(entity, &hitboxes);
+        let _entity = entity::add_hitbox_to_entity(entity, &hitboxes);
 
         for hb_kv in &hitboxes {
             self.add_model(gl, &hb_kv.0, &gltf_meshes.meshes[&hb_kv.0]);
@@ -352,7 +352,7 @@ impl Scene {
         };
 
         let clr = na::Vector3::new(1.0, 0.0, 0.0);
-        let cube_model = cube::Cube::new(clr, gl);
+        let _cube_model = cube::Cube::new(clr, gl);
 
         let mut scale_mat = na::Matrix4::identity();
 

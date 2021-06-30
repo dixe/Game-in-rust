@@ -1,8 +1,8 @@
 use nalgebra as na;
 use crate::render_gl;
 
-use crate::camera;
-use crate::level;
+
+
 use crate::controls;
 use crate::deltatime;
 use crate::game;
@@ -25,7 +25,7 @@ impl Context {
 
     pub fn new() -> Result<Context, failure::Error> {
 
-        let mut ctx = empty()?;
+        let ctx = empty()?;
 
         Ok(ctx)
     }

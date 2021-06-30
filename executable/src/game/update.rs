@@ -152,8 +152,8 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
             let z_rot = camera.z_rotation();
 
             let rot_mat = na::Matrix3::new_rotation(z_rot);
-            let y = -controls.movement_dir.y;
-            let x = controls.movement_dir.x;
+            let _y = -controls.movement_dir.y;
+            let _x = controls.movement_dir.x;
             let player_move_dir = rot_mat * na::Vector3::new(-controls.movement_dir.y, controls.movement_dir.x, 0.0);
 
             shared::physics_functions::update_velocity(&mut player.base_entity.physics, player_move_dir);
@@ -185,7 +185,7 @@ fn perform_attack(entity: &mut entity::Entity) {
     match entity.get_state() {
         shared::EntityState::Attack(info) => {
 
-            let current_frame = entity.animation_player.as_ref().unwrap().current_frame_number();
+            let _current_frame = entity.animation_player.as_ref().unwrap().current_frame_number();
 
             let attack_info = shared::AttackInfo {
                 combo_num: 1 - info.combo_num,

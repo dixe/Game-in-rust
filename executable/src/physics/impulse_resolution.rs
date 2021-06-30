@@ -1,6 +1,6 @@
 use nalgebra as na;
 
-use crate::entity;
+
 use crate::game;
 use crate::shared;
 

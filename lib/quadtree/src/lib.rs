@@ -519,7 +519,7 @@ mod test {
 
     use super::*;
 
-    use nalgebra as na;
+    
 
 
     #[test]

@@ -160,10 +160,10 @@ impl Skeleton {
 
             skeleton.calc_t_pose();
 
-            let left_leg = Ik::new(vec![15, 16, 17], walk_target, joints_data[&24].2, &skeleton.joints);
+            let _left_leg = Ik::new(vec![15, 16, 17], walk_target, joints_data[&24].2, &skeleton.joints);
 
             //TODO get pole for right leg
-            let right_leg = Ik::new(vec![18, 19, 20], walk_target, joints_data[&24].2, &skeleton.joints);
+            let _right_leg = Ik::new(vec![18, 19, 20], walk_target, joints_data[&24].2, &skeleton.joints);
 
             /*
             skeleton.legs = Some(IkLegs {

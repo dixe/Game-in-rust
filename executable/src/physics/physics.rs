@@ -1,7 +1,7 @@
 use crate::game;
 
 use crate::physics::impulse_resolution::*;
-use crate::physics::projection_collision::*;
+
 use crate::physics::movement_collision::*;
 
 use crate::entity;
@@ -39,7 +39,7 @@ fn update_entities_position(scene: &mut game::Scene, delta: f32) {
     // and take the ones where we want physics
 
     //for entity in scene.entities.values_mut() {
-    let entity  = &mut scene.entities.player;
+    let _entity  = &mut scene.entities.player;
     update_entity_position(&mut scene.entities.player, delta);
 
     for enemy in scene.entities.enemies.values_mut() {

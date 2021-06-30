@@ -130,7 +130,7 @@ pub struct IkTransition {
 
 //REWORK THIS WALKING IK SO THAT ONE LEG START TRANSITION
 //
-pub fn update_ik(skeleton: &mut Skeleton, physics: &shared::Physics, delta: f32) {
+pub fn update_ik(skeleton: &mut Skeleton, physics: &shared::Physics, _delta: f32) {
 
     let ik_legs = match skeleton.legs {
         Some(ref mut ik_legs) => ik_legs,
@@ -314,7 +314,7 @@ fn get_angles(ik: &Ik, hip_pos: na::Vector2::<f32>, target: na::Vector2::<f32>) 
 
 
 fn update_joint(ik: &Ik, joint_index: usize, target_angle: f32, joints: &mut Vec<Joint>) {
-    let mut i = ik.bones[joint_index];
+    let i = ik.bones[joint_index];
     let euler = joints[i].rotation.euler_angles();
 
     let rotation = na::UnitQuaternion::from_euler_angles(target_angle, euler.1, euler.2);

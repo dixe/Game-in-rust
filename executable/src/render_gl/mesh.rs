@@ -149,7 +149,7 @@ impl GltfMesh {
             let v2 = self.pos_data[v2_i as usize];
 
             let n0 = self.normal_data[v0_i as usize];
-            let n1 = self.normal_data[v1_i as usize];
+            let _n1 = self.normal_data[v1_i as usize];
             let n2 = self.normal_data[v2_i as usize];
             let normal = ((na::Vector3::new(n0[0], n0[1], n0[2]) + na::Vector3::new(n0[0], n0[1], n0[2]) + na::Vector3::new(n2[0], n2[1], n2[2])) / 3.0).normalize();
 

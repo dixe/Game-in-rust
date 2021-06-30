@@ -22,8 +22,8 @@ pub trait Camera {
 
     fn z_rotation(&self ) -> f32 {
         let follow_dir = -self.front();
-        let x = follow_dir.x;
-        let y = follow_dir.y;
+        let _x = follow_dir.x;
+        let _y = follow_dir.y;
         f32::atan2(follow_dir.y, follow_dir.x)
     }
 

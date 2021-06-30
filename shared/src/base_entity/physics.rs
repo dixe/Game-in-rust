@@ -34,7 +34,7 @@ impl Physics {
 
         let identity_pos = na::Vector4::new(0.0, 0.0, 0.0, 1.0);
 
-        let up = transform * na::Vector4::new(0.0, 0.0, 1.0, 1.0);
+        let _up = transform * na::Vector4::new(0.0, 0.0, 1.0, 1.0);
 
         (transform * identity_pos).xyz();
 

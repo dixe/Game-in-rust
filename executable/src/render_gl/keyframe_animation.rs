@@ -76,7 +76,7 @@ pub fn load_animations(file_path: &str, skeleton: &Skeleton, base_animations: Op
     let attack_frames = animations.get("attack");
     let attack_follow_frames = animations.get("attack_follow");
 
-    let mut roll_frames = animations.get("roll");
+    let roll_frames = animations.get("roll");
 
     let t_pose = create_animation(t_pose_frames, base_animations.map(|fb| &fb.t_pose), true);
     let walk = create_animation(walk_frames, base_animations.map(|fb| &fb.walk), true);

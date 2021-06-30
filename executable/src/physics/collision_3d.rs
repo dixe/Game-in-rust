@@ -339,7 +339,7 @@ pub fn check_collision(box_1: &CollisionBox, box_2: &CollisionBox) -> CollisionR
     all_sat_axis.append(&mut box_2.sat_axis());
 
 
-    let mut has_gap = false;
+    let _has_gap = false;
 
     let vertices_1 = box_1.vertices();
     let vertices_2 = box_2.vertices();
@@ -417,7 +417,7 @@ pub fn check_collision_triangles(box_1: &CollisionBox, triangles: &[Triangle]) -
 
     // triangles is not bound to give a convex shape, thus the logic is a bit different from
     // the two boxes case
-    let box_vertices = box_1.vertices();
+    let _box_vertices = box_1.vertices();
     let mut resolve_dir = na::Vector3::<f32>::new(0.0, 0.0, 0.0);
     let mut collision = false;
 
@@ -428,7 +428,7 @@ pub fn check_collision_triangles(box_1: &CollisionBox, triangles: &[Triangle]) -
             },
             CollisionResult::Collision(resolve) => {
 
-                let triangle_angle = f32::acos(triangle.normal.dot(&na::Vector3::<f32>::new(0.0, 0.0, 1.0)));
+                let _triangle_angle = f32::acos(triangle.normal.dot(&na::Vector3::<f32>::new(0.0, 0.0, 1.0)));
 
                 resolve_dir = resolve;
                 collision = true;
@@ -456,7 +456,7 @@ fn triangle_box_collision(box_1: &CollisionBox, triangle: &Triangle) -> Collisio
         let p0_negative = (edge.0.dot(&triangle.normal) + triangle.d).is_sign_negative();
         let p1_negative = (triangle.normal.dot(&edge.1) + triangle.d).is_sign_negative();
 
-        if(p0_negative != p1_negative) {
+        if p0_negative != p1_negative {
             /*
             println!("Edge {:?}", edge);
             println!("Normal {:?}", triangle.normal);
@@ -775,7 +775,7 @@ mod tests {
         let col = triangle_box_collision(&box_1, &triangle);
 
         match col {
-            CollisionResult::Collision(resolve_vec) => {
+            CollisionResult::Collision(_resolve_vec) => {
                 assert!(false);
             },
             _ => {
@@ -817,7 +817,7 @@ mod tests {
 
     #[test]
     fn collision_box_transform() {
-        let box_1 = create_box(na::Vector3::new(7.0, 6.1, -2.7), None);
+        let _box_1 = create_box(na::Vector3::new(7.0, 6.1, -2.7), None);
         let box_1 = create_box(na::Vector3::new(0.0, 0.0, 0.0), None);
 
         let rotation = na::UnitQuaternion::<f32>::from_euler_angles(-0.0, -0.0, 3.028);
