@@ -47,7 +47,7 @@ impl Ai<RegularEnemyState> for RegularEnemyAi {
 
             },
             shared::Behaviour::Attack => {
-                println!("ATTACKED");
+                //println!("ATTACKED");
                 ai_data.current_behaviour = shared::Behaviour::KeepDistance;
 
                 //
