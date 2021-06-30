@@ -116,10 +116,10 @@ fn resolve_world_collision_entity(entity: &mut entity::Entity, world: &[Triangle
 
                         let mut fall_or_slide_res = FallOrSlide::Fall;
 
-                        fall_or_slide(&(entity.base_entity.physics.pos + v3::new(max_x, max_y,0.0)), &world, &mut fall_or_slide_res);
-                        fall_or_slide(&(entity.base_entity.physics.pos + v3::new(min_x, max_y,0.0)), &world, &mut fall_or_slide_res);
-                        fall_or_slide(&(entity.base_entity.physics.pos + v3::new(max_x, min_y,0.0)), &world, &mut fall_or_slide_res);
-                        fall_or_slide(&(entity.base_entity.physics.pos + v3::new(min_x, min_y,0.0)), &world, &mut fall_or_slide_res);
+                        fall_or_slide(&(entity.base_entity.physics.pos + V3::new(max_x, max_y,0.0)), &world, &mut fall_or_slide_res);
+                        fall_or_slide(&(entity.base_entity.physics.pos + V3::new(min_x, max_y,0.0)), &world, &mut fall_or_slide_res);
+                        fall_or_slide(&(entity.base_entity.physics.pos + V3::new(max_x, min_y,0.0)), &world, &mut fall_or_slide_res);
+                        fall_or_slide(&(entity.base_entity.physics.pos + V3::new(min_x, min_y,0.0)), &world, &mut fall_or_slide_res);
 
                         match fall_or_slide_res {
                             FallOrSlide::Fall => {
@@ -141,7 +141,7 @@ enum FallOrSlide {
     Slide(f32)
 }
 
-fn fall_or_slide(point: &v3, world: &[Triangle], res: &mut FallOrSlide) {
+fn fall_or_slide(point: &V3, world: &[Triangle], res: &mut FallOrSlide) {
     let mut set_falling = true;
     // If not falling and close to ground, snap to ground, to avoid jitter
 

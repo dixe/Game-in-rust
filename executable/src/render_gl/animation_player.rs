@@ -138,12 +138,12 @@ impl AnimationPlayer {
         // create transition animation from current frame state
         let transition_time = 0.2;
 
-        let keyFrames = vec![self.current_frame(skeleton), next_start_key_frame];
+        let key_frames = vec![self.current_frame(skeleton), next_start_key_frame];
         // important that this is after we call current_frame, since that uses the elapsed time
         self.elapsed = 0.0;
         self.root_motion_prev = na::Vector3::new(0.0, 0.0, 0.0);
 
-        self.current_animation = Animation::Transition(KeyframeAnimation::new(transition_time, keyFrames, false, None));
+        self.current_animation = Animation::Transition(KeyframeAnimation::new(transition_time, key_frames, false, None));
 
 
         self.has_repeated = false;

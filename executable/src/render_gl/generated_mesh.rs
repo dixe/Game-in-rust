@@ -35,7 +35,7 @@ pub fn perlin_field() -> GltfMesh {
             let noise: f64  = perlin.get([i_f, j_f]);
 
             min = f64::min(min, noise);
-            noise_data.push(v3::new(i as f32, j as f32, noise as f32));
+            noise_data.push(V3::new(i as f32, j as f32, noise as f32));
         }
     }
 
@@ -62,7 +62,7 @@ pub fn perlin_field() -> GltfMesh {
 
 }
 
-fn save_noise_to_image(pos_data: &Vec::<v3>, h: u32, w: u32) -> Result<(), image::ImageError> {
+fn save_noise_to_image(pos_data: &Vec::<V3>, h: u32, w: u32) -> Result<(), image::ImageError> {
 
     let new_scale = 256.0 / 2.0;
 
@@ -89,11 +89,11 @@ fn save_noise_to_image(pos_data: &Vec::<v3>, h: u32, w: u32) -> Result<(), image
 
 }
 
-fn pos_for_grid(noise_data: &Vec::<v3>, h: f32, w: f32) -> Vec::<v3> {
+fn pos_for_grid(noise_data: &Vec::<V3>, h: f32, w: f32) -> Vec::<V3> {
 
     let mut pos_data = Vec::new();
     for sample in noise_data {
-        pos_data.push(v3::new( sample.x - (w/2.0), sample.y - (h/2.0), sample.z * 3.0));
+        pos_data.push(V3::new( sample.x - (w/2.0), sample.y - (h/2.0), sample.z * 3.0));
     }
 
     pos_data
@@ -103,12 +103,12 @@ fn pos_for_grid(noise_data: &Vec::<v3>, h: f32, w: f32) -> Vec::<v3> {
 
 
 
-fn normals_for_grid(pos_data: &Vec::<v3>, indices: &Vec::<u32>, h: u32, w: u32) -> Vec::<[f32; 3]> {
+fn normals_for_grid(pos_data: &Vec::<V3>, indices: &Vec::<u32>, h: u32, w: u32) -> Vec::<[f32; 3]> {
     let mut normal_data_vec = Vec::new();
 
     for _i in 0..h {
         for _j in 0..w {
-            normal_data_vec.push(v3::new(0.0, 0.0, 0.0));
+            normal_data_vec.push(V3::new(0.0, 0.0, 0.0));
         }
     }
 
@@ -163,20 +163,20 @@ fn indices_for_grid(h: u32, w: u32) -> Vec::<u32> {
 
 
 
-fn tex_coord_for_grid(pos_data: &Vec::<v3>, h: u32, w: u32) -> Vec::<[f32; 2]> {
+fn tex_coord_for_grid(pos_data: &Vec::<V3>, h: u32, w: u32) -> Vec::<[f32; 2]> {
     let mut tex_data = Vec::new();
 
 
     let step_size = 1.0/8.0;
     let offset = 0.04;
-    let blue = v2::new(offset, step_size + offset);
-    let green = v2::new(step_size * 4.0 + offset, step_size + offset);
-    let white = v2::new(offset, step_size * 7.0  + offset);
+    let blue = V2::new(offset, step_size + offset);
+    let green = V2::new(step_size * 4.0 + offset, step_size + offset);
+    let white = V2::new(offset, step_size * 7.0  + offset);
 
-    let _bright = v2::new(0.0, 0.0);
-    let light = v2::new(0.1, 0.0);
-    let dark = v2::new(0.2, 0.0);
-    let darker = v2::new(0.3, 0.0);
+    let _bright = V2::new(0.0, 0.0);
+    let light = V2::new(0.1, 0.0);
+    let dark = V2::new(0.2, 0.0);
+    let darker = V2::new(0.3, 0.0);
 
     let mut tex_coords = std::collections::HashSet::new();
 

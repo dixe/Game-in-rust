@@ -299,10 +299,10 @@ impl Scene {
         self.cube_shader.set_used();
 
 
-        let lightPos = na::Vector3::new(0.0, 0.0, 10.0);
+        let light_pos = na::Vector3::new(0.0, 0.0, 10.0);
 
         // CAN BE MOVED OUTSIDE THE LOOP
-        self.cube_shader.set_vec3(gl, "lightPos", lightPos);
+        self.cube_shader.set_vec3(gl, "lightPos", light_pos);
         self.cube_shader.set_vec3(gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
 
         self.cube_shader.set_projection_and_view(gl, self.camera().projection(), self.camera().view());
@@ -310,7 +310,7 @@ impl Scene {
         // RENDER WITH MESH SHADER
 
         self.mesh_shader.set_used();
-        self.mesh_shader.set_vec3(gl, "lightPos", lightPos);
+        self.mesh_shader.set_vec3(gl, "lightPos", light_pos);
         self.mesh_shader.set_vec3(gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
         self.mesh_shader.set_vec3(gl, "viewPos", self.camera().pos());
 
