@@ -293,7 +293,7 @@ impl Scene {
 
     }
 
-    pub fn render(&mut self, render_context: &mut render_gl::context::Context) {
+    pub fn render(&mut self, render_context: &mut render_gl::context::Context, low_poly_texture_id: u32) {
         let gl = &render_context.gl;
         // RENDER SCENE WITH CUBE SHADER
         self.cube_shader.set_used();
@@ -309,6 +309,10 @@ impl Scene {
 
         // RENDER WITH MESH SHADER
 
+        // Set low_poly_texture as active
+        render_gl::texture::set_low_poly_texture(&render_context.gl, low_poly_texture_id);
+
+
         self.mesh_shader.set_used();
         self.mesh_shader.set_vec3(gl, "lightPos", light_pos);
         self.mesh_shader.set_vec3(gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
@@ -322,12 +326,6 @@ impl Scene {
             render_gl::render_entity(&entity, model, gl, &self.mesh_shader);
         }
 
-        /*
-        self.world_shader.set_used();
-        self.world_shader.set_vec3(gl, "lightPos", lightPos);
-        self.world_shader.set_vec3(gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
-        self.world_shader.set_projection_and_view(gl, self.camera().projection(), self.camera().view());
-         */
 
         let model = &self.models["world"];
         render_gl::render_world(model, gl, &self.mesh_shader);

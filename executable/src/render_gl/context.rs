@@ -11,9 +11,9 @@ pub struct Context {
 
     pub video_subsystem: sdl2::VideoSubsystem,
     pub controller_subsystem: sdl2::GameControllerSubsystem,
-    pub window:  sdl2::video::Window,
+    pub window: sdl2::video::Window,
 
-    pub gl_context:  sdl2::video::GLContext,
+    pub gl_context: sdl2::video::GLContext,
     pub gl: gl::Gl,
 
 

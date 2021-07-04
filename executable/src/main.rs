@@ -201,9 +201,15 @@ fn run() -> Result<(), failure::Error> {
     let collision_shader = render_gl::Shader::new("collision_test_shader", &ctx.render_context.res, &ctx.render_context.gl)?;
 
     // setup texture
-    render_gl::texture::load_and_set("low_poly.png", &ctx.render_context.res, &ctx.render_context.gl)?;
+    let low_poly_texture_id = render_gl::texture::load_and_set("low_poly.png", &ctx.render_context.res, &ctx.render_context.gl)?;
 
     let bone_cube = cube::Cube::new(na::Vector3::new(0.5, 0.5, 0.5), &ctx.render_context.gl);
+
+
+
+    let ft = text_render::free_type_wrapper::load_free_type();
+
+    let bitmaps = text_render::bitmap_generator::generate_map(&ft, &ctx.render_context.gl);
 
     'main: loop{
         ctx.update_delta();
@@ -275,7 +281,7 @@ fn run() -> Result<(), failure::Error> {
         // ANIMATIONS UPDATE
         ctx.scene.update_animations(delta);
         // RENDERING
-        ctx.scene.render(&mut ctx.render_context);
+        ctx.scene.render(&mut ctx.render_context, low_poly_texture_id);
 
         ctx.render_context.gl_swap_window();
 

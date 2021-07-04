@@ -4,7 +4,6 @@ use gl;
 
 pub struct SkinnedMesh {
     mesh: Mesh,
-    inverse_bind_poses: Vec<na::Matrix4<f32>>, // TODO maybe remove this, since we don't use them
 }
 
 pub struct Mesh {
@@ -95,7 +94,6 @@ impl SkinnedMesh {
 
         SkinnedMesh {
             mesh,
-            inverse_bind_poses: Vec::<na::Matrix4<f32>>::new(),
         }
 
     }

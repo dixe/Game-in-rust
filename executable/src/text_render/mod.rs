@@ -1,9 +1,6 @@
-use crate::types::*;
+pub mod free_type_wrapper;
 
+pub mod bitmap_generator;
+mod types;
 
-struct Character {
-    texture_id: u32,
-    size: V2u,
-    bearing: V3u,
-    advance: u32
-}
+pub use self::types::*;
