@@ -33,7 +33,7 @@ pub fn load_and_set(name: &str, res: &Resources, gl: &gl::Gl) -> Result<u32, fai
 }
 
 
-pub fn set_low_poly_texture(gl: &gl::Gl, texture_id: u32) {
+pub fn set_texture(gl: &gl::Gl, texture_id: u32) {
     unsafe {
         gl.BindTexture(gl::TEXTURE_2D, texture_id);
     }
@@ -41,8 +41,10 @@ pub fn set_low_poly_texture(gl: &gl::Gl, texture_id: u32) {
 
 pub fn bitmap_texture(gl: &gl::Gl, bytes: &[u8], width: i32, height: i32) -> Result<u32, failure::Error> {
 
+
     let mut obj: gl::types::GLuint = 0;
     unsafe {
+        gl.PixelStorei(gl::UNPACK_ALIGNMENT, 1);
         gl.GenTextures(1, &mut obj);
         gl.BindTexture(gl::TEXTURE_2D, obj);
 
@@ -68,5 +70,4 @@ pub fn bitmap_texture(gl: &gl::Gl, bytes: &[u8], width: i32, height: i32) -> Res
     }
 
     Ok(obj as u32)
-
 }

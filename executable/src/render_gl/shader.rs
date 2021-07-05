@@ -58,6 +58,26 @@ impl Shader {
     }
 
 
+    pub fn set_projection(&self, gl: &gl::Gl, projection: na::Matrix4<f32>) {
+
+        self.program.set_used();
+        unsafe {
+            let proj_str = std::ffi::CString::new("projection").unwrap();
+
+
+            let proj_loc = gl.GetUniformLocation(
+                self.program.id(),
+                proj_str.as_ptr() as *mut gl::types::GLchar);
+
+            gl.UniformMatrix4fv(
+                proj_loc,
+                1,
+                gl::FALSE,
+                projection.as_slice().as_ptr() as *const f32);
+        }
+    }
+
+
     pub fn set_projection_and_view(&self, gl: &gl::Gl, projection: na::Matrix4<f32>, view: na::Matrix4<f32>) {
         self.program.set_used();
         unsafe {

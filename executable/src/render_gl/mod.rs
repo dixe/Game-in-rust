@@ -27,7 +27,7 @@ mod model;
 pub use self::model::{Model};
 
 mod render_functions;
-pub use self::render_functions::{render_entity, render_world};
+pub use self::render_functions::*;
 
 
 mod keyframe_animation;

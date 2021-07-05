@@ -13,6 +13,8 @@ use crate::camera;
 use crate::action_system;
 use crate::game::ai;
 use crate::resources::Resources;
+use crate::text_render;
+use crate::types::*;
 
 pub struct Cameras {
     free_camera: camera::FreeCamera,
@@ -45,7 +47,7 @@ pub struct Scene {
     pub mesh_shader: render_gl::Shader,
     pub world_shader: render_gl::Shader,
     pub hitbox_shader: render_gl::Shader,
-
+    pub text_shader: render_gl::Shader,
 
     // World
     pub world_triangles: Vec::<physics::Triangle>,
@@ -293,7 +295,37 @@ impl Scene {
 
     }
 
-    pub fn render(&mut self, render_context: &mut render_gl::context::Context, low_poly_texture_id: u32) {
+
+    //TODO store low_poly_texture id and char maps in render context
+    pub fn render(&mut self, render_context: &mut render_gl::context::Context, low_poly_texture_id: u32, charMap: &std::collections::HashMap<u32, text_render::Character>, bmq: &text_render::BitmapQuad) {
+
+        // Render meshes
+        self.render_meshes(render_context, low_poly_texture_id);
+
+
+
+        // Render text
+        self.render_text(render_context, charMap, bmq);
+
+    }
+
+
+    fn render_text(&mut self, render_context: &mut render_gl::context::Context, charMap: &std::collections::HashMap<u32, text_render::Character>, bmq: &text_render::BitmapQuad) {
+
+        //TODO get height and width from not hard coded
+        let projection = na::Matrix4::new_orthographic(0.0, 700.0, 0.0, 800.0, -1.0, 1.0);
+        self.text_shader.set_projection(&render_context.gl, projection);
+
+        render_gl::render_text(
+            &render_context.gl,
+            charMap,
+            &mut self.text_shader,
+            &bmq.vao,
+            &bmq.vbo,
+            &V3::new(0.0,0.0,1.0));
+    }
+
+    fn render_meshes(&mut self, render_context: &mut render_gl::context::Context, low_poly_texture_id: u32) {
         let gl = &render_context.gl;
         // RENDER SCENE WITH CUBE SHADER
         self.cube_shader.set_used();
@@ -310,7 +342,7 @@ impl Scene {
         // RENDER WITH MESH SHADER
 
         // Set low_poly_texture as active
-        render_gl::texture::set_low_poly_texture(&render_context.gl, low_poly_texture_id);
+        render_gl::texture::set_texture(&render_context.gl, low_poly_texture_id);
 
 
         self.mesh_shader.set_used();
@@ -517,6 +549,8 @@ fn empty(render_context: &render_gl::context::Context, res_dll: &Resources) -> R
 
     let hitbox_shader = render_gl::Shader::new("hitbox_shader", &render_context.res, &render_context.gl)?;
 
+    let text_shader = render_gl::Shader::new("text_shader", &render_context.res, &render_context.gl)?;
+
     let actions = action_system::load_player_actions(&render_context.res)?;
 
 
@@ -538,6 +572,7 @@ fn empty(render_context: &render_gl::context::Context, res_dll: &Resources) -> R
         cube_shader,
         hitbox_shader,
         entities,
+        text_shader,
         cameras,
         models: std::collections::HashMap::new(),
         animations: std::collections::HashMap::new(),

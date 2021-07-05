@@ -55,6 +55,17 @@ impl<B> Buffer<B> where B: BufferType {
     }
 
 
+    pub fn dynamic_draw_data(&self, size: u32) {
+        unsafe {
+            self.gl.BufferData(
+                gl::ARRAY_BUFFER,
+                size as gl::types::GLsizeiptr,
+                0 as *const gl::types::GLvoid,
+                gl::DYNAMIC_DRAW,
+            );
+        }
+    }
+
     pub fn static_draw_data<T>(&self, data: &[T]) {
         unsafe {
             self.gl.BufferData(
