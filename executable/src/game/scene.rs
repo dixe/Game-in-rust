@@ -122,7 +122,7 @@ impl Scene {
         enemy.base_entity.queued_action = Some(shared::EntityState::Idle);
         enemy.next_action();
 
-        enemy.ai = Some(shared::EntityAi::regular_enemy(10.0));
+        enemy.ai = Some(shared::EntityAi::regular_enemy(4.0));
 
         let _id = self.entities.enemies.add(enemy);
 
@@ -151,7 +151,6 @@ impl Scene {
 
         Ok(())
     }
-
 
 
     fn setup_world(&mut self, gl: &gl::Gl) -> Result<(), failure::Error>  {
@@ -238,8 +237,6 @@ impl Scene {
 
         let model = entity::Model::skinned_model(model_mesh);
 
-        let _model_name = name.to_string();
-
         self.models.insert(name.to_string(), model);
 
     }
@@ -302,10 +299,8 @@ impl Scene {
         // Render meshes
         self.render_meshes(render_context, low_poly_texture_id);
 
-
-
         // Render text
-        self.render_text(render_context, charMap, bmq);
+        //self.render_text(render_context, charMap, bmq);
 
     }
 
@@ -322,7 +317,7 @@ impl Scene {
             &mut self.text_shader,
             &bmq.vao,
             &bmq.vbo,
-            &V3::new(0.0,0.0,1.0));
+            &V3::new(0.0, 0.0, 1.0));
     }
 
     fn render_meshes(&mut self, render_context: &mut render_gl::context::Context, low_poly_texture_id: u32) {
@@ -356,6 +351,15 @@ impl Scene {
         for entity in self.entities.values() {
             let model = &self.models[&entity.model_name];
             render_gl::render_entity(&entity, model, gl, &self.mesh_shader);
+
+            match &entity.weapon {
+                Some(w) => {
+                    let model = &self.models[&w.model_name];
+                    render_gl::render_entity(&w, model, gl, &self.mesh_shader);
+                },
+                None => {}
+            };
+
         }
 
 

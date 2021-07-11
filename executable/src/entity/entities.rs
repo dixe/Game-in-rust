@@ -75,15 +75,6 @@ impl Entities {
 
         res.push(&self.player);
 
-        // and weapons used
-
-        match self.weapons.entities.get(&self.player.weapon_id) {
-            Some(w) => {
-                res.push(w);
-            },
-            _ =>{}
-        }
-
 
         for e in self.enemies.entities.values() {
             res.push(e);

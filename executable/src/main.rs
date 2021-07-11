@@ -212,6 +212,7 @@ fn run() -> Result<(), failure::Error> {
     let bitmap_quad = text_render::bitmap_generator::generate_quad(&ctx.render_context.gl);
 
 
+
     'main: loop{
         ctx.update_delta();
         // For debugging always set delta to 0.016 (60fps) even when having long breaks in visualStudio

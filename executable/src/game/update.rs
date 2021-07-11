@@ -35,15 +35,29 @@ pub fn update_game_state(scene: &mut game::Scene, controls: &controls::Controls,
 
     // WEAPONS TRANSFORMS AND COLLISIONS
     let player = &mut scene.entities.player;
-    update_entity_weapon_and_collisions(player, &mut scene.entities.weapons, &mut scene.entities.enemies.values_mut());
+    update_entity_weapon(player, &mut scene.entities.weapons);
+
+    for enemy in scene.entities.enemies.values_mut() {
+
+        update_entity_weapon_collisions(player, &scene.entities.weapons, enemy);
 
 
+        update_entity_weapon(enemy, &mut scene.entities.weapons);
+        update_entity_weapon_collisions(enemy, &mut scene.entities.weapons, player);
+    }
 }
 
-fn update_entity_weapon_and_collisions<'a, I>(entity: &mut entity::Entity, weapons: &mut entity::EntitiesCollection, targets: I) where
-    I: Iterator<Item = &'a mut entity::Entity> {
-    let weapon = match weapons.get_mut(entity.weapon_id) {
-        Some(weapon) => weapon,
+
+
+fn update_entity_weapon(entity: &mut entity::Entity, weapons: &mut entity::EntitiesCollection){
+
+    let world_mat = entity.skeleton.joints[14].world_matrix;
+    let model_mat = entity.base_entity.physics.calculate_model_mat();
+
+    let state = entity.get_state();
+
+    let weapon = match entity.weapon {
+        Some(ref mut weapon) => weapon,
         None => {
             return ;
         }
@@ -55,24 +69,59 @@ fn update_entity_weapon_and_collisions<'a, I>(entity: &mut entity::Entity, weapo
     weapon.base_entity.physics.apply_transform(model_mat * world_mat);
 
 
-    if let shared::EntityState::Attack(info) = entity.get_state() {
+}
+
+
+
+fn update_entity_weapon_physics(entity: &mut entity::Entity, weapons: &mut entity::EntitiesCollection) {
+    let world_mat = entity.skeleton.joints[14].world_matrix;
+    let model_mat = entity.base_entity.physics.calculate_model_mat();
+
+
+
+    let weapon = match entity.weapon {
+        Some(ref mut weapon) => weapon,
+        None => {
+            return ;
+        }
+    };
+
+    let world_mat = entity.skeleton.joints[14].world_matrix;
+    let model_mat = entity.base_entity.physics.calculate_model_mat();
+
+    weapon.base_entity.physics.apply_transform(model_mat * world_mat);
+
+}
+
+fn update_entity_weapon_collisions(entity: & entity::Entity, weapons: & entity::EntitiesCollection, target: &mut entity::Entity) {
+
+    let weapon = match entity.weapon {
+        Some(ref weapon) => weapon,
+        None => {
+            return ;
+        }
+    };
+
+    let state = entity.get_state();
+    if let shared::EntityState::Attack(info) = state {
 
         let current_frame = entity.animation_player.as_ref().unwrap().current_frame_number();
 
         if current_frame >= info.hit_start_frame && current_frame <= info.hit_end_frame {
 
-            for target in targets {
-                target.is_hit = false;
-                if entity_collision(&weapon, target) {
-                    resolve_player_hit_enemy(entity, target);
-                    target.is_hit = true;
-                }
 
+            target.is_hit = false;
+            if entity_collision(&weapon, target) {
+                resolve_player_hit_enemy(&entity.base_entity, target);
+                target.is_hit = true;
             }
+
+
         }
     }
-
 }
+
+
 
 
 
@@ -81,7 +130,7 @@ fn update_enemies(scene: &mut game::Scene) {
 }
 
 
-fn resolve_player_hit_enemy(_player: &entity::Entity, _enemy: &mut entity::Entity) {
+fn resolve_player_hit_enemy(_player: &shared::BaseEntity, _enemy: &mut entity::Entity) {
 
 
 }
@@ -104,6 +153,25 @@ fn entity_collision(entity_1: &entity::Entity, entity_2: &entity::Entity) -> boo
     }
 
     false
+}
+
+
+fn set_entity_weapon(entity: &mut entity::Entity, weapon_id: usize, weapons: &entity::EntitiesCollection, animations: &std::collections::HashMap<String, render_gl::PlayerAnimations>) {
+
+
+    let new_weapon = match weapons.get(weapon_id) {
+        Some(w) => w.clone(),
+        None => entity.clone(),
+    };
+
+    let weapon_model_name = new_weapon.model_name.to_string();
+
+    entity.weapon = Some(Box::new(new_weapon));
+
+    let new_animations = animations.get(&weapon_model_name).unwrap();
+
+    entity.animation_player.as_mut().unwrap().set_animations(new_animations.clone());
+    println!("Weapon {:#?}", weapon_model_name);
 }
 
 
@@ -131,20 +199,15 @@ fn update_player(camera: &dyn camera::Camera, controls: &controls::Controls, pla
 
 
     if controls.next_weapon {
-        // Also change the animations on the animation player
-        player.weapon_id = (player.weapon_id + 1) % (weapons.count() + 1);
-
-
-        let new_weapon_name = match weapons.get(player.weapon_id) {
-            Some(w) => &w.model_name,
-            None => &player.model_name,
-        };
-
-        let new_animations = animations.get(new_weapon_name).unwrap();
-
-        player.animation_player.as_mut().unwrap().set_animations(new_animations.clone());
-        println!("Weapon {:#?}", new_weapon_name);
-
+        match &player.weapon {
+            Some(w) => {
+                player.weapon = None;
+            },
+            None => {
+                //TODO using id = 1 is not the real way to do this
+                set_entity_weapon(player, 1, weapons, animations);
+            }
+        }
     }
 
     match camera.mode() {
@@ -194,6 +257,7 @@ fn perform_attack(entity: &mut entity::Entity) {
         _ => {
             let attack_info = shared::AttackInfo {
                 combo_num: 0,
+
                 hit_start_frame: 9,
                 hit_end_frame: 20,
             };
@@ -260,27 +324,14 @@ fn update_entity_state(entity: &mut entity::Entity) {
 fn update_enemies_states(scene: &mut game::Scene) {
 
     for enemy in scene.entities.enemies.values_mut() {
+
+        match enemy.weapon {
+            None => {
+                set_entity_weapon(enemy, 1, &scene.entities.weapons, &scene.animations);
+            },
+            _ => {}
+        }
+
         update_entity_state(enemy);
     }
-}
-
-
-fn update_enemies_death(_scene: &mut game::Scene) {
-    /*
-    let mut deaths =  Vec::new();
-    for e in &scene.state.enemies {
-    let enemy_hp = match scene.ecs.get_health(*e) {
-    Some(e_hp) => *e_hp,
-    None => continue,
-};
-
-    if enemy_hp.health() <= 0.0 {
-    deaths.push(e);
-}
-}
-
-    for dead in deaths {
-    scene.ecs.remove_entity(*dead);
-}
-     */
 }

@@ -14,11 +14,11 @@ pub struct Entity {
     pub bones: Vec::<na::Matrix4::<f32>>,
     pub skeleton: render_gl::Skeleton,
     pub hitboxes: Vec::<physics::CollisionBox>,
-    pub weapon_id: usize,
+    pub weapon: Option<Box<Entity>>,
     pub is_hit: bool,
-    pub ai: Option<shared::EntityAi>
+    pub ai: Option<shared::EntityAi>,
+    has_run: bool
 }
-
 
 impl Entity {
 
@@ -33,11 +33,12 @@ impl Entity {
                 joints: Vec::new(),
                 legs: None,
             },
-            weapon_id: 9999999,
+            weapon: None,
             hitboxes: Vec::<physics::CollisionBox>::new(),
             is_hit: false,
             id: 0,
-            ai: None
+            ai: None,
+            has_run: false,
         }
     }
 
@@ -57,7 +58,6 @@ impl Entity {
 
     }
 
-
     pub fn next_action(&mut self) {
 
         match self.base_entity.queued_action {
@@ -69,6 +69,7 @@ impl Entity {
             }
         };
     }
+
 
     fn update_state(&mut self, state: shared::EntityState) {
 
