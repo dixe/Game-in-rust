@@ -15,7 +15,7 @@ pub fn keep_distance(distance: f32, entity: &mut BaseEntity, target: &BaseEntity
     let mut vel = entity.physics.pos - target.physics.pos;
 
     vel.z = 0.0;
-    let leway = 2.0;
+    let leway = distance * 0.1;
 
 
     entity.physics.facing_dir = (-vel).normalize();
