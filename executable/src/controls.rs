@@ -105,10 +105,6 @@ impl Controls {
                 },
 
 
-
-
-
-
                 Event::Window {win_event, ..} => {
                     match win_event {
                         sdl2::event::WindowEvent::Exposed => {
